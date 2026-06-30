@@ -1,0 +1,35 @@
+# Project-specific
+CLAUDE.md
+docs/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Supabase
+supabase/.branches
+supabase/.temp
+
+# Node / React
+node_modules/
+dist/
+.vite/
+.cache/
+
+# Flutter / Dart
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/build/
+apps/mobile/.packages
+*.g.dart
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.iml
