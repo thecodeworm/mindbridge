@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_service.dart';
 
@@ -82,9 +83,10 @@ class _SignInScreenState extends State<SignInScreen> {
                   onPressed: _submitting ? null : _submit,
                   child: Text(_submitting ? 'Logging in…' : 'Log in'),
                 ),
-                OutlinedButton(
+                OutlinedButton.icon(
                   onPressed: _signInWithGoogle,
-                  child: const Text('Continue with Google'),
+                  icon: SvgPicture.asset('assets/google_logo.svg', width: 18, height: 18),
+                  label: const Text('Continue with Google'),
                 ),
                 TextButton(
                   onPressed: widget.onSwitchToSignUp,
