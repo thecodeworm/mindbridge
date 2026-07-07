@@ -34,5 +34,17 @@ class AuthService {
     }
   }
 
+  Future<String?> signInWithGoogle() async {
+    try {
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'com.mindbridge.mindbridge://login-callback',
+      );
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    }
+  }
+
   Future<void> signOut() => _client.auth.signOut();
 }

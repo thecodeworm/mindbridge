@@ -41,6 +41,13 @@ class _SignInScreenState extends State<SignInScreen> {
     });
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() => _error = null);
+    final error = await _authService.signInWithGoogle();
+    if (!mounted) return;
+    if (error != null) setState(() => _error = error);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,6 +81,10 @@ class _SignInScreenState extends State<SignInScreen> {
                 FilledButton(
                   onPressed: _submitting ? null : _submit,
                   child: Text(_submitting ? 'Logging in…' : 'Log in'),
+                ),
+                OutlinedButton(
+                  onPressed: _signInWithGoogle,
+                  child: const Text('Continue with Google'),
                 ),
                 TextButton(
                   onPressed: widget.onSwitchToSignUp,
