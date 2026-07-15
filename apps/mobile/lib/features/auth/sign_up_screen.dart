@@ -14,93 +14,220 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _authService = AuthService(Supabase.instance.client);
+  final _formKey = GlobalKey<FormState>();
   final _displayNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   String? _error;
   bool _submitting = false;
+  bool _googleSubmitting = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirm = true;
 
   @override
   void dispose() {
     _displayNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    setState(() {
-      _submitting = true;
-      _error = null;
-    });
+    if (!_formKey.currentState!.validate()) return;
+    setState(() { _submitting = true; _error = null; });
     final error = await _authService.signUp(
       email: _emailController.text.trim(),
       password: _passwordController.text,
       displayName: _displayNameController.text.trim(),
     );
     if (!mounted) return;
-    setState(() {
-      _submitting = false;
-      _error = error;
-    });
+    setState(() { _submitting = false; _error = error; });
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() => _error = null);
+    setState(() { _googleSubmitting = true; _error = null; });
     final error = await _authService.signInWithGoogle();
     if (!mounted) return;
+    setState(() { _googleSubmitting = false; });
     if (error != null) setState(() => _error = error);
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      body: Center(
-        child: Padding(
+      body: SafeArea(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text('Sign up', style: Theme.of(context).textTheme.headlineMedium),
-                const SizedBox(height: 16),
-                if (_error != null) ...[
-                  Text(_error!, style: const TextStyle(color: Colors.red)),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 32),
+                  // Brand header
+                  Text(
+                    'MindBridge',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Track your mood, grow your mind.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Create your account',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  if (_error != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: cs.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _error!,
+                        style: TextStyle(color: cs.onErrorContainer, fontSize: 13),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  // Google first
+                  OutlinedButton.icon(
+                    onPressed: _googleSubmitting ? null : _signInWithGoogle,
+                    icon: _googleSubmitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : SvgPicture.asset('assets/google_logo.svg', width: 18, height: 18),
+                    label: const Text('Continue with Google'),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'or',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  AutofillGroup(
+                    child: Form(
+                      key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextFormField(
+                            controller: _displayNameController,
+                            decoration: const InputDecoration(labelText: 'Display name'),
+                            textCapitalization: TextCapitalization.words,
+                            autofillHints: const [AutofillHints.name],
+                            validator: (v) =>
+                                (v == null || v.trim().isEmpty) ? 'Display name is required' : null,
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: const InputDecoration(labelText: 'Email'),
+                            keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [AutofillHints.newUsername],
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return 'Email is required';
+                              if (!v.contains('@')) return "That email doesn't look right";
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              helperText: 'At least 6 characters',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                ),
+                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                              ),
+                            ),
+                            obscureText: _obscurePassword,
+                            autofillHints: const [AutofillHints.newPassword],
+                            validator: (v) {
+                              if (v == null || v.isEmpty) return 'Password is required';
+                              if (v.length < 6) return 'Password must be at least 6 characters';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _confirmPasswordController,
+                            decoration: InputDecoration(
+                              labelText: 'Confirm password',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureConfirm
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                ),
+                                onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                                tooltip: _obscureConfirm ? 'Show password' : 'Hide password',
+                              ),
+                            ),
+                            obscureText: _obscureConfirm,
+                            autofillHints: const [AutofillHints.newPassword],
+                            validator: (v) {
+                              if (v == null || v.isEmpty) return 'Please confirm your password';
+                              if (v != _passwordController.text) {
+                                return "Passwords don't match — give that another try";
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            onPressed: _submitting ? null : _submit,
+                            child: Text(_submitting ? 'Creating account…' : 'Create account'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: widget.onSwitchToSignIn,
+                    child: const Text('Already have an account? Log in'),
+                  ),
+                  const SizedBox(height: 32),
                 ],
-                TextField(
-                  controller: _displayNameController,
-                  decoration: const InputDecoration(labelText: 'Display name'),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: _submitting ? null : _submit,
-                  child: Text(_submitting ? 'Signing up…' : 'Sign up'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _signInWithGoogle,
-                  icon: SvgPicture.asset('assets/google_logo.svg', width: 18, height: 18),
-                  label: const Text('Continue with Google'),
-                ),
-                TextButton(
-                  onPressed: widget.onSwitchToSignIn,
-                  child: const Text('Already have an account? Log in'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
