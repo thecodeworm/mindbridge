@@ -1,1 +1,206 @@
 @import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   MindBridge design tokens (see CLAUDE.md § Design System)
+
+   Tokens live as CSS variables so they can be swapped live for
+   dark mode. `@theme inline` (below) maps them to Tailwind color
+   utilities that reference the vars directly — so changing :root
+   re-themes every utility instantly.
+
+   Dark mode resolves two ways:
+   - system:  prefers-color-scheme: dark  (unless overridden to light)
+   - manual:  [data-theme="dark"] / [data-theme="light"] wins
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --cream: #fcf3e3;
+  --surface: #f4efe6;
+  --border: #e5ddd0;
+  --field: #ffffff;
+
+  --blue: #4a80b5;
+  --blue-dark: #3a6a9a;
+  --blue-tint: #eef4fa;
+
+  --terra: #c97b52;
+  --terra-dark: #b56840;
+  --terra-tint: #fbf0e9;
+
+  --ink: #1c1917;
+  --muted: #78716c;
+  --faint: #a8a29e;
+
+  --success: #5b8c6e;
+  --success-tint: #eaf1eb;
+  --caution: #b98a34;
+  --caution-tint: #faf1de;
+  --error: #b4534b;
+  --error-tint: #f9ebea;
+
+  /* Text color for filled blue/terra buttons — must contrast the
+     button fill in BOTH modes, so it is a token, not a fixed white. */
+  --on-accent: #ffffff;
+
+  /* Mood scale (temperature, not red→green) */
+  --mood-1: #7c8ba8;
+  --mood-3: #96a9c1;
+  --mood-5: #c4bca9;
+  --mood-7: #dfb05e;
+  --mood-9: #dd955a;
+}
+
+/* Dark tokens — applied by system preference unless the user has
+   explicitly forced light via [data-theme="light"]. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --cream: #1c1815;
+    --surface: #2a2420;
+    --border: #3d3530;
+    --field: #322b26;
+
+    --blue: #6b9dce;
+    --blue-dark: #8bb5e0;
+    --blue-tint: #1a2636;
+
+    --terra: #d89468;
+    --terra-dark: #e8a882;
+    --terra-tint: #2d1f16;
+
+    --ink: #f4efe6;
+    --muted: #b8afa6;
+    --faint: #7a6e67;
+
+    --success: #7aaf8e;
+    --success-tint: #1a2920;
+    --caution: #d4a84a;
+    --caution-tint: #2a2210;
+    --error: #d47068;
+    --error-tint: #2a1815;
+
+    /* In dark mode the accent fills are light, so button text is dark. */
+    --on-accent: #1c1815;
+  }
+}
+
+/* Manual override — always wins over system preference. */
+:root[data-theme="dark"] {
+  --cream: #1c1815;
+  --surface: #2a2420;
+  --border: #3d3530;
+  --field: #322b26;
+
+  --blue: #6b9dce;
+  --blue-dark: #8bb5e0;
+  --blue-tint: #1a2636;
+
+  --terra: #d89468;
+  --terra-dark: #e8a882;
+  --terra-tint: #2d1f16;
+
+  --ink: #f4efe6;
+  --muted: #b8afa6;
+  --faint: #7a6e67;
+
+  --success: #7aaf8e;
+  --success-tint: #1a2920;
+  --caution: #d4a84a;
+  --caution-tint: #2a2210;
+  --error: #d47068;
+  --error-tint: #2a1815;
+
+  --on-accent: #1c1815;
+}
+
+/* Map tokens → Tailwind color utilities (bg-*, text-*, border-*).
+   `inline` makes the utilities emit var() references, so the token
+   swaps above take effect without regenerating any classes. */
+@theme inline {
+  --color-cream: var(--cream);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-field: var(--field);
+
+  --color-blue: var(--blue);
+  --color-blue-dark: var(--blue-dark);
+  --color-blue-tint: var(--blue-tint);
+
+  --color-terra: var(--terra);
+  --color-terra-dark: var(--terra-dark);
+  --color-terra-tint: var(--terra-tint);
+
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-caution: var(--caution);
+  --color-caution-tint: var(--caution-tint);
+  --color-error: var(--error);
+  --color-error-tint: var(--error-tint);
+
+  --color-on-accent: var(--on-accent);
+
+  --color-mood-1: var(--mood-1);
+  --color-mood-3: var(--mood-3);
+  --color-mood-5: var(--mood-5);
+  --color-mood-7: var(--mood-7);
+  --color-mood-9: var(--mood-9);
+}
+
+@layer base {
+  html, body {
+    background-color: var(--cream);
+    color: var(--ink);
+  }
+
+  /* Required accessibility focus ring — 2px blue-dark, 2px offset,
+     on every interactive element. */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--blue-dark);
+    outline-offset: 2px;
+  }
+
+  /* Mood score slider — temperature gradient track (slate → gold).
+     Hex values are absolute (same in light and dark mode per spec).
+     Thumb is a thin vertical bar, not a round node. */
+  .mood-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 10px;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #7c8ba8, #96a9c1, #c4bca9, #dfb05e, #dd955a);
+    outline: none;
+    cursor: pointer;
+  }
+
+  .mood-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 4px;
+    height: 24px;
+    border-radius: 2px;
+    background: #ffffff;
+    box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.14), 0 1px 5px rgba(0, 0, 0, 0.18);
+  }
+
+  .mood-slider::-moz-range-track {
+    height: 10px;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #7c8ba8, #96a9c1, #c4bca9, #dfb05e, #dd955a);
+  }
+
+  .mood-slider::-moz-range-thumb {
+    width: 4px;
+    height: 24px;
+    border-radius: 2px;
+    background: #ffffff;
+    border: none;
+    box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.14), 0 1px 5px rgba(0, 0, 0, 0.18);
+  }
+}
