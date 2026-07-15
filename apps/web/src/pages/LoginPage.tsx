@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 function GoogleIcon() {
   return (
@@ -10,16 +12,35 @@ function GoogleIcon() {
     </svg>
   )
 }
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+
+function EyeIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  )
+}
+
+function EyeOffIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  )
+}
 
 export function LoginPage() {
-  const { signIn, signInWithGoogle } = useAuth()
+  const { signIn, signInWithGoogle, resetPassword } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [forgotMode, setForgotMode] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -27,10 +48,7 @@ export function LoginPage() {
     setSubmitting(true)
     const { error } = await signIn(email, password)
     setSubmitting(false)
-    if (error) {
-      setError(error)
-      return
-    }
+    if (error) { setError(error); return }
     navigate('/')
   }
 
@@ -40,28 +58,110 @@ export function LoginPage() {
     if (error) setError(error)
   }
 
+  async function handleForgotPassword(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setSubmitting(true)
+    const { error } = await resetPassword(email)
+    setSubmitting(false)
+    if (error) { setError(error); return }
+    setResetSent(true)
+  }
+
+  const brandHeader = (
+    <div className="mb-8 text-center">
+      <div className="text-3xl font-bold text-blue-dark">MindBridge</div>
+      <p className="mt-1 text-sm text-muted">Track your mood, grow your mind.</p>
+    </div>
+  )
+
+  if (forgotMode) {
+    if (resetSent) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center bg-cream p-4">
+          {brandHeader}
+          <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 shadow-sm text-center">
+            <div className="text-4xl">✉️</div>
+            <p className="font-medium text-ink">Check your inbox</p>
+            <p className="text-sm text-muted">
+              We sent a reset link to <span className="text-ink">{email}</span>.
+            </p>
+            <button
+              onClick={() => { setForgotMode(false); setResetSent(false) }}
+              className="text-sm font-medium text-blue-dark hover:underline"
+            >
+              Back to log in
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-cream p-4">
+        {brandHeader}
+        <form
+          onSubmit={handleForgotPassword}
+          className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 shadow-sm"
+        >
+          <h1 className="text-xl font-bold text-ink">Reset your password</h1>
+          <p className="text-sm text-muted">Enter your email and we'll send you a reset link.</p>
+          {error && (
+            <p className="rounded-xl bg-error-tint px-4 py-2 text-sm text-error">{error}</p>
+          )}
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            className="w-full rounded-full border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
+          />
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {submitting ? 'Sending…' : 'Send reset link'}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setForgotMode(false); setError(null) }}
+            className="w-full text-center text-sm font-medium text-blue-dark hover:underline"
+          >
+            Back to log in
+          </button>
+        </form>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-cream p-4">
+      {brandHeader}
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 rounded-lg bg-white p-8 shadow"
+        className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 shadow-sm"
       >
-        <h1 className="text-2xl font-bold text-gray-900">Log in</h1>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <h1 className="text-xl font-bold text-ink">Welcome back</h1>
+        {error && (
+          <p className="rounded-xl bg-error-tint px-4 py-2 text-sm text-error">{error}</p>
+        )}
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          className="flex w-full items-center justify-center gap-2 rounded border border-gray-300 px-3 py-2 font-medium text-gray-700 hover:bg-gray-50"
+          className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-field px-4 py-3 font-medium text-ink transition-colors hover:bg-blue-tint"
         >
           <GoogleIcon />
           Continue with Google
         </button>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
+            <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-2 text-gray-400">or</span>
+            <span className="bg-surface px-2 text-faint">or</span>
           </div>
         </div>
         <input
@@ -70,26 +170,48 @@ export function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full rounded border border-gray-300 px-3 py-2"
+          autoComplete="email"
+          className="w-full rounded-full border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full rounded border border-gray-300 px-3 py-2"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            className="w-full rounded-full border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            tabIndex={-1}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-muted"
+          >
+            {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+          </button>
+        </div>
+        <div className="flex justify-end -mt-2">
+          <button
+            type="button"
+            onClick={() => { setForgotMode(true); setError(null) }}
+            className="text-sm font-medium text-blue-dark hover:underline"
+          >
+            Forgot?
+          </button>
+        </div>
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded bg-indigo-600 px-3 py-2 font-medium text-white disabled:opacity-50"
+          className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? 'Logging in…' : 'Log in'}
         </button>
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-muted">
           Need an account?{' '}
-          <Link to="/signup" className="text-indigo-600">
+          <Link to="/signup" className="font-medium text-blue-dark hover:underline">
             Sign up
           </Link>
         </p>
