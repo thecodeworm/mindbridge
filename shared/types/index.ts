@@ -34,3 +34,30 @@ export interface JournalEntry {
   body: string
   created_at: string
 }
+
+export interface CopingSuggestion {
+  id: string
+  mood_log_id: string
+  user_id: string
+  technique_name: string
+  description: string
+  steps: string[]
+  model_used: string
+  generated_at: string
+}
+
+export interface AiCallLog {
+  id: string
+  user_id: string
+  input_tokens: number
+  output_tokens: number
+  latency_ms: number
+  called_at: string
+}
+
+export interface SuggestionResponse {
+  technique_name: string
+  description: string
+  steps: string[]
+  show_crisis_resources: boolean
+}
