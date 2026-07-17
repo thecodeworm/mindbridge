@@ -87,7 +87,7 @@ export function MoodLogPage() {
       }
     }
 
-    navigate('/')
+    navigate('/suggestion', { state: { moodLogId, userId: user.id }, replace: true })
   }
 
   return (

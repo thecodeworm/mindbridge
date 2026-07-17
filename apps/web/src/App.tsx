@@ -4,6 +4,7 @@ import { SignUpPage } from './pages/SignUpPage'
 import { LoginPage } from './pages/LoginPage'
 import { HomePage } from './pages/HomePage'
 import { MoodLogPage } from './pages/MoodLogPage'
+import { SuggestionPage } from './pages/SuggestionPage'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/log" element={<MoodLogPage />} />
+        <Route path="/suggestion" element={<SuggestionPage />} />
       </Route>
     </Routes>
   )
