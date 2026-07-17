@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'mood_log_service.dart';
+import 'suggestion_screen.dart';
 
 // Mood scale color stops — matches CLAUDE.md § Mood Scale Stops and MoodLogPage.tsx
 const _kMoodStops = [
@@ -93,7 +94,14 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
       }
     }
 
-    if (mounted) Navigator.pop(context);
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SuggestionScreen(moodLogId: result.moodLogId!, userId: userId),
+        ),
+      );
+    }
   }
 
   @override
