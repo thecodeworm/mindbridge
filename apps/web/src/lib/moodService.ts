@@ -1,4 +1,4 @@
-import type { MoodTag } from '../../../../shared/types'
+import type { MoodLog, MoodTag } from '../../../../shared/types'
 import { supabase } from './supabaseClient'
 
 export async function logMood({
@@ -34,4 +34,22 @@ export async function addJournalEntry({
     .insert({ mood_log_id: moodLogId, user_id: userId, body })
 
   return { error: error?.message ?? null }
+}
+
+export async function getMoodLogsInRange(
+  userId: string,
+  days: number,
+): Promise<{ logs: MoodLog[]; error: string | null }> {
+  const since = new Date()
+  since.setDate(since.getDate() - days)
+
+  const { data, error } = await supabase
+    .from('mood_logs')
+    .select('id, user_id, mood_score, mood_tag, logged_at')
+    .eq('user_id', userId)
+    .gte('logged_at', since.toISOString())
+    .order('logged_at', { ascending: true })
+
+  if (error) return { logs: [], error: error.message }
+  return { logs: (data ?? []) as MoodLog[], error: null }
 }
