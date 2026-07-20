@@ -1,0 +1,198 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch: {}
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+      supabase_function: ${{ steps.filter.outputs.supabase_function }}
+      supabase_migrations: ${{ steps.filter.outputs.supabase_migrations }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - 'shared/**'
+              - '.github/workflows/ci.yml'
+            mobile:
+              - 'apps/mobile/**'
+              - '.github/workflows/ci.yml'
+            supabase_function:
+              - 'supabase/functions/**'
+              - '.github/workflows/ci.yml'
+            supabase_migrations:
+              - 'supabase/migrations/**'
+              - '.github/workflows/ci.yml'
+      - name: No tracked .env files
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.[^.]+$)' | grep -v -E '\.env\.example$'; then
+            echo "Tracked .env file found — remove it from git." >&2
+            exit 1
+          fi
+
+  web:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  mobile:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.4'
+          channel: 'stable'
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter build apk --debug
+
+  supabase-function:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.supabase_function == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 'v2.x'
+      - run: deno check generate-suggestion/index.ts
+      - run: deno lint generate-suggestion/
+      - run: deno fmt --check generate-suggestion/
+
+  rls-check:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.supabase_migrations == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mindbridge_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: postgres
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGDATABASE: mindbridge_ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bootstrap minimal auth schema stub
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          create schema auth;
+
+          create table auth.users (
+            id uuid primary key default gen_random_uuid(),
+            email text,
+            raw_user_meta_data jsonb
+          );
+
+          create function auth.uid() returns uuid
+            language sql stable
+            as $$ select null::uuid $$;
+
+          do $$
+          begin
+            if not exists (select 1 from pg_roles where rolname = 'authenticated') then
+              create role authenticated;
+            end if;
+            if not exists (select 1 from pg_roles where rolname = 'service_role') then
+              create role service_role;
+            end if;
+          end
+          $$;
+          SQL
+
+      - name: Apply migrations
+        run: |
+          for f in supabase/migrations/*.sql; do
+            echo "Applying $f"
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Audit RLS coverage on all 5 tables
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          do $$
+          declare
+            r record;
+            missing text := '';
+          begin
+            for r in
+              select t.table_name,
+                     coalesce(c.relrowsecurity, false) as rls_enabled,
+                     coalesce((select count(*) from pg_policies p
+                               where p.schemaname = 'public' and p.tablename = t.table_name), 0) as policy_count
+              from (values ('users'), ('mood_logs'), ('journal_entries'), ('coping_suggestions'), ('ai_call_logs')) as t(table_name)
+              left join pg_class c on c.relname = t.table_name and c.relnamespace = 'public'::regnamespace
+            loop
+              if not r.rls_enabled or r.policy_count = 0 then
+                missing := missing || format('%s (rls_enabled=%s, policies=%s); ', r.table_name, r.rls_enabled, r.policy_count);
+              end if;
+            end loop;
+
+            if missing <> '' then
+              raise exception 'RLS audit failed for: %', missing;
+            end if;
+
+            raise notice 'RLS audit passed: all 5 tables have RLS enabled with policies.';
+          end
+          $$;
+          SQL
+
+  ci-success:
+    needs: [detect-changes, web, mobile, supabase-function, rls-check]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs succeeded or were skipped
+        run: |
+          results='${{ toJSON(needs) }}'
+          echo "$results" | jq -e 'to_entries | all(.value.result == "success" or .value.result == "skipped")'

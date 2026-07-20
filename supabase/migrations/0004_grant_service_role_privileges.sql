@@ -1,3 +1,4 @@
+-- CI: touched to exercise the rls-check workflow job's path filter.
 -- The service-role client in generate-suggestion bypasses RLS but still
 -- needs explicit table privileges — RLS bypass and Postgres GRANTs are
 -- separate. Without this, service-role inserts fail with
