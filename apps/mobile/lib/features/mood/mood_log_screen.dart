@@ -1,29 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/mood_color.dart';
 import 'mood_log_service.dart';
 import 'suggestion_screen.dart';
-
-// Mood scale color stops — matches CLAUDE.md § Mood Scale Stops and MoodLogPage.tsx
-const _kMoodStops = [
-  (1.0, Color(0xFF7C8BA8)),
-  (3.0, Color(0xFF96A9C1)),
-  (5.0, Color(0xFFC4BCA9)),
-  (7.0, Color(0xFFDFB05E)),
-  (10.0, Color(0xFFDD955A)),
-];
-
-Color _moodColor(double score) {
-  for (int i = _kMoodStops.length - 1; i >= 0; i--) {
-    if (score >= _kMoodStops[i].$1) {
-      if (i == _kMoodStops.length - 1) return _kMoodStops[i].$2;
-      final lo = _kMoodStops[i];
-      final hi = _kMoodStops[i + 1];
-      final t = (score - lo.$1) / (hi.$1 - lo.$1);
-      return Color.lerp(lo.$2, hi.$2, t)!;
-    }
-  }
-  return _kMoodStops[0].$2;
-}
 
 class MoodLogScreen extends StatefulWidget {
   const MoodLogScreen({super.key});
@@ -106,7 +85,7 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = _moodColor(_score);
+    final color = moodColor(_score);
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 

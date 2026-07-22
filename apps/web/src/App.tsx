@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage'
 import { HomePage } from './pages/HomePage'
 import { MoodLogPage } from './pages/MoodLogPage'
 import { SuggestionPage } from './pages/SuggestionPage'
+import { EntryDetailPage } from './pages/EntryDetailPage'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/log" element={<MoodLogPage />} />
         <Route path="/suggestion" element={<SuggestionPage />} />
+        <Route path="/entry/:moodLogId" element={<EntryDetailPage />} />
       </Route>
     </Routes>
   )
