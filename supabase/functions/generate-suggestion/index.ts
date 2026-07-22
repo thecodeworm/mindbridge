@@ -13,12 +13,14 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 const MODEL = 'claude-haiku-4-5'
 
-const SYSTEM_PROMPT = `You are a warm, supportive guide inside MindBridge, a mood-tracking app for teens. After a user logs their mood, you generate ONE simple CBT (Cognitive Behavioral Therapy) coping technique tailored to how they're feeling.
+const SYSTEM_PROMPT =
+  `You are a warm, supportive guide inside MindBridge, a mood-tracking app for teens. After a user logs their mood, you generate ONE simple CBT (Cognitive Behavioral Therapy) coping technique tailored to how they're feeling.
 
 Rules:
 - This is self-help guidance, not therapy or a clinical diagnosis. Never claim to diagnose or treat a condition.
 - Keep the tone warm, direct, and age-appropriate for teens. No clinical jargon.
 - Always return exactly 3 short, concrete steps the user can do right now — each one sentence.
+- Never have any em dashes within the suggestion given. Vary the length of the sentences so it feels personalized.
 - If the user included a journal entry, ground the technique in what they wrote. If they only gave a mood score and tag, choose a technique well-suited to that mood level — a score alone should still produce a genuinely useful suggestion.
 - Set crisis_signal to true only if the journal entry suggests thoughts of self-harm, suicide, or being in crisis. Still provide a gentle, relevant technique in this case — never leave the response empty.
 - Respond only with the requested JSON object.`
@@ -50,7 +52,10 @@ Deno.serve(async (req) => {
   try {
     const { mood_log_id, user_id } = await req.json()
     if (!mood_log_id || !user_id) {
-      return jsonResponse({ error: 'mood_log_id and user_id are required' }, 400)
+      return jsonResponse(
+        { error: 'mood_log_id and user_id are required' },
+        400,
+      )
     }
 
     const authHeader = req.headers.get('Authorization')
@@ -72,7 +77,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Invalid or expired session' }, 401)
     }
     if (user.id !== user_id) {
-      return jsonResponse({ error: 'user_id does not match authenticated user' }, 403)
+      return jsonResponse({
+        error: 'user_id does not match authenticated user',
+      }, 403)
     }
 
     // Service-role client — coping_suggestions/ai_call_logs have SELECT-only
@@ -145,7 +152,9 @@ Journal entry: ${journalEntry?.body ? journalEntry.body : '(none provided)'}`
     }
 
     const anthropicData = await anthropicRes.json()
-    const textBlock = anthropicData.content?.find((b: { type: string }) => b.type === 'text')
+    const textBlock = anthropicData.content?.find((b: { type: string }) =>
+      b.type === 'text'
+    )
 
     let parsed: {
       technique_name: string
@@ -168,7 +177,8 @@ Journal entry: ${journalEntry?.body ? journalEntry.body : '(none provided)'}`
       return jsonResponse({ error: 'Malformed suggestion response' }, 502)
     }
 
-    const showCrisisResources = moodLog.mood_score <= 2 || parsed.crisis_signal === true
+    const showCrisisResources = moodLog.mood_score <= 2 ||
+      parsed.crisis_signal === true
 
     const { error: insertSuggestionError } = await serviceClient
       .from('coping_suggestions')
@@ -182,17 +192,21 @@ Journal entry: ${journalEntry?.body ? journalEntry.body : '(none provided)'}`
       })
 
     if (insertSuggestionError) {
-      console.error('Failed to insert coping_suggestion:', insertSuggestionError)
+      console.error(
+        'Failed to insert coping_suggestion:',
+        insertSuggestionError,
+      )
       return jsonResponse({ error: 'Failed to save suggestion' }, 500)
     }
 
     const usage = anthropicData.usage ?? {}
-    const { error: insertLogError } = await serviceClient.from('ai_call_logs').insert({
-      user_id,
-      input_tokens: usage.input_tokens ?? 0,
-      output_tokens: usage.output_tokens ?? 0,
-      latency_ms: latencyMs,
-    })
+    const { error: insertLogError } = await serviceClient.from('ai_call_logs')
+      .insert({
+        user_id,
+        input_tokens: usage.input_tokens ?? 0,
+        output_tokens: usage.output_tokens ?? 0,
+        latency_ms: latencyMs,
+      })
 
     if (insertLogError) {
       // Non-fatal — the suggestion was saved successfully; only the usage log failed.
