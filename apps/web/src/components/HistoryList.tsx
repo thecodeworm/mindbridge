@@ -58,11 +58,11 @@ export function HistoryList({ userId }: { userId: string }) {
   useEffect(() => {
     let cancelled = false
     setLoading(true)
-    getHistory(userId, { limit: PAGE_SIZE, offset: 0 }).then(({ entries, error }) => {
+    getHistory(userId, { limit: PAGE_SIZE + 1, offset: 0 }).then(({ entries, error }) => {
       if (cancelled) return
-      setEntries(entries)
+      setHasMore(entries.length > PAGE_SIZE)
+      setEntries(entries.slice(0, PAGE_SIZE))
       setError(error)
-      setHasMore(entries.length === PAGE_SIZE)
       setLoading(false)
     })
     return () => {
@@ -73,12 +73,12 @@ export function HistoryList({ userId }: { userId: string }) {
   async function loadMore() {
     setLoadingMore(true)
     const { entries: next, error } = await getHistory(userId, {
-      limit: PAGE_SIZE,
+      limit: PAGE_SIZE + 1,
       offset: entries.length,
     })
-    setEntries((prev) => [...prev, ...next])
+    setHasMore(next.length > PAGE_SIZE)
+    setEntries((prev) => [...prev, ...next.slice(0, PAGE_SIZE)])
     setError(error)
-    setHasMore(next.length === PAGE_SIZE)
     setLoadingMore(false)
   }
 

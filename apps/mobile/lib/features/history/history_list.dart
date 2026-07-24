@@ -8,9 +8,14 @@ import 'history_service.dart';
 const _kPageSize = 20;
 
 class HistoryList extends StatefulWidget {
-  const HistoryList({super.key, required this.userId});
+  const HistoryList({super.key, required this.userId, this.onEntryChanged});
 
   final String userId;
+
+  /// Called after returning from viewing an entry's detail screen, so a
+  /// parent (the dashboard's mood trend chart) can refresh too — edits and
+  /// deletes made there aren't otherwise visible outside this widget.
+  final VoidCallback? onEntryChanged;
 
   @override
   State<HistoryList> createState() => _HistoryListState();
@@ -33,14 +38,18 @@ class _HistoryListState extends State<HistoryList> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final result = await _service.getHistory(userId: widget.userId, limit: _kPageSize, offset: 0);
+    final result = await _service.getHistory(
+      userId: widget.userId,
+      limit: _kPageSize + 1,
+      offset: 0,
+    );
     if (!mounted) return;
     setState(() {
       _entries
         ..clear()
-        ..addAll(result.entries);
+        ..addAll(result.entries.take(_kPageSize));
       _error = result.error;
-      _hasMore = result.entries.length == _kPageSize;
+      _hasMore = result.entries.length > _kPageSize;
       _loading = false;
     });
   }
@@ -49,14 +58,14 @@ class _HistoryListState extends State<HistoryList> {
     setState(() => _loadingMore = true);
     final result = await _service.getHistory(
       userId: widget.userId,
-      limit: _kPageSize,
+      limit: _kPageSize + 1,
       offset: _entries.length,
     );
     if (!mounted) return;
     setState(() {
-      _entries.addAll(result.entries);
+      _entries.addAll(result.entries.take(_kPageSize));
       _error = result.error;
-      _hasMore = result.entries.length == _kPageSize;
+      _hasMore = result.entries.length > _kPageSize;
       _loadingMore = false;
     });
   }
@@ -110,10 +119,15 @@ class _HistoryListState extends State<HistoryList> {
             ..._entries.map(
               (entry) => MoodLogCard(
                 entry: entry,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => EntryDetailScreen(moodLogId: entry.id)),
-                ),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => EntryDetailScreen(moodLogId: entry.id)),
+                  );
+                  if (!mounted) return;
+                  await _load();
+                  widget.onEntryChanged?.call();
+                },
               ),
             ),
           if (!_loading && _hasMore && _entries.isNotEmpty)

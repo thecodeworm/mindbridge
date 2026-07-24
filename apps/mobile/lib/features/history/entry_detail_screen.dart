@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/mood_color.dart';
+import '../mood/mood_log_screen.dart';
 import '../mood/mood_log_service.dart';
 import 'history_service.dart';
 
@@ -19,6 +20,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
   EntryDetail? _detail;
   bool _loading = true;
   String? _error;
+  bool _deleting = false;
 
   @override
   void initState() {
@@ -48,6 +50,53 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     return '${months[d.month - 1]} ${d.day}, ${d.year}';
   }
 
+  Future<void> _edit() async {
+    if (_detail == null) return;
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => MoodLogScreen(editing: _detail)),
+    );
+    if (result == true) _load();
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete this entry?'),
+        content: const Text(
+          "This removes the mood log, journal entry, and coping suggestion. This can't be undone.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _deleting = true);
+    final error = await _service.deleteEntry(widget.moodLogId);
+    if (!mounted) return;
+
+    if (error != null) {
+      setState(() {
+        _deleting = false;
+        _error = error;
+      });
+      return;
+    }
+
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -59,6 +108,23 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         foregroundColor: cs.onSurface,
+        actions: [
+          if (!_loading && _error == null && _detail != null)
+            PopupMenuButton<String>(
+              enabled: !_deleting,
+              onSelected: (value) {
+                if (value == 'edit') _edit();
+                if (value == 'delete') _confirmDelete();
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Delete', style: TextStyle(color: cs.error)),
+                ),
+              ],
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

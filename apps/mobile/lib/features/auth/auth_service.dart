@@ -48,7 +48,19 @@ class AuthService {
 
   Future<String?> resetPassword(String email) async {
     try {
-      await _client.auth.resetPasswordForEmail(email);
+      await _client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'com.mindbridge.mindbridge://reset-callback',
+      );
+      return null;
+    } on AuthException catch (e) {
+      return e.message;
+    }
+  }
+
+  Future<String?> updatePassword(String newPassword) async {
+    try {
+      await _client.auth.updateUser(UserAttributes(password: newPassword));
       return null;
     } on AuthException catch (e) {
       return e.message;
