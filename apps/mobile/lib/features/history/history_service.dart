@@ -135,4 +135,62 @@ class HistoryService {
       return (detail: null, error: e.message);
     }
   }
+
+  Future<String?> deleteEntry(String moodLogId) async {
+    // journal_entries and coping_suggestions cascade-delete via their
+    // mood_log_id FK — see 0001_init_schema.sql.
+    try {
+      await _client.from('mood_logs').delete().eq('id', moodLogId);
+      return null;
+    } on PostgrestException catch (e) {
+      return e.message;
+    }
+  }
+
+  Future<String?> updateEntry({
+    required String moodLogId,
+    required String userId,
+    required int moodScore,
+    required String moodTag,
+    required String journalBody,
+  }) async {
+    try {
+      await _client
+          .from('mood_logs')
+          .update({'mood_score': moodScore, 'mood_tag': moodTag})
+          .eq('id', moodLogId);
+
+      final trimmed = journalBody.trim();
+
+      // journal_entries.mood_log_id has no unique constraint (it's not
+      // 1:1 at the schema level like coping_suggestions is), so there's
+      // no upsert conflict target — look up the existing row by hand.
+      final existing = await _client
+          .from('journal_entries')
+          .select('id')
+          .eq('mood_log_id', moodLogId)
+          .maybeSingle();
+
+      if (trimmed.isNotEmpty) {
+        if (existing != null) {
+          await _client
+              .from('journal_entries')
+              .update({'body': trimmed})
+              .eq('id', existing['id'] as String);
+        } else {
+          await _client.from('journal_entries').insert({
+            'mood_log_id': moodLogId,
+            'user_id': userId,
+            'body': trimmed,
+          });
+        }
+      } else if (existing != null) {
+        await _client.from('journal_entries').delete().eq('id', existing['id'] as String);
+      }
+
+      return null;
+    } on PostgrestException catch (e) {
+      return e.message;
+    }
+  }
 }

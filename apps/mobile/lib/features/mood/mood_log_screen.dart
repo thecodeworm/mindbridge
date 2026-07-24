@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/mood_color.dart';
+import '../history/history_service.dart';
 import 'mood_log_service.dart';
 import 'suggestion_screen.dart';
 
 class MoodLogScreen extends StatefulWidget {
-  const MoodLogScreen({super.key});
+  const MoodLogScreen({super.key, this.editing});
+
+  /// When set, the screen edits this existing entry instead of logging a
+  /// new one. The coping_suggestions row is 1:1 on mood_log_id and already
+  /// exists for this entry — editing doesn't regenerate it.
+  final EntryDetail? editing;
 
   @override
   State<MoodLogScreen> createState() => _MoodLogScreenState();
@@ -13,12 +19,24 @@ class MoodLogScreen extends StatefulWidget {
 
 class _MoodLogScreenState extends State<MoodLogScreen> {
   final _service = MoodLogService(Supabase.instance.client);
+  final _historyService = HistoryService(Supabase.instance.client);
   final _journalController = TextEditingController();
 
-  double _score = 5;
+  bool get _isEditing => widget.editing != null;
+
+  late double _score;
   String? _tag;
   String? _error;
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final editing = widget.editing;
+    _score = editing?.moodLog.moodScore.toDouble() ?? 5;
+    _tag = editing?.moodLog.moodTag;
+    _journalController.text = editing?.journalEntry?.body ?? '';
+  }
 
   @override
   void dispose() {
@@ -39,6 +57,26 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
       _submitting = true;
       _error = null;
     });
+
+    if (_isEditing) {
+      final error = await _historyService.updateEntry(
+        moodLogId: widget.editing!.moodLog.id,
+        userId: userId,
+        moodScore: _score.round(),
+        moodTag: _tag!,
+        journalBody: _journalController.text,
+      );
+      if (!mounted) return;
+      if (error != null) {
+        setState(() {
+          _submitting = false;
+          _error = error;
+        });
+        return;
+      }
+      Navigator.pop(context, true);
+      return;
+    }
 
     final result = await _service.logMood(
       userId: userId,
@@ -91,7 +129,7 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('How are you feeling?'),
+        title: Text(_isEditing ? 'Edit entry' : 'How are you feeling?'),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         foregroundColor: cs.onSurface,
@@ -193,7 +231,9 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
                 Expanded(
                   child: FilledButton(
                     onPressed: _submitting ? null : _submit,
-                    child: Text(_submitting ? 'Saving…' : 'Save'),
+                    child: Text(
+                      _submitting ? 'Saving…' : (_isEditing ? 'Save changes' : 'Save'),
+                    ),
                   ),
                 ),
               ],

@@ -1,18 +1,23 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { MOOD_TAGS } from '../../../../shared/types'
 import type { MoodTag } from '../../../../shared/types'
 import { logMood, addJournalEntry } from '../lib/moodService'
+import { updateEntry } from '../lib/historyService'
+import type { EntryDetail } from '../lib/historyService'
 import { moodColor } from '../lib/moodColor'
 
 export function MoodLogPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const [score, setScore] = useState(5)
-  const [tag, setTag] = useState<MoodTag | null>(null)
-  const [journal, setJournal] = useState('')
+  const editing = (location.state as { editing?: EntryDetail } | null)?.editing ?? null
+
+  const [score, setScore] = useState(editing?.moodLog.mood_score ?? 5)
+  const [tag, setTag] = useState<MoodTag | null>(editing?.moodLog.mood_tag ?? null)
+  const [journal, setJournal] = useState(editing?.journalEntry?.body ?? '')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -26,6 +31,22 @@ export function MoodLogPage() {
 
     setError(null)
     setSubmitting(true)
+
+    if (editing) {
+      // The coping_suggestions row is 1:1 on mood_log_id and already
+      // exists for this entry — editing doesn't regenerate it.
+      const { error: updateError } = await updateEntry({
+        moodLogId: editing.moodLog.id,
+        userId: user.id,
+        moodScore: roundedScore,
+        moodTag: tag,
+        journalBody: journal,
+      })
+      setSubmitting(false)
+      if (updateError) { setError(updateError); return }
+      navigate(`/entry/${editing.moodLog.id}`, { replace: true })
+      return
+    }
 
     const { moodLogId, error: logError } = await logMood({
       userId: user.id,
@@ -61,7 +82,9 @@ export function MoodLogPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-md space-y-6 rounded-xl border border-border bg-surface p-8 shadow-sm"
       >
-        <h1 className="text-2xl font-bold text-ink">How are you feeling?</h1>
+        <h1 className="text-2xl font-bold text-ink">
+          {editing ? 'Edit entry' : 'How are you feeling?'}
+        </h1>
 
         {error && (
           <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{error}</p>
@@ -136,7 +159,7 @@ export function MoodLogPage() {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => navigate('/')}
+            onClick={() => navigate(editing ? `/entry/${editing.moodLog.id}` : '/')}
             className="flex-1 rounded-lg border border-border bg-field px-3 py-2 font-medium text-ink transition-colors hover:bg-blue-tint"
           >
             Cancel
@@ -146,7 +169,7 @@ export function MoodLogPage() {
             disabled={submitting}
             className="flex-1 rounded-lg bg-blue-dark px-3 py-2 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {submitting ? 'Saving…' : 'Save'}
+            {submitting ? 'Saving…' : editing ? 'Save changes' : 'Save'}
           </button>
         </div>
       </form>

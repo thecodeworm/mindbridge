@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { MOOD_TAGS } from '../../../../shared/types'
-import { getEntryDetail } from '../lib/historyService'
+import { deleteEntry, getEntryDetail } from '../lib/historyService'
 import type { EntryDetail } from '../lib/historyService'
 import { moodColor } from '../lib/moodColor'
 
@@ -25,6 +25,10 @@ export function EntryDetailPage() {
   const [detail, setDetail] = useState<EntryDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!moodLogId) return
@@ -41,16 +45,112 @@ export function EntryDetailPage() {
     }
   }, [moodLogId])
 
+  function handleEdit() {
+    setMenuOpen(false)
+    navigate('/log', { state: { editing: detail } })
+  }
+
+  async function handleConfirmDelete() {
+    if (!moodLogId) return
+    setDeleting(true)
+    setDeleteError(null)
+    const { error } = await deleteEntry(moodLogId)
+    if (error) {
+      setDeleting(false)
+      setDeleteError(error)
+      return
+    }
+    navigate('/')
+  }
+
   return (
     <div className="flex min-h-screen items-start justify-center bg-cream p-4 pt-12">
       <div className="w-full max-w-md space-y-4">
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="text-sm font-medium text-muted transition-colors hover:text-ink"
-        >
-          ← Back to history
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="text-sm font-medium text-muted transition-colors hover:text-ink"
+          >
+            ← Back to history
+          </button>
+
+          {!loading && !error && detail && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="Entry options"
+                aria-expanded={menuOpen}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-muted transition-colors hover:bg-blue-tint hover:text-ink"
+              >
+                ⋮
+              </button>
+              {menuOpen && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Close menu"
+                    onClick={() => setMenuOpen(false)}
+                    className="fixed inset-0 z-10 cursor-default"
+                  />
+                  <div className="absolute right-0 z-20 mt-1 w-36 overflow-hidden rounded-lg border border-border bg-surface shadow-md">
+                    <button
+                      type="button"
+                      onClick={handleEdit}
+                      className="block w-full px-4 py-2 text-left text-sm font-medium text-ink transition-colors hover:bg-blue-tint"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        setConfirmingDelete(true)
+                      }}
+                      className="block w-full px-4 py-2 text-left text-sm font-medium text-error transition-colors hover:bg-error-tint"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {confirmingDelete && (
+          <div className="space-y-3 rounded-xl border border-border bg-surface p-4 shadow-sm">
+            <p className="text-sm font-medium text-ink">Delete this entry?</p>
+            <p className="text-sm text-muted">
+              This removes the mood log, journal entry, and coping suggestion. This can't be undone.
+            </p>
+            {deleteError && (
+              <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{deleteError}</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmingDelete(false)
+                  setDeleteError(null)
+                }}
+                disabled={deleting}
+                className="flex-1 rounded-lg border border-border bg-field px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-blue-tint disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                className="flex-1 rounded-lg border border-error px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-error-tint disabled:opacity-50"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading && (
           <div className="animate-pulse space-y-4 rounded-xl border border-border bg-surface p-8 shadow-sm">

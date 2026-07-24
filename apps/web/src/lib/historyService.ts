@@ -74,3 +74,56 @@ export async function getEntryDetail(
     error: null,
   }
 }
+
+export async function deleteEntry(moodLogId: string): Promise<{ error: string | null }> {
+  // journal_entries and coping_suggestions cascade-delete via their
+  // mood_log_id FK — see 0001_init_schema.sql.
+  const { error } = await supabase.from('mood_logs').delete().eq('id', moodLogId)
+  return { error: error?.message ?? null }
+}
+
+export async function updateEntry({
+  moodLogId,
+  userId,
+  moodScore,
+  moodTag,
+  journalBody,
+}: {
+  moodLogId: string
+  userId: string
+  moodScore: number
+  moodTag: MoodTag
+  journalBody: string
+}): Promise<{ error: string | null }> {
+  const { error: moodError } = await supabase
+    .from('mood_logs')
+    .update({ mood_score: moodScore, mood_tag: moodTag })
+    .eq('id', moodLogId)
+  if (moodError) return { error: moodError.message }
+
+  const trimmed = journalBody.trim()
+
+  // journal_entries.mood_log_id has no unique constraint (it's not 1:1 at
+  // the schema level like coping_suggestions is), so there's no upsert
+  // conflict target — look up the existing row by hand instead.
+  const { data: existing, error: fetchError } = await supabase
+    .from('journal_entries')
+    .select('id')
+    .eq('mood_log_id', moodLogId)
+    .maybeSingle()
+  if (fetchError) return { error: fetchError.message }
+
+  if (trimmed) {
+    const { error } = existing
+      ? await supabase.from('journal_entries').update({ body: trimmed }).eq('id', existing.id)
+      : await supabase
+          .from('journal_entries')
+          .insert({ mood_log_id: moodLogId, user_id: userId, body: trimmed })
+    if (error) return { error: error.message }
+  } else if (existing) {
+    const { error } = await supabase.from('journal_entries').delete().eq('id', existing.id)
+    if (error) return { error: error.message }
+  }
+
+  return { error: null }
+}
