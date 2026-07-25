@@ -12,6 +12,7 @@ interface AuthContextValue {
   session: Session | null
   user: User | null
   loading: boolean
+  isRecoverySession: boolean
   signUp: (
     email: string,
     password: string,
@@ -25,9 +26,17 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
+// A reset-password link establishes a full, persisted Supabase session. This
+// flag keeps ProtectedRoute from treating that as a normal login. Persisted
+// to sessionStorage so a reload mid-recovery doesn't silently promote it.
+const RECOVERY_STORAGE_KEY = 'mindbridge-recovery-session'
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isRecoverySession, setIsRecoverySession] = useState(
+    () => sessionStorage.getItem(RECOVERY_STORAGE_KEY) === 'true',
+  )
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -37,8 +46,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession)
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoverySession(true)
+        sessionStorage.setItem(RECOVERY_STORAGE_KEY, 'true')
+      } else if (event === 'SIGNED_OUT' || event === 'SIGNED_IN') {
+        setIsRecoverySession(false)
+        sessionStorage.removeItem(RECOVERY_STORAGE_KEY)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -81,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     user: session?.user ?? null,
     loading,
+    isRecoverySession,
     signUp,
     signIn,
     signInWithGoogle,

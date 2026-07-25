@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/recovery_state.dart';
 import 'core/theme.dart';
 import 'core/theme_controller.dart';
 import 'features/auth/reset_password_screen.dart';
@@ -37,29 +40,52 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   bool _showSignUp = false;
+  StreamSubscription<AuthState>? _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Only used to *set* the persisted flag when a recovery link is opened.
+    // Reading it back happens via RecoveryState.isRecovery below, since the
+    // event itself is transient and any later emission (tokenRefreshed,
+    // userUpdated, initialSession after a relaunch) would otherwise fall
+    // through to HomeScreen.
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        RecoveryState.set(true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<AuthState>(
-      stream: Supabase.instance.client.auth.onAuthStateChange,
-      builder: (context, snapshot) {
-        final event = snapshot.data?.event;
-        final session = snapshot.data?.session ?? Supabase.instance.client.auth.currentSession;
-
-        // The reset-password deep link delivers a recovery session, not a
-        // normal sign-in — route to the reset form instead of HomeScreen
-        // until the user sets a new password (which signs them out again).
-        if (event == AuthChangeEvent.passwordRecovery) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: RecoveryState.isRecovery,
+      builder: (context, isRecovery, _) {
+        if (isRecovery) {
           return const ResetPasswordScreen();
         }
 
-        if (session != null) {
-          return const HomeScreen();
-        }
+        return StreamBuilder<AuthState>(
+          stream: Supabase.instance.client.auth.onAuthStateChange,
+          builder: (context, snapshot) {
+            final session = snapshot.data?.session ?? Supabase.instance.client.auth.currentSession;
 
-        return _showSignUp
-            ? SignUpScreen(onSwitchToSignIn: () => setState(() => _showSignUp = false))
-            : SignInScreen(onSwitchToSignUp: () => setState(() => _showSignUp = true));
+            if (session != null) {
+              return const HomeScreen();
+            }
+
+            return _showSignUp
+                ? SignUpScreen(onSwitchToSignIn: () => setState(() => _showSignUp = false))
+                : SignInScreen(onSwitchToSignUp: () => setState(() => _showSignUp = true));
+          },
+        );
       },
     );
   }

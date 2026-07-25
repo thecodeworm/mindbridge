@@ -42,24 +42,31 @@ export interface EntryDetail {
   copingSuggestion: CopingSuggestion | null
 }
 
+// Every query below filters on user_id as well as the row id. RLS already
+// enforces this server-side; the explicit filter is defense in depth, so a
+// policy regression degrades to "not found" instead of a cross-user read.
 export async function getEntryDetail(
   moodLogId: string,
+  userId: string,
 ): Promise<{ detail: EntryDetail | null; error: string | null }> {
   const [moodLogRes, journalRes, suggestionRes] = await Promise.all([
     supabase
       .from('mood_logs')
       .select('id, user_id, mood_score, mood_tag, logged_at')
       .eq('id', moodLogId)
+      .eq('user_id', userId)
       .single(),
     supabase
       .from('journal_entries')
       .select('id, mood_log_id, user_id, body, created_at')
       .eq('mood_log_id', moodLogId)
+      .eq('user_id', userId)
       .maybeSingle(),
     supabase
       .from('coping_suggestions')
       .select('id, mood_log_id, user_id, technique_name, description, steps, model_used, generated_at')
       .eq('mood_log_id', moodLogId)
+      .eq('user_id', userId)
       .maybeSingle(),
   ])
 
@@ -75,11 +82,27 @@ export async function getEntryDetail(
   }
 }
 
-export async function deleteEntry(moodLogId: string): Promise<{ error: string | null }> {
+const NOT_FOUND = "We couldn't find that entry. It may have already been deleted."
+
+export async function deleteEntry(
+  moodLogId: string,
+  userId: string,
+): Promise<{ error: string | null }> {
   // journal_entries and coping_suggestions cascade-delete via their
   // mood_log_id FK — see 0001_init_schema.sql.
-  const { error } = await supabase.from('mood_logs').delete().eq('id', moodLogId)
-  return { error: error?.message ?? null }
+  //
+  // .select() matters: without it an RLS-blocked delete returns
+  // {error: null} with zero rows affected and the caller reports success.
+  const { data, error } = await supabase
+    .from('mood_logs')
+    .delete()
+    .eq('id', moodLogId)
+    .eq('user_id', userId)
+    .select('id')
+
+  if (error) return { error: error.message }
+  if (!data || data.length === 0) return { error: NOT_FOUND }
+  return { error: null }
 }
 
 export async function updateEntry({
@@ -95,11 +118,14 @@ export async function updateEntry({
   moodTag: MoodTag
   journalBody: string
 }): Promise<{ error: string | null }> {
-  const { error: moodError } = await supabase
+  const { data: updatedMood, error: moodError } = await supabase
     .from('mood_logs')
     .update({ mood_score: moodScore, mood_tag: moodTag })
     .eq('id', moodLogId)
+    .eq('user_id', userId)
+    .select('id')
   if (moodError) return { error: moodError.message }
+  if (!updatedMood || updatedMood.length === 0) return { error: NOT_FOUND }
 
   const trimmed = journalBody.trim()
 
@@ -110,19 +136,33 @@ export async function updateEntry({
     .from('journal_entries')
     .select('id')
     .eq('mood_log_id', moodLogId)
+    .eq('user_id', userId)
     .maybeSingle()
   if (fetchError) return { error: fetchError.message }
 
   if (trimmed) {
-    const { error } = existing
-      ? await supabase.from('journal_entries').update({ body: trimmed }).eq('id', existing.id)
+    const { data, error } = existing
+      ? await supabase
+          .from('journal_entries')
+          .update({ body: trimmed })
+          .eq('id', existing.id)
+          .eq('user_id', userId)
+          .select('id')
       : await supabase
           .from('journal_entries')
           .insert({ mood_log_id: moodLogId, user_id: userId, body: trimmed })
+          .select('id')
     if (error) return { error: error.message }
+    if (!data || data.length === 0) return { error: NOT_FOUND }
   } else if (existing) {
-    const { error } = await supabase.from('journal_entries').delete().eq('id', existing.id)
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .delete()
+      .eq('id', existing.id)
+      .eq('user_id', userId)
+      .select('id')
     if (error) return { error: error.message }
+    if (!data || data.length === 0) return { error: NOT_FOUND }
   }
 
   return { error: null }

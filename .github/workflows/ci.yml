@@ -7,6 +7,12 @@ on:
     branches: [main, dev]
   workflow_dispatch: {}
 
+# Least privilege: every job here only reads the checked-out tree. Without
+# this block GITHUB_TOKEN inherits the repo-wide default scopes, which on a
+# public repo can include write access to contents, issues, and packages.
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
