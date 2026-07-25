@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/recovery_state.dart';
+import '../../core/validators.dart';
 import 'auth_service.dart';
 
 /// Shown in place of [HomeScreen]/[SignInScreen] by `AuthGate` when the
@@ -20,6 +22,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _confirmController = TextEditingController();
   String? _error;
   bool _submitting = false;
+  bool _cancelling = false;
   bool _obscurePassword = true;
 
   @override
@@ -31,10 +34,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_passwordController.text != _confirmController.text) {
-      setState(() => _error = 'Passwords do not match.');
-      return;
-    }
 
     setState(() {
       _submitting = true;
@@ -52,10 +51,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       return;
     }
 
-    // Signing out drops the recovery session and lets AuthGate's stream
-    // fall back to SignInScreen so the user logs in fresh with the new
-    // password.
+    // Signing out drops the recovery session; clearing the persisted flag
+    // is what actually lets AuthGate fall back to SignInScreen — until then
+    // isRecovery stays true, closing the window where HomeScreen could
+    // flash between updatePassword's userUpdated event and this signOut.
     await _authService.signOut();
+    await RecoveryState.set(false);
+  }
+
+  Future<void> _cancel() async {
+    setState(() => _cancelling = true);
+    await _authService.signOut();
+    await RecoveryState.set(false);
   }
 
   @override
@@ -111,6 +118,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           controller: _passwordController,
                           decoration: InputDecoration(
                             labelText: 'New password',
+                            helperText: kPasswordHint,
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword
@@ -123,11 +131,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           ),
                           obscureText: _obscurePassword,
                           autofillHints: const [AutofillHints.newPassword],
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return 'Password is required';
-                            if (v.length < 6) return 'Must be at least 6 characters';
-                            return null;
-                          },
+                          validator: validatePassword,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -136,12 +140,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           obscureText: _obscurePassword,
                           autofillHints: const [AutofillHints.newPassword],
                           validator: (v) =>
-                              (v == null || v.isEmpty) ? 'Please confirm your password' : null,
+                              validatePasswordConfirmation(v, _passwordController.text),
                         ),
                         const SizedBox(height: 16),
                         FilledButton(
-                          onPressed: _submitting ? null : _submit,
+                          onPressed: (_submitting || _cancelling) ? null : _submit,
                           child: Text(_submitting ? 'Saving…' : 'Save new password'),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: (_submitting || _cancelling) ? null : _cancel,
+                          child: Text(_cancelling ? 'Cancelling…' : 'Cancel'),
                         ),
                       ],
                     ),

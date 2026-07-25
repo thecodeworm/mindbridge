@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/validators.dart';
 import 'auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -167,7 +168,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             controller: _passwordController,
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              helperText: 'At least 6 characters',
+                              helperText: kPasswordHint,
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword
@@ -180,11 +181,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             obscureText: _obscurePassword,
                             autofillHints: const [AutofillHints.newPassword],
-                            validator: (v) {
-                              if (v == null || v.isEmpty) return 'Password is required';
-                              if (v.length < 6) return 'Password must be at least 6 characters';
-                              return null;
-                            },
+                            validator: validatePassword,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -203,13 +200,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             obscureText: _obscureConfirm,
                             autofillHints: const [AutofillHints.newPassword],
-                            validator: (v) {
-                              if (v == null || v.isEmpty) return 'Please confirm your password';
-                              if (v != _passwordController.text) {
-                                return "Passwords don't match — give that another try";
-                              }
-                              return null;
-                            },
+                            validator: (v) =>
+                                validatePasswordConfirmation(v, _passwordController.text),
                           ),
                           const SizedBox(height: 24),
                           FilledButton(

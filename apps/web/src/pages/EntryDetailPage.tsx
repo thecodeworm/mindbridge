@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { MOOD_TAGS } from '../../../../shared/types'
+import { useAuth } from '../context/AuthContext'
 import { deleteEntry, getEntryDetail } from '../lib/historyService'
 import type { EntryDetail } from '../lib/historyService'
 import { moodColor } from '../lib/moodColor'
@@ -20,6 +21,7 @@ function formatDate(iso: string): string {
 
 export function EntryDetailPage() {
   const { moodLogId } = useParams<{ moodLogId: string }>()
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [detail, setDetail] = useState<EntryDetail | null>(null)
@@ -31,10 +33,10 @@ export function EntryDetailPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!moodLogId) return
+    if (!moodLogId || !user) return
     let cancelled = false
     setLoading(true)
-    getEntryDetail(moodLogId).then(({ detail, error }) => {
+    getEntryDetail(moodLogId, user.id).then(({ detail, error }) => {
       if (cancelled) return
       setDetail(detail)
       setError(error)
@@ -43,7 +45,7 @@ export function EntryDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [moodLogId])
+  }, [moodLogId, user])
 
   function handleEdit() {
     setMenuOpen(false)
@@ -51,10 +53,10 @@ export function EntryDetailPage() {
   }
 
   async function handleConfirmDelete() {
-    if (!moodLogId) return
+    if (!moodLogId || !user) return
     setDeleting(true)
     setDeleteError(null)
-    const { error } = await deleteEntry(moodLogId)
+    const { error } = await deleteEntry(moodLogId, user.id)
     if (error) {
       setDeleting(false)
       setDeleteError(error)

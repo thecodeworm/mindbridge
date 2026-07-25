@@ -29,11 +29,17 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
   }
 
   Future<void> _load() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
     setState(() {
       _loading = true;
       _error = null;
     });
-    final result = await _service.getEntryDetail(widget.moodLogId);
+    final result = await _service.getEntryDetail(
+      moodLogId: widget.moodLogId,
+      userId: userId,
+    );
     if (!mounted) return;
     setState(() {
       _detail = result.detail;
@@ -82,8 +88,14 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     );
     if (confirmed != true) return;
 
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
     setState(() => _deleting = true);
-    final error = await _service.deleteEntry(widget.moodLogId);
+    final error = await _service.deleteEntry(
+      moodLogId: widget.moodLogId,
+      userId: userId,
+    );
     if (!mounted) return;
 
     if (error != null) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'core/env.dart';
+import 'core/recovery_state.dart';
 import 'core/secure_storage.dart';
 import 'core/theme_controller.dart';
 
@@ -14,6 +15,7 @@ Future<void> main() async {
     authOptions: FlutterAuthClientOptions(localStorage: SecureLocalStorage()),
   );
   await ThemeController.load();
+  await RecoveryState.load();
 
   runApp(const App());
 }

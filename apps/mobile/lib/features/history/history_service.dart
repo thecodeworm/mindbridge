@@ -72,6 +72,8 @@ class EntryDetail {
   final CopingSuggestionDetail? copingSuggestion;
 }
 
+const _kNotFound = "We couldn't find that entry. It may have already been deleted.";
+
 class HistoryService {
   HistoryService(this._client);
 
@@ -98,23 +100,32 @@ class HistoryService {
     }
   }
 
-  Future<({EntryDetail? detail, String? error})> getEntryDetail(String moodLogId) async {
+  // Every query below filters on user_id as well as the row id. RLS already
+  // enforces this server-side; the explicit filter is defense in depth, so a
+  // policy regression degrades to "not found" instead of a cross-user read.
+  Future<({EntryDetail? detail, String? error})> getEntryDetail({
+    required String moodLogId,
+    required String userId,
+  }) async {
     try {
       final results = await Future.wait([
         _client
             .from('mood_logs')
             .select('id, user_id, mood_score, mood_tag, logged_at')
             .eq('id', moodLogId)
+            .eq('user_id', userId)
             .single(),
         _client
             .from('journal_entries')
             .select('id, mood_log_id, user_id, body, created_at')
             .eq('mood_log_id', moodLogId)
+            .eq('user_id', userId)
             .maybeSingle(),
         _client
             .from('coping_suggestions')
             .select('id, mood_log_id, user_id, technique_name, description, steps, model_used, generated_at')
             .eq('mood_log_id', moodLogId)
+            .eq('user_id', userId)
             .maybeSingle(),
       ]);
 
@@ -136,11 +147,23 @@ class HistoryService {
     }
   }
 
-  Future<String?> deleteEntry(String moodLogId) async {
+  Future<String?> deleteEntry({
+    required String moodLogId,
+    required String userId,
+  }) async {
     // journal_entries and coping_suggestions cascade-delete via their
     // mood_log_id FK — see 0001_init_schema.sql.
+    //
+    // .select() matters: without it an RLS-blocked delete completes without
+    // throwing and affects zero rows, and the caller reports success.
     try {
-      await _client.from('mood_logs').delete().eq('id', moodLogId);
+      final deleted = await _client
+          .from('mood_logs')
+          .delete()
+          .eq('id', moodLogId)
+          .eq('user_id', userId)
+          .select('id');
+      if ((deleted as List<dynamic>).isEmpty) return _kNotFound;
       return null;
     } on PostgrestException catch (e) {
       return e.message;
@@ -155,10 +178,13 @@ class HistoryService {
     required String journalBody,
   }) async {
     try {
-      await _client
+      final updatedMood = await _client
           .from('mood_logs')
           .update({'mood_score': moodScore, 'mood_tag': moodTag})
-          .eq('id', moodLogId);
+          .eq('id', moodLogId)
+          .eq('user_id', userId)
+          .select('id');
+      if ((updatedMood as List<dynamic>).isEmpty) return _kNotFound;
 
       final trimmed = journalBody.trim();
 
@@ -169,23 +195,34 @@ class HistoryService {
           .from('journal_entries')
           .select('id')
           .eq('mood_log_id', moodLogId)
+          .eq('user_id', userId)
           .maybeSingle();
 
       if (trimmed.isNotEmpty) {
+        final List<dynamic> written;
         if (existing != null) {
-          await _client
+          written = await _client
               .from('journal_entries')
               .update({'body': trimmed})
-              .eq('id', existing['id'] as String);
+              .eq('id', existing['id'] as String)
+              .eq('user_id', userId)
+              .select('id');
         } else {
-          await _client.from('journal_entries').insert({
+          written = await _client.from('journal_entries').insert({
             'mood_log_id': moodLogId,
             'user_id': userId,
             'body': trimmed,
-          });
+          }).select('id');
         }
+        if (written.isEmpty) return _kNotFound;
       } else if (existing != null) {
-        await _client.from('journal_entries').delete().eq('id', existing['id'] as String);
+        final deleted = await _client
+            .from('journal_entries')
+            .delete()
+            .eq('id', existing['id'] as String)
+            .eq('user_id', userId)
+            .select('id');
+        if ((deleted as List<dynamic>).isEmpty) return _kNotFound;
       }
 
       return null;

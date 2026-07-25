@@ -1,6 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import {
+  MIN_PASSWORD_LENGTH,
+  PASSWORD_HINT,
+  validatePassword,
+  validatePasswordConfirmation,
+} from '../lib/validators'
 
 function GoogleIcon() {
   return (
@@ -45,8 +51,9 @@ export function SignUpPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (password !== confirmPassword) {
-      setError("Passwords don't match — give that another try.")
+    const passwordError = validatePassword(password) ?? validatePasswordConfirmation(password, confirmPassword)
+    if (passwordError) {
+      setError(passwordError)
       return
     }
     setError(null)
@@ -119,7 +126,7 @@ export function SignUpPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={MIN_PASSWORD_LENGTH}
               autoComplete="new-password"
               className="w-full rounded-full border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint"
             />
@@ -133,7 +140,7 @@ export function SignUpPage() {
               {showPassword ? <EyeOffIcon /> : <EyeIcon />}
             </button>
           </div>
-          <p className="px-2 text-xs text-faint">At least 6 characters</p>
+          <p className="px-2 text-xs text-faint">{PASSWORD_HINT}</p>
         </div>
         <div className="relative">
           <input

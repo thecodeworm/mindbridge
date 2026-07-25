@@ -1,35 +1,34 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import { useAuth } from '../context/AuthContext'
+import { PASSWORD_HINT, validatePassword, validatePasswordConfirmation } from '../lib/validators'
 
 type LinkState = 'pending' | 'ready' | 'expired'
 
 export function ResetPasswordPage() {
   const navigate = useNavigate()
-  const [linkState, setLinkState] = useState<LinkState>('pending')
+  const { loading, isRecoverySession } = useAuth()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
 
+  const linkState: LinkState = loading ? 'pending' : isRecoverySession ? 'ready' : 'expired'
+
+  // If the user navigates away mid-recovery without setting a new password,
+  // don't leave the recovery session sitting around.
+  const doneRef = useRef(done)
+  doneRef.current = done
+  const isRecoverySessionRef = useRef(isRecoverySession)
+  isRecoverySessionRef.current = isRecoverySession
+
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setLinkState('ready')
-    })
-
-    // Supabase parses the recovery token from the URL hash on load and
-    // fires PASSWORD_RECOVERY shortly after. If it hasn't fired by the
-    // time this timeout runs, the link is missing, malformed, or expired.
-    const timeout = window.setTimeout(() => {
-      setLinkState((current) => (current === 'pending' ? 'expired' : current))
-    }, 4000)
-
     return () => {
-      subscription.unsubscribe()
-      window.clearTimeout(timeout)
+      if (isRecoverySessionRef.current && !doneRef.current) {
+        supabase.auth.signOut()
+      }
     }
   }, [])
 
@@ -37,12 +36,9 @@ export function ResetPasswordPage() {
     e.preventDefault()
     setError(null)
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.')
+    const passwordError = validatePassword(password) ?? validatePasswordConfirmation(password, confirmPassword)
+    if (passwordError) {
+      setError(passwordError)
       return
     }
 
@@ -116,16 +112,19 @@ export function ResetPasswordPage() {
         {error && (
           <p className="rounded-xl bg-error-tint px-4 py-2 text-sm text-error">{error}</p>
         )}
-        <input
-          type="password"
-          placeholder="New password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoComplete="new-password"
-          disabled={linkState !== 'ready'}
-          className="w-full rounded-full border border-border bg-field px-4 py-3 text-ink placeholder:text-faint disabled:opacity-50"
-        />
+        <div className="space-y-1">
+          <input
+            type="password"
+            placeholder="New password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+            disabled={linkState !== 'ready'}
+            className="w-full rounded-full border border-border bg-field px-4 py-3 text-ink placeholder:text-faint disabled:opacity-50"
+          />
+          <p className="px-2 text-xs text-faint">{PASSWORD_HINT}</p>
+        </div>
         <input
           type="password"
           placeholder="Confirm new password"
