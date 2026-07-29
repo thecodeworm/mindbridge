@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecoverySession(true)
         sessionStorage.setItem(RECOVERY_STORAGE_KEY, 'true')
-      } else if (event === 'SIGNED_OUT' || event === 'SIGNED_IN') {
+      } else if (event === 'SIGNED_OUT') {
         setIsRecoverySession(false)
         sessionStorage.removeItem(RECOVERY_STORAGE_KEY)
       }
