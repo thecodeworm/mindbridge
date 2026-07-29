@@ -268,6 +268,11 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text("Enter your email and we'll send a reset link."),
+          const SizedBox(height: 4),
+          const Text(
+            'Signed up with Google? Use the Google button instead.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
           const SizedBox(height: 12),
           if (_error != null) ...[
             Container(

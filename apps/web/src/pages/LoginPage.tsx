@@ -106,6 +106,7 @@ export function LoginPage() {
         >
           <h1 className="text-xl font-bold text-ink">Reset your password</h1>
           <p className="text-sm text-muted">Enter your email and we'll send you a reset link.</p>
+          <p className="text-xs text-faint">Signed up with Google? Use the Google button on the log in page instead.</p>
           {error && (
             <p className="rounded-xl bg-error-tint px-4 py-2 text-sm text-error">{error}</p>
           )}

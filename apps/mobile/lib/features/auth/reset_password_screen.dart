@@ -65,9 +65,59 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     await RecoveryState.set(false);
   }
 
+  bool get _isGoogleOnly {
+    final identities = Supabase.instance.client.auth.currentUser?.identities ?? [];
+    return identities.isNotEmpty && identities.every((i) => i.provider != 'email');
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
+    if (_isGoogleOnly) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'MindBridge',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      'You signed up with Google',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "There's no password to reset — just use the Google button to sign in.",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: _cancel,
+                      child: const Text('Back to sign in'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(

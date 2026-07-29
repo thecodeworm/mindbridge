@@ -8,7 +8,7 @@ type LinkState = 'pending' | 'ready' | 'expired'
 
 export function ResetPasswordPage() {
   const navigate = useNavigate()
-  const { loading, isRecoverySession } = useAuth()
+  const { loading, isRecoverySession, user } = useAuth()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -16,6 +16,9 @@ export function ResetPasswordPage() {
   const [done, setDone] = useState(false)
 
   const linkState: LinkState = loading ? 'pending' : isRecoverySession ? 'ready' : 'expired'
+
+  const isGoogleOnly = linkState === 'ready' &&
+    (user?.identities ?? []).every((i: { provider: string }) => i.provider !== 'email')
 
   // If the user navigates away mid-recovery without setting a new password,
   // don't leave the recovery session sitting around.
@@ -72,6 +75,26 @@ export function ResetPasswordPage() {
           <p className="text-sm text-muted">You can log in with your new password now.</p>
           <button
             onClick={() => navigate('/login')}
+            className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
+          >
+            Back to log in
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isGoogleOnly) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-cream p-4">
+        {brandHeader}
+        <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 text-center shadow-sm">
+          <p className="font-medium text-ink">You signed up with Google</p>
+          <p className="text-sm text-muted">
+            There's no password to reset — just use the Google button to sign in.
+          </p>
+          <button
+            onClick={async () => { await supabase.auth.signOut(); navigate('/login') }}
             className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
           >
             Back to log in
