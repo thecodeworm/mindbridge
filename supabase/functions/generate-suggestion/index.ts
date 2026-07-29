@@ -10,7 +10,9 @@ const DEV_ORIGINS = ['http://localhost:5173', 'http://localhost:3000']
 
 function buildCorsHeaders(requestOrigin: string | null) {
   const allowed = [...ALLOWED_ORIGINS, ...DEV_ORIGINS]
-  const allowOrigin = requestOrigin && allowed.includes(requestOrigin)
+  const isVercelPreview = requestOrigin !== null &&
+    /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(requestOrigin)
+  const allowOrigin = requestOrigin && (allowed.includes(requestOrigin) || isVercelPreview)
     ? requestOrigin
     : allowed[0] ?? ''
 
