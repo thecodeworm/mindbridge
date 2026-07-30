@@ -47,16 +47,19 @@ class CopingSuggestionDetail {
     required this.techniqueName,
     required this.description,
     required this.steps,
+    required this.crisisSignal,
   });
 
   final String techniqueName;
   final String description;
   final List<String> steps;
+  final bool crisisSignal;
 
   factory CopingSuggestionDetail.fromJson(Map<String, dynamic> json) => CopingSuggestionDetail(
         techniqueName: json['technique_name'] as String,
         description: json['description'] as String,
         steps: (json['steps'] as List<dynamic>).map((e) => e as String).toList(),
+        crisisSignal: json['crisis_signal'] as bool? ?? false,
       );
 }
 
@@ -123,7 +126,7 @@ class HistoryService {
             .maybeSingle(),
         _client
             .from('coping_suggestions')
-            .select('id, mood_log_id, user_id, technique_name, description, steps, model_used, generated_at')
+            .select('id, mood_log_id, user_id, technique_name, description, steps, model_used, generated_at, crisis_signal')
             .eq('mood_log_id', moodLogId)
             .eq('user_id', userId)
             .maybeSingle(),

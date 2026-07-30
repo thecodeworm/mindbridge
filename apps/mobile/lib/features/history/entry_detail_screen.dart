@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/mood_color.dart';
+import '../../core/theme.dart';
 import '../mood/mood_log_screen.dart';
 import '../mood/mood_log_service.dart';
 import 'history_service.dart';
@@ -232,6 +233,28 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
           ],
         ),
       ),
+      if (detail.copingSuggestion != null &&
+          (detail.copingSuggestion!.crisisSignal || moodLog.moodScore <= 2)) ...[
+        const SizedBox(height: 16),
+        Builder(builder: (context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.dTerraTint : AppColors.terraTint,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: isDark ? AppColors.dTerra : AppColors.terra),
+            ),
+            child: Text(
+              "If you're in crisis, you're not alone — call or text 988, or text HOME to 741741.",
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? AppColors.dTerraDark : AppColors.terraDark,
+              ),
+            ),
+          );
+        }),
+      ],
       const SizedBox(height: 16),
       Container(
         padding: const EdgeInsets.all(24),
