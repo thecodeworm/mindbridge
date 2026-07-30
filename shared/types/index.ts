@@ -44,6 +44,7 @@ export interface CopingSuggestion {
   steps: string[]
   model_used: string
   generated_at: string
+  crisis_signal: boolean
 }
 
 export interface AiCallLog {

@@ -196,6 +196,11 @@ export function EntryDetailPage() {
               )}
             </div>
 
+            {detail.copingSuggestion && (detail.copingSuggestion.crisis_signal || detail.moodLog.mood_score <= 2) && (
+              <div className="rounded-lg border border-terra bg-terra-tint px-4 py-3 text-sm text-terra-dark">
+                If you're in crisis, you're not alone — call or text 988, or text HOME to 741741.
+              </div>
+            )}
             <div className="space-y-4 rounded-xl border border-border bg-surface p-8 shadow-sm">
               {detail.copingSuggestion ? (
                 <>

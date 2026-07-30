@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
   .filter(Boolean)
 
 // Dev fallback so local Vite/Flutter-web runs keep working without an env var.
-const DEV_ORIGINS = ['http://localhost:5173', 'http://localhost:3000']
+const DEV_ORIGINS = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:3000']
 
 function buildCorsHeaders(requestOrigin: string | null) {
   const allowed = [...ALLOWED_ORIGINS, ...DEV_ORIGINS]

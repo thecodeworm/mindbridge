@@ -64,7 +64,7 @@ export async function getEntryDetail(
       .maybeSingle(),
     supabase
       .from('coping_suggestions')
-      .select('id, mood_log_id, user_id, technique_name, description, steps, model_used, generated_at')
+      .select('id, mood_log_id, user_id, technique_name, description, steps, model_used, generated_at, crisis_signal')
       .eq('mood_log_id', moodLogId)
       .eq('user_id', userId)
       .maybeSingle(),
