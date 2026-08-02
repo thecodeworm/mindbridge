@@ -39,6 +39,7 @@ class AuthService {
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: 'com.mindbridge.mindbridge://login-callback',
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
       return null;
     } on AuthException catch (e) {
