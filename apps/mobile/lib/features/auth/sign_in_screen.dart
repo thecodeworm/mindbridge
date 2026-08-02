@@ -269,9 +269,9 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
         children: [
           const Text("Enter your email and we'll send a reset link."),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Signed up with Google? Use the Google button instead.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           if (_error != null) ...[

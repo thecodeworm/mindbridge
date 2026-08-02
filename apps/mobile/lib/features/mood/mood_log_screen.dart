@@ -169,7 +169,6 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
               value: _score,
               min: 1,
               max: 10,
-              divisions: 9,
               activeColor: color,
               inactiveColor: color.withValues(alpha: 0.25),
               onChanged: (v) => setState(() => _score = v),

@@ -114,8 +114,12 @@ class _MoodTrendChartState extends State<MoodTrendChart> {
                       tooltipBorder: BorderSide(color: cs.outline),
                       getTooltipItems: (spots) => spots.map((s) {
                         final log = data[s.x.round()];
+                        final info = moodTagInfo(log.moodTag);
+                        final tagLabel = info != null
+                            ? '${info['emoji']} ${info['label']}'
+                            : log.moodTag;
                         return LineTooltipItem(
-                          '${log.moodScore} · ${log.moodTag}',
+                          '${log.moodScore} · $tagLabel',
                           tt.bodySmall!.copyWith(fontWeight: FontWeight.w600),
                         );
                       }).toList(),
@@ -126,7 +130,7 @@ class _MoodTrendChartState extends State<MoodTrendChart> {
                       spots: [
                         for (int i = 0; i < data.length; i++) FlSpot(i.toDouble(), data[i].moodScore.toDouble()),
                       ],
-                      isCurved: true,
+                      isCurved: false,
                       color: cs.primary,
                       barWidth: 2,
                       dotData: FlDotData(

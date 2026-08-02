@@ -24,6 +24,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool _submitting = false;
   bool _cancelling = false;
   bool _obscurePassword = true;
+  bool _done = false;
+  bool _expired = false;
 
   @override
   void dispose() {
@@ -44,19 +46,29 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     if (!mounted) return;
 
     if (error != null) {
+      // A session/JWT error means the recovery link expired before submission.
+      final lc = error.toLowerCase();
+      final isSessionError = lc.contains('session') ||
+          lc.contains('jwt') ||
+          lc.contains('expired') ||
+          lc.contains('missing');
       setState(() {
         _submitting = false;
-        _error = error;
+        if (isSessionError) {
+          _expired = true;
+        } else {
+          _error = error;
+        }
       });
       return;
     }
 
-    // Signing out drops the recovery session; clearing the persisted flag
-    // is what actually lets AuthGate fall back to SignInScreen — until then
-    // isRecovery stays true, closing the window where HomeScreen could
-    // flash between updatePassword's userUpdated event and this signOut.
-    await _authService.signOut();
-    await RecoveryState.set(false);
+    // Show the success screen. RecoveryState stays true so AuthGate keeps
+    // rendering this widget. _cancel() (called by "Back to sign in") clears it.
+    setState(() {
+      _submitting = false;
+      _done = true;
+    });
   }
 
   Future<void> _cancel() async {
@@ -70,52 +82,126 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return identities.isNotEmpty && identities.every((i) => i.provider != 'email');
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _brandHeader(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Text(
+          'MindBridge',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+            color: cs.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Track your mood, grow your mind.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
 
-    if (_isGoogleOnly) {
-      return Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'MindBridge',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      'You signed up with Google',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "There's no password to reset — just use the Google button to sign in.",
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _cancel,
-                      child: const Text('Back to sign in'),
-                    ),
-                  ],
-                ),
+  Widget _centeredCard(BuildContext context, {required Widget child}) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _brandHeader(context),
+                  const SizedBox(height: 32),
+                  child,
+                ],
               ),
             ),
           ),
         ),
-      );
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    if (_done) {
+      return _centeredCard(context, child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('✅', textAlign: TextAlign.center, style: TextStyle(fontSize: 48)),
+          const SizedBox(height: 16),
+          Text(
+            'Password updated',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'You can sign in with your new password now.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: _cancel,
+            child: const Text('Back to sign in'),
+          ),
+        ],
+      ));
+    }
+
+    if (_expired) {
+      return _centeredCard(context, child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'This link has expired',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Reset links only work once and expire after a while. Request a new one from the sign in page.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 24),
+          OutlinedButton(
+            onPressed: _cancel,
+            child: const Text('Request a new link'),
+          ),
+        ],
+      ));
+    }
+
+    if (_isGoogleOnly) {
+      return _centeredCard(context, child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'You signed up with Google',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "There's no password to reset — just use the Google button to sign in.",
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: _cancel,
+            child: const Text('Back to sign in'),
+          ),
+        ],
+      ));
     }
 
     return Scaffold(
@@ -130,14 +216,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 32),
-                  Text(
-                    'MindBridge',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  _brandHeader(context),
                   const SizedBox(height: 32),
                   Text(
                     'Set a new password',
