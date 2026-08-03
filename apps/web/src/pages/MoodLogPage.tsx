@@ -1,12 +1,28 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { MOOD_TAGS } from '../../../../shared/types'
-import type { MoodTag } from '../../../../shared/types'
+import { MOOD_TAGS, MOOD_QUADRANTS, moodTagInfo } from '../../../../shared/types'
+import type { MoodTag, MoodQuadrant, ActivityTag } from '../../../../shared/types'
 import { logMood, addJournalEntry } from '../lib/moodService'
 import { updateEntry } from '../lib/historyService'
 import type { EntryDetail } from '../lib/historyService'
 import { moodColor } from '../lib/moodColor'
+import { getActivityTags, setEntryActivities } from '../lib/activityService'
+import { ActivityTagPicker } from '../components/ActivityTagPicker'
+import { DistortionPicker } from '../components/DistortionPicker'
+import { supabase } from '../lib/supabaseClient'
+
+function tagsByQuadrant(q: MoodQuadrant) {
+  return MOOD_TAGS.filter((t) => t.quadrant === q)
+}
+
+const chipClass = (selected: boolean) =>
+  [
+    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+    selected
+      ? 'border-blue-dark bg-blue-tint text-blue-dark'
+      : 'border-border bg-field text-ink hover:bg-blue-tint',
+  ].join(' ')
 
 export function MoodLogPage() {
   const { user } = useAuth()
@@ -17,12 +33,29 @@ export function MoodLogPage() {
 
   const [score, setScore] = useState(editing?.moodLog.mood_score ?? 5)
   const [tag, setTag] = useState<MoodTag | null>(editing?.moodLog.mood_tag ?? null)
+  const [quadrant, setQuadrant] = useState<MoodQuadrant | null>(() => {
+    if (!editing?.moodLog.mood_tag) return null
+    return moodTagInfo(editing.moodLog.mood_tag)?.quadrant ?? null
+  })
   const [journal, setJournal] = useState(editing?.journalEntry?.body ?? '')
+  const [activityTags, setActivityTags] = useState<ActivityTag[]>([])
+  const [selectedActivities, setSelectedActivities] = useState<string[]>(
+    editing?.activities?.map((a) => a.id) ?? [],
+  )
+  const [showDistortions, setShowDistortions] = useState(false)
+  const [distortionsDone, setDistortionsDone] = useState(false)
+  const [distortions, setDistortions] = useState<string[]>([])
+  const [reframe, setReframe] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const color = moodColor(score)
   const roundedScore = Math.round(score)
+
+  useEffect(() => {
+    getActivityTags().then(({ tags }) => setActivityTags(tags))
+    if (editing?.activities) setSelectedActivities(editing.activities.map((a) => a.id))
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -33,8 +66,6 @@ export function MoodLogPage() {
     setSubmitting(true)
 
     if (editing) {
-      // The coping_suggestions row is 1:1 on mood_log_id and already
-      // exists for this entry — editing doesn't regenerate it.
       const { error: updateError } = await updateEntry({
         moodLogId: editing.moodLog.id,
         userId: user.id,
@@ -42,6 +73,16 @@ export function MoodLogPage() {
         moodTag: tag,
         journalBody: journal,
       })
+      if (!updateError) {
+        await setEntryActivities(editing.moodLog.id, user.id, selectedActivities)
+        if (distortions.length > 0 && editing.journalEntry?.id) {
+          await supabase
+            .from('journal_entries')
+            .update({ distortions, reframe: reframe || null })
+            .eq('id', editing.journalEntry.id)
+            .eq('user_id', user.id)
+        }
+      }
       setSubmitting(false)
       if (updateError) { setError(updateError); return }
       navigate(`/entry/${editing.moodLog.id}`, { replace: true })
@@ -71,10 +112,31 @@ export function MoodLogPage() {
         setSubmitting(false)
         return
       }
+      // Save distortions if selected
+      if (distortions.length > 0) {
+        const { data: jEntry } = await supabase
+          .from('journal_entries')
+          .select('id')
+          .eq('mood_log_id', moodLogId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+        if (jEntry) {
+          await supabase
+            .from('journal_entries')
+            .update({ distortions, reframe: reframe || null })
+            .eq('id', jEntry.id)
+        }
+      }
+    }
+
+    if (selectedActivities.length > 0) {
+      await setEntryActivities(moodLogId, user.id, selectedActivities)
     }
 
     navigate('/suggestion', { state: { moodLogId, userId: user.id }, replace: true })
   }
+
+  const tagsForQuadrant = quadrant ? tagsByQuadrant(quadrant) : []
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-cream p-4 pt-12">
@@ -90,16 +152,11 @@ export function MoodLogPage() {
           <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{error}</p>
         )}
 
-        {/* Score slider */}
+        {/* Score */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-muted">Mood score</label>
-            <span
-              className="text-2xl font-bold"
-              style={{ color }}
-            >
-              {roundedScore}
-            </span>
+            <span className="text-2xl font-bold" style={{ color }}>{roundedScore}</span>
           </div>
           <input
             type="range"
@@ -116,28 +173,55 @@ export function MoodLogPage() {
           </div>
         </div>
 
-        {/* Tag picker */}
+        {/* Two-step mood tag picker */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted">Pick a tag</p>
-          <div className="flex flex-wrap gap-2">
-            {MOOD_TAGS.map((t) => (
+          <p className="text-sm font-medium text-muted">How would you describe it?</p>
+          {quadrant === null ? (
+            <div className="grid grid-cols-2 gap-2">
+              {MOOD_QUADRANTS.map((q) => (
+                <button
+                  key={q.value}
+                  type="button"
+                  onClick={() => { setQuadrant(q.value); setTag(null) }}
+                  className="flex flex-col items-start gap-1 rounded-xl border border-border bg-field p-3 text-left transition-colors hover:bg-blue-tint"
+                >
+                  <span className="text-lg">{q.emoji}</span>
+                  <span className="text-xs font-medium text-ink">{q.label}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
               <button
-                key={t.value}
                 type="button"
-                onClick={() => setTag(t.value)}
-                className={[
-                  'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
-                  tag === t.value
-                    ? 'border-blue-dark bg-blue-tint text-blue-dark'
-                    : 'border-border bg-field text-ink hover:bg-blue-tint',
-                ].join(' ')}
+                onClick={() => { setQuadrant(null); setTag(null) }}
+                className="text-xs text-muted transition-colors hover:text-ink"
               >
-                <span>{t.emoji}</span>
-                <span>{t.label}</span>
+                ← Change
               </button>
-            ))}
-          </div>
+              <div className="flex flex-wrap gap-2">
+                {tagsForQuadrant.map((t) => (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setTag(t.value)}
+                    className={chipClass(tag === t.value)}
+                  >
+                    <span>{t.emoji}</span>
+                    <span>{t.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Activity tags */}
+        <ActivityTagPicker
+          tags={activityTags}
+          selected={selectedActivities}
+          onChange={setSelectedActivities}
+        />
 
         {/* Journal */}
         <div className="space-y-1">
@@ -147,7 +231,7 @@ export function MoodLogPage() {
           <textarea
             id="journal"
             value={journal}
-            onChange={(e) => setJournal(e.target.value)}
+            onChange={(e) => { setJournal(e.target.value); setDistortionsDone(false) }}
             maxLength={500}
             rows={4}
             placeholder="How are you feeling? (optional)"
@@ -155,6 +239,35 @@ export function MoodLogPage() {
           />
           <p className="text-right text-xs text-faint">{journal.length} / 500</p>
         </div>
+
+        {/* Cognitive distortion picker — shown when journal has text and not yet done */}
+        {journal.trim().length > 0 && !distortionsDone && !showDistortions && (
+          <button
+            type="button"
+            onClick={() => setShowDistortions(true)}
+            className="text-sm text-muted transition-colors hover:text-ink"
+          >
+            ✦ Notice any thinking traps? (optional)
+          </button>
+        )}
+
+        {showDistortions && !distortionsDone && (
+          <DistortionPicker
+            onDone={(d, r) => {
+              setDistortions(d)
+              setReframe(r)
+              setDistortionsDone(true)
+              setShowDistortions(false)
+            }}
+            onSkip={() => setShowDistortions(false)}
+          />
+        )}
+
+        {distortionsDone && distortions.length > 0 && (
+          <p className="text-xs text-success">
+            ✓ Reframe saved ({distortions.length} thinking trap{distortions.length > 1 ? 's' : ''} noted)
+          </p>
+        )}
 
         <div className="flex gap-3">
           <button

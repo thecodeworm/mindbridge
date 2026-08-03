@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/app_lock_state.dart';
 import 'core/recovery_state.dart';
 import 'core/theme.dart';
 import 'core/theme_controller.dart';
+import 'features/auth/app_lock_service.dart';
 import 'features/auth/reset_password_screen.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/auth/sign_up_screen.dart';
@@ -22,10 +24,117 @@ class App extends StatelessWidget {
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: mode,
-        home: const AuthGate(),
-        // Supabase OAuth deep link delivers /?code=... as a Flutter route.
-        // The SDK handles the session exchange; we just need to not crash.
+        home: const _AppLockWrapper(),
         onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => const AuthGate()),
+      ),
+    );
+  }
+}
+
+// Wraps AuthGate with a lock screen on app resume when app lock is enabled.
+class _AppLockWrapper extends StatefulWidget {
+  const _AppLockWrapper();
+
+  @override
+  State<_AppLockWrapper> createState() => _AppLockWrapperState();
+}
+
+class _AppLockWrapperState extends State<_AppLockWrapper> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      AppLockState.lock();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppLockState.locked,
+      builder: (context, locked, child) {
+        if (locked) {
+          return _LockScreen(onUnlocked: AppLockState.unlock);
+        }
+        return child!;
+      },
+      child: const AuthGate(),
+    );
+  }
+}
+
+class _LockScreen extends StatefulWidget {
+  const _LockScreen({required this.onUnlocked});
+  final VoidCallback onUnlocked;
+
+  @override
+  State<_LockScreen> createState() => _LockScreenState();
+}
+
+class _LockScreenState extends State<_LockScreen> {
+  bool _attempting = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _attempt();
+  }
+
+  Future<void> _attempt() async {
+    setState(() {
+      _attempting = true;
+      _error = null;
+    });
+    final ok = await authenticate();
+    if (!mounted) return;
+    if (ok) {
+      widget.onUnlocked();
+    } else {
+      setState(() {
+        _attempting = false;
+        _error = 'Authentication failed. Try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🔒', style: TextStyle(fontSize: 48)),
+              const SizedBox(height: 16),
+              Text('MindBridge is locked', style: tt.titleMedium),
+              const SizedBox(height: 8),
+              if (_error != null)
+                Text(_error!, style: tt.bodySmall?.copyWith(color: cs.error)),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: _attempting ? null : _attempt,
+                child: Text(_attempting ? 'Authenticating…' : 'Unlock'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -45,11 +154,6 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void initState() {
     super.initState();
-    // Only used to *set* the persisted flag when a recovery link is opened.
-    // Reading it back happens via RecoveryState.isRecovery below, since the
-    // event itself is transient and any later emission (tokenRefreshed,
-    // userUpdated, initialSession after a relaunch) would otherwise fall
-    // through to HomeScreen.
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       if (data.event == AuthChangeEvent.passwordRecovery) {
         RecoveryState.set(true);
@@ -75,7 +179,8 @@ class _AuthGateState extends State<AuthGate> {
         return StreamBuilder<AuthState>(
           stream: Supabase.instance.client.auth.onAuthStateChange,
           builder: (context, snapshot) {
-            final session = snapshot.data?.session ?? Supabase.instance.client.auth.currentSession;
+            final session =
+                snapshot.data?.session ?? Supabase.instance.client.auth.currentSession;
 
             if (session != null) {
               return const HomeScreen();

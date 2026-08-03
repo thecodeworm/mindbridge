@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme.dart';
+import '../history/history_service.dart';
+import '../help/help_screen.dart';
 import 'suggestion_service.dart';
 
 class SuggestionScreen extends StatefulWidget {
@@ -15,10 +17,14 @@ class SuggestionScreen extends StatefulWidget {
 
 class _SuggestionScreenState extends State<SuggestionScreen> {
   late final SuggestionService _service = SuggestionService(Supabase.instance.client);
+  late final HistoryService _historyService = HistoryService(Supabase.instance.client);
 
   SuggestionResult? _suggestion;
   bool _loading = true;
   String? _error;
+
+  bool? _helpful;
+  bool _saved = false;
 
   @override
   void initState() {
@@ -44,6 +50,25 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
       _suggestion = result.suggestion;
       _error = result.error;
     });
+  }
+
+  Future<void> _setHelpful(bool? value) async {
+    setState(() => _helpful = value);
+    await _historyService.updateSuggestionFeedback(
+      moodLogId: widget.moodLogId,
+      userId: widget.userId,
+      helpful: value,
+    );
+  }
+
+  Future<void> _toggleSaved() async {
+    final next = !_saved;
+    setState(() => _saved = next);
+    await _historyService.updateSuggestionFeedback(
+      moodLogId: widget.moodLogId,
+      userId: widget.userId,
+      saved: next,
+    );
   }
 
   void _done() {
@@ -140,15 +165,9 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
             style: tt.bodyMedium,
           ),
           const SizedBox(height: 20),
-          FilledButton(
-            onPressed: _load,
-            child: const Text('Try again'),
-          ),
+          FilledButton(onPressed: _load, child: const Text('Try again')),
           const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: _done,
-            child: const Text('Done'),
-          ),
+          OutlinedButton(onPressed: _done, child: const Text('Done')),
         ],
       ),
     );
@@ -168,16 +187,22 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (suggestion.showCrisisResources) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: terraTint,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: terra),
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HelpScreen()),
             ),
-            child: Text(
-              "If you're in crisis, you're not alone — call or text 988, or text HOME to 741741.",
-              style: tt.bodyMedium?.copyWith(color: terraDark),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: terraTint,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: terra),
+              ),
+              child: Text(
+                "If you're in crisis, you're not alone — tap here for crisis resources.",
+                style: tt.bodyMedium?.copyWith(color: terraDark),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -211,7 +236,33 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
                       ),
                     ),
                   ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
+              // Feedback row
+              Row(
+                children: [
+                  Text('Helpful?', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  const SizedBox(width: 8),
+                  _FeedbackButton(
+                    icon: '👍',
+                    active: _helpful == true,
+                    onTap: () => _setHelpful(_helpful == true ? null : true),
+                  ),
+                  const SizedBox(width: 4),
+                  _FeedbackButton(
+                    icon: '👎',
+                    active: _helpful == false,
+                    onTap: () => _setHelpful(_helpful == false ? null : false),
+                  ),
+                  const Spacer(),
+                  _FeedbackButton(
+                    icon: _saved ? '🔖' : '🏷️',
+                    active: _saved,
+                    onTap: _toggleSaved,
+                    tooltip: _saved ? 'Remove from toolkit' : 'Save to toolkit',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               FilledButton(
                 onPressed: _done,
                 child: const Text('Done'),
@@ -220,6 +271,45 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FeedbackButton extends StatelessWidget {
+  const _FeedbackButton({
+    required this.icon,
+    required this.active,
+    required this.onTap,
+    this.tooltip,
+  });
+
+  final String icon;
+  final bool active;
+  final VoidCallback onTap;
+  final String? tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: tooltip ?? '',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: active ? cs.primaryContainer : Colors.transparent,
+            border: Border.all(
+              color: active ? cs.primary : cs.outline,
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Text(icon, style: const TextStyle(fontSize: 16)),
+        ),
+      ),
     );
   }
 }

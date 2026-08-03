@@ -225,13 +225,29 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Feedback loop: pull up to 3 techniques this user found helpful to inform variety.
+    const { data: helpfulTechniques } = await serviceClient
+      .from('coping_suggestions')
+      .select('technique_name, description')
+      .eq('user_id', user_id)
+      .eq('helpful', true)
+      .order('generated_at', { ascending: false })
+      .limit(3)
+
+    const helpfulSection = helpfulTechniques && helpfulTechniques.length > 0
+      ? `\n\nTechniques this user has found helpful before (for reference — vary the approach when mood context differs):\n` +
+        helpfulTechniques.map((t: { technique_name: string; description: string }) =>
+          `- ${t.technique_name}: ${t.description}`
+        ).join('\n')
+      : ''
+
     const userMessage = `Mood score: ${moodLog.mood_score}/10
 Mood tag: <mood_tag>${moodLog.mood_tag}</mood_tag>
 Journal entry: ${
       journalEntry?.body
         ? `<journal_entry>${journalEntry.body}</journal_entry>`
         : '(none provided)'
-    }`
+    }${helpfulSection}`
 
     const startedAt = Date.now()
 

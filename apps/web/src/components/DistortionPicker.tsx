@@ -1,0 +1,116 @@
+import { useState } from 'react'
+
+export interface Distortion {
+  id: string
+  name: string
+  description: string
+}
+
+const DISTORTIONS: Distortion[] = [
+  { id: 'catastrophizing',   name: 'Catastrophizing',   description: 'Assuming the worst possible outcome will happen.' },
+  { id: 'mind-reading',      name: 'Mind reading',      description: "Believing you know what others are thinking, usually negatively." },
+  { id: 'all-or-nothing',    name: 'All-or-nothing',    description: 'Seeing things in black and white, with no middle ground.' },
+  { id: 'fortune-telling',   name: 'Fortune telling',   description: 'Predicting a negative future as if it were certain.' },
+  { id: 'personalization',   name: 'Personalization',   description: 'Blaming yourself for things outside your control.' },
+  { id: 'emotional-reasoning', name: 'Emotional reasoning', description: "Believing something is true because it feels true." },
+]
+
+interface Props {
+  onDone: (selected: string[], reframe: string) => void
+  onSkip: () => void
+}
+
+export function DistortionPicker({ onDone, onSkip }: Props) {
+  const [selected, setSelected] = useState<string[]>([])
+  const [reframe, setReframe] = useState('')
+  const [step, setStep] = useState<'pick' | 'reframe'>('pick')
+
+  function toggle(id: string) {
+    setSelected((prev) => prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id])
+  }
+
+  if (step === 'reframe') {
+    return (
+      <div className="space-y-3 rounded-xl border border-border bg-surface p-5 shadow-sm">
+        <h3 className="font-semibold text-ink">Challenge the thought</h3>
+        <p className="text-sm text-muted">What would you tell a friend who said that?</p>
+        <textarea
+          value={reframe}
+          onChange={(e) => setReframe(e.target.value)}
+          rows={3}
+          placeholder="A more balanced way to see it..."
+          className="w-full resize-none rounded-lg border border-border bg-field px-3 py-2 text-sm text-ink placeholder:text-faint"
+        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setStep('pick')}
+            className="flex-1 rounded-lg border border-border bg-field px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-blue-tint"
+          >
+            ← Back
+          </button>
+          <button
+            type="button"
+            onClick={() => onDone(selected, reframe)}
+            className="flex-1 rounded-lg bg-blue-dark px-3 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3 rounded-xl border border-border bg-surface p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h3 className="font-semibold text-ink">Notice any thinking traps?</h3>
+          <p className="text-xs text-muted">Optional — totally skippable</p>
+        </div>
+        <button
+          type="button"
+          onClick={onSkip}
+          className="shrink-0 text-sm text-muted transition-colors hover:text-ink"
+        >
+          Skip
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        {DISTORTIONS.map((d) => {
+          const isSelected = selected.includes(d.id)
+          return (
+            <button
+              key={d.id}
+              type="button"
+              onClick={() => toggle(d.id)}
+              className={[
+                'flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors',
+                isSelected
+                  ? 'border-blue-dark bg-blue-tint'
+                  : 'border-border bg-field hover:bg-blue-tint',
+              ].join(' ')}
+            >
+              <span className={`mt-0.5 h-4 w-4 shrink-0 rounded border-2 ${isSelected ? 'border-blue-dark bg-blue-dark' : 'border-border'}`} />
+              <div>
+                <p className={`text-sm font-medium ${isSelected ? 'text-blue-dark' : 'text-ink'}`}>{d.name}</p>
+                <p className="text-xs text-muted">{d.description}</p>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {selected.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setStep('reframe')}
+          className="w-full rounded-lg bg-blue-dark px-3 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90"
+        >
+          Reframe → ({selected.length} selected)
+        </button>
+      )}
+    </div>
+  )
+}

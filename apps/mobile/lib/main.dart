@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
+import 'core/app_lock_state.dart';
 import 'core/env.dart';
 import 'core/recovery_state.dart';
 import 'core/secure_storage.dart';
@@ -16,6 +17,7 @@ Future<void> main() async {
   );
   await ThemeController.load();
   await RecoveryState.load();
+  await AppLockState.init();
 
   runApp(const App());
 }

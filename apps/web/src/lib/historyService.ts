@@ -1,4 +1,4 @@
-import type { CopingSuggestion, JournalEntry, MoodLog, MoodTag } from '../../../../shared/types'
+import type { ActivityTag, CopingSuggestion, JournalEntry, MoodLog, MoodTag } from '../../../../shared/types'
 import { supabase } from './supabaseClient'
 
 export interface HistoryEntry {
@@ -40,16 +40,16 @@ export interface EntryDetail {
   moodLog: MoodLog
   journalEntry: JournalEntry | null
   copingSuggestion: CopingSuggestion | null
+  activities: ActivityTag[]
 }
 
-// Every query below filters on user_id as well as the row id. RLS already
-// enforces this server-side; the explicit filter is defense in depth, so a
-// policy regression degrades to "not found" instead of a cross-user read.
+// Every query filters on user_id as well as row id — RLS enforces this
+// server-side; the explicit filter degrades a policy regression to "not found".
 export async function getEntryDetail(
   moodLogId: string,
   userId: string,
 ): Promise<{ detail: EntryDetail | null; error: string | null }> {
-  const [moodLogRes, journalRes, suggestionRes] = await Promise.all([
+  const [moodLogRes, journalRes, suggestionRes, activityRes] = await Promise.all([
     supabase
       .from('mood_logs')
       .select('id, user_id, mood_score, mood_tag, logged_at')
@@ -64,19 +64,31 @@ export async function getEntryDetail(
       .maybeSingle(),
     supabase
       .from('coping_suggestions')
-      .select('id, mood_log_id, user_id, technique_name, description, steps, model_used, generated_at, crisis_signal')
+      .select(
+        'id, mood_log_id, user_id, technique_name, description, steps, model_used, generated_at, crisis_signal, helpful, saved',
+      )
       .eq('mood_log_id', moodLogId)
       .eq('user_id', userId)
       .maybeSingle(),
+    supabase
+      .from('mood_log_activities')
+      .select('activity_tag_id, activity_tags(id, user_id, slug, label, emoji, created_at)')
+      .eq('mood_log_id', moodLogId)
+      .eq('user_id', userId),
   ])
 
   if (moodLogRes.error) return { detail: null, error: moodLogRes.error.message }
+
+  const activities = ((activityRes.data ?? []) as unknown as Array<{ activity_tags: ActivityTag | null }>)
+    .map((r) => r.activity_tags)
+    .filter((t): t is ActivityTag => t != null)
 
   return {
     detail: {
       moodLog: moodLogRes.data as MoodLog,
       journalEntry: (journalRes.data as JournalEntry | null) ?? null,
       copingSuggestion: (suggestionRes.data as CopingSuggestion | null) ?? null,
+      activities,
     },
     error: null,
   }
@@ -88,11 +100,6 @@ export async function deleteEntry(
   moodLogId: string,
   userId: string,
 ): Promise<{ error: string | null }> {
-  // journal_entries and coping_suggestions cascade-delete via their
-  // mood_log_id FK — see 0001_init_schema.sql.
-  //
-  // .select() matters: without it an RLS-blocked delete returns
-  // {error: null} with zero rows affected and the caller reports success.
   const { data, error } = await supabase
     .from('mood_logs')
     .delete()
@@ -128,10 +135,6 @@ export async function updateEntry({
   if (!updatedMood || updatedMood.length === 0) return { error: NOT_FOUND }
 
   const trimmed = journalBody.trim()
-
-  // journal_entries.mood_log_id has no unique constraint (it's not 1:1 at
-  // the schema level like coping_suggestions is), so there's no upsert
-  // conflict target — look up the existing row by hand instead.
   const { data: existing, error: fetchError } = await supabase
     .from('journal_entries')
     .select('id')

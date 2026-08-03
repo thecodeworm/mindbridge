@@ -1,14 +1,45 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/models.dart';
 
+export '../../core/models.dart' show MoodLog;
+
+// Mirrors shared/types MOOD_TAGS — update both together.
 const kMoodTags = [
-  {'value': 'happy',    'emoji': '😊', 'label': 'Happy'},
-  {'value': 'calm',     'emoji': '😌', 'label': 'Calm'},
-  {'value': 'meh',      'emoji': '😐', 'label': 'Meh'},
-  {'value': 'sad',      'emoji': '😢', 'label': 'Sad'},
-  {'value': 'anxious',  'emoji': '😰', 'label': 'Anxious'},
-  {'value': 'angry',    'emoji': '😤', 'label': 'Angry'},
-  {'value': 'tired',    'emoji': '😴', 'label': 'Tired'},
-  {'value': 'confused', 'emoji': '🤔', 'label': 'Confused'},
+  // High energy + pleasant
+  {'quadrant': 'high-pleasant', 'value': 'excited',     'emoji': '🤩', 'label': 'Excited'},
+  {'quadrant': 'high-pleasant', 'value': 'happy',       'emoji': '😊', 'label': 'Happy'},
+  {'quadrant': 'high-pleasant', 'value': 'energized',   'emoji': '⚡', 'label': 'Energized'},
+  {'quadrant': 'high-pleasant', 'value': 'proud',       'emoji': '💪', 'label': 'Proud'},
+  {'quadrant': 'high-pleasant', 'value': 'grateful',    'emoji': '🙏', 'label': 'Grateful'},
+  {'quadrant': 'high-pleasant', 'value': 'hopeful',     'emoji': '🌟', 'label': 'Hopeful'},
+  // High energy + unpleasant
+  {'quadrant': 'high-unpleasant', 'value': 'anxious',     'emoji': '😰', 'label': 'Anxious'},
+  {'quadrant': 'high-unpleasant', 'value': 'angry',       'emoji': '😤', 'label': 'Angry'},
+  {'quadrant': 'high-unpleasant', 'value': 'stressed',    'emoji': '😫', 'label': 'Stressed'},
+  {'quadrant': 'high-unpleasant', 'value': 'frustrated',  'emoji': '😣', 'label': 'Frustrated'},
+  {'quadrant': 'high-unpleasant', 'value': 'overwhelmed', 'emoji': '🌀', 'label': 'Overwhelmed'},
+  {'quadrant': 'high-unpleasant', 'value': 'irritated',   'emoji': '😒', 'label': 'Irritated'},
+  // Low energy + pleasant
+  {'quadrant': 'low-pleasant', 'value': 'calm',        'emoji': '😌', 'label': 'Calm'},
+  {'quadrant': 'low-pleasant', 'value': 'content',     'emoji': '🙂', 'label': 'Content'},
+  {'quadrant': 'low-pleasant', 'value': 'relaxed',     'emoji': '😮‍💨', 'label': 'Relaxed'},
+  {'quadrant': 'low-pleasant', 'value': 'peaceful',    'emoji': '🕊️', 'label': 'Peaceful'},
+  {'quadrant': 'low-pleasant', 'value': 'focused',     'emoji': '🎯', 'label': 'Focused'},
+  {'quadrant': 'low-pleasant', 'value': 'satisfied',   'emoji': '✨', 'label': 'Satisfied'},
+  // Low energy + unpleasant
+  {'quadrant': 'low-unpleasant', 'value': 'sad',       'emoji': '😢', 'label': 'Sad'},
+  {'quadrant': 'low-unpleasant', 'value': 'tired',     'emoji': '😴', 'label': 'Tired'},
+  {'quadrant': 'low-unpleasant', 'value': 'confused',  'emoji': '🤔', 'label': 'Confused'},
+  {'quadrant': 'low-unpleasant', 'value': 'meh',       'emoji': '😐', 'label': 'Meh'},
+  {'quadrant': 'low-unpleasant', 'value': 'lonely',    'emoji': '🫂', 'label': 'Lonely'},
+  {'quadrant': 'low-unpleasant', 'value': 'bored',     'emoji': '😑', 'label': 'Bored'},
+];
+
+const kMoodQuadrants = [
+  {'value': 'high-pleasant',   'label': 'Feeling good & activated', 'emoji': '✨'},
+  {'value': 'high-unpleasant', 'label': 'Activated but struggling', 'emoji': '⚡'},
+  {'value': 'low-pleasant',    'label': 'Calm & at ease',           'emoji': '🌿'},
+  {'value': 'low-unpleasant',  'label': 'Low & drained',            'emoji': '🌧️'},
 ];
 
 Map<String, String>? moodTagInfo(String value) {
@@ -75,28 +106,103 @@ class MoodLogService {
       return (logs: <MoodLog>[], error: e.message);
     }
   }
-}
 
-class MoodLog {
-  MoodLog({
-    required this.id,
-    required this.userId,
-    required this.moodScore,
-    required this.moodTag,
-    required this.loggedAt,
-  });
+  Future<({List<MoodLog> logs, String? error})> getAllLogsForYear({
+    required String userId,
+  }) async {
+    final since = DateTime.now().subtract(const Duration(days: 366));
+    try {
+      final data = await _client
+          .from('mood_logs')
+          .select('id, user_id, mood_score, mood_tag, logged_at')
+          .eq('user_id', userId)
+          .gte('logged_at', since.toIso8601String())
+          .order('logged_at', ascending: true);
+      final logs = (data as List<dynamic>)
+          .map((row) => MoodLog.fromJson(row as Map<String, dynamic>))
+          .toList();
+      return (logs: logs, error: null);
+    } on PostgrestException catch (e) {
+      return (logs: <MoodLog>[], error: e.message);
+    }
+  }
 
-  final String id;
-  final String userId;
-  final int moodScore;
-  final String moodTag;
-  final DateTime loggedAt;
+  Future<({List<ActivityTag> tags, String? error})> getActivityTags() async {
+    try {
+      final data = await _client
+          .from('activity_tags')
+          .select('id, user_id, slug, label, emoji')
+          .order('label', ascending: true);
+      final tags = (data as List<dynamic>)
+          .map((row) => ActivityTag.fromJson(row as Map<String, dynamic>))
+          .toList();
+      return (tags: tags, error: null);
+    } on PostgrestException catch (e) {
+      return (tags: <ActivityTag>[], error: e.message);
+    }
+  }
 
-  factory MoodLog.fromJson(Map<String, dynamic> json) => MoodLog(
-        id: json['id'] as String,
-        userId: json['user_id'] as String,
-        moodScore: json['mood_score'] as int,
-        moodTag: json['mood_tag'] as String,
-        loggedAt: DateTime.parse(json['logged_at'] as String),
-      );
+  Future<String?> setEntryActivities({
+    required String moodLogId,
+    required String userId,
+    required List<String> tagIds,
+  }) async {
+    try {
+      await _client
+          .from('mood_log_activities')
+          .delete()
+          .eq('mood_log_id', moodLogId)
+          .eq('user_id', userId);
+
+      if (tagIds.isNotEmpty) {
+        await _client.from('mood_log_activities').insert(
+          tagIds.map((id) => {
+            'mood_log_id': moodLogId,
+            'activity_tag_id': id,
+            'user_id': userId,
+          }).toList(),
+        );
+      }
+      return null;
+    } on PostgrestException catch (e) {
+      return e.message;
+    }
+  }
+
+  Future<({List<({MoodLog log, List<ActivityTag> activities})> entries, String? error})>
+      getLogsWithActivities({
+    required String userId,
+    required int days,
+  }) async {
+    final since = DateTime.now().subtract(Duration(days: days));
+    try {
+      final data = await _client
+          .from('mood_logs')
+          .select(
+            'id, user_id, mood_score, mood_tag, logged_at, '
+            'mood_log_activities(activity_tag_id, activity_tags(id, user_id, slug, label, emoji))',
+          )
+          .eq('user_id', userId)
+          .gte('logged_at', since.toIso8601String())
+          .order('logged_at', ascending: true);
+
+      final entries = (data as List<dynamic>).map((row) {
+        final map = row as Map<String, dynamic>;
+        final log = MoodLog.fromJson(map);
+        final activityRows = (map['mood_log_activities'] as List<dynamic>?) ?? [];
+        final activities = activityRows
+            .map((a) {
+              final tagRow = (a as Map<String, dynamic>)['activity_tags'] as Map<String, dynamic>?;
+              return tagRow != null ? ActivityTag.fromJson(tagRow) : null;
+            })
+            .whereType<ActivityTag>()
+            .toList();
+        return (log: log, activities: activities);
+      }).toList();
+
+      return (entries: entries, error: null);
+    } on PostgrestException catch (e) {
+      return (entries: <({MoodLog log, List<ActivityTag> activities})>[], error: e.message);
+    }
+  }
 }
