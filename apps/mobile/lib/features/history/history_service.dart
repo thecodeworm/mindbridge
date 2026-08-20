@@ -6,6 +6,16 @@ export '../../core/models.dart'
 
 const _kNotFound = "We couldn't find that entry. It may have already been deleted.";
 
+// A freshly-minted session JWT can occasionally be checked a moment before the
+// server clock agrees it's valid ("token used before issued") right after
+// login. It's transient — one retry after a short delay clears it.
+const _kTransientAuthError = "Still getting things ready — pull to refresh in a moment.";
+
+bool _isClockSkewError(String message) {
+  final m = message.toLowerCase();
+  return m.contains('issued at') || m.contains('used before issued');
+}
+
 class HistoryService {
   HistoryService(this._client);
 
@@ -17,19 +27,35 @@ class HistoryService {
     int offset = 0,
   }) async {
     try {
-      final data = await _client
-          .from('mood_logs')
-          .select('id, mood_score, mood_tag, logged_at, coping_suggestions(technique_name)')
-          .eq('user_id', userId)
-          .order('logged_at', ascending: false)
-          .range(offset, offset + limit - 1);
-      final entries = (data as List<dynamic>)
-          .map((row) => HistoryEntry.fromJson(row as Map<String, dynamic>))
-          .toList();
-      return (entries: entries, error: null);
+      return await _fetchHistory(userId: userId, limit: limit, offset: offset);
     } on PostgrestException catch (e) {
+      if (_isClockSkewError(e.message)) {
+        try {
+          await Future.delayed(const Duration(milliseconds: 500));
+          return await _fetchHistory(userId: userId, limit: limit, offset: offset);
+        } on PostgrestException {
+          return (entries: <HistoryEntry>[], error: _kTransientAuthError);
+        }
+      }
       return (entries: <HistoryEntry>[], error: e.message);
     }
+  }
+
+  Future<({List<HistoryEntry> entries, String? error})> _fetchHistory({
+    required String userId,
+    required int limit,
+    required int offset,
+  }) async {
+    final data = await _client
+        .from('mood_logs')
+        .select('id, mood_score, mood_tag, logged_at, coping_suggestions(technique_name)')
+        .eq('user_id', userId)
+        .order('logged_at', ascending: false)
+        .range(offset, offset + limit - 1);
+    final entries = (data as List<dynamic>)
+        .map((row) => HistoryEntry.fromJson(row as Map<String, dynamic>))
+        .toList();
+    return (entries: entries, error: null);
   }
 
   // Every query filters on user_id as well as row id — RLS enforces this

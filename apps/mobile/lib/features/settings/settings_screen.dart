@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/elevation.dart';
 import '../../core/theme.dart';
 import '../../core/theme_controller.dart';
 import '../../core/app_lock_state.dart';
+import '../../widgets/crisis_fab.dart';
 import '../auth/app_lock_service.dart';
 import '../auth/auth_service.dart';
 import '../help/help_screen.dart';
@@ -106,7 +108,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _exporting = true;
       _exportError = null;
     });
-    final error = await exportUserData(userId);
+    final box = context.findRenderObject() as RenderBox?;
+    final origin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+    final error = await exportUserData(userId, sharePositionOrigin: origin);
     if (!mounted) return;
     setState(() {
       _exporting = false;
@@ -375,6 +379,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
+      floatingActionButton: const CrisisFab(),
     );
   }
 
@@ -396,11 +401,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _section(ColorScheme cs, TextTheme tt, {required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outline),
-      ),
+      decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

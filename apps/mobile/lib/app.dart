@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/app_lock_state.dart';
+import 'core/onboarding_state.dart';
 import 'core/recovery_state.dart';
 import 'core/theme.dart';
 import 'core/theme_controller.dart';
@@ -11,6 +12,7 @@ import 'features/auth/reset_password_screen.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/auth/sign_up_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/onboarding/onboarding_flow.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -69,7 +71,22 @@ class _AppLockWrapperState extends State<_AppLockWrapper> with WidgetsBindingObs
         }
         return child!;
       },
-      child: const AuthGate(),
+      child: const _OnboardingGate(),
+    );
+  }
+}
+
+// Shows onboarding once (per install), then falls through to AuthGate.
+class _OnboardingGate extends StatelessWidget {
+  const _OnboardingGate();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: OnboardingState.completed,
+      builder: (context, completed, _) {
+        return completed ? const AuthGate() : const OnboardingFlow();
+      },
     );
   }
 }

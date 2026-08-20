@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/crisis.dart';
+import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
 import '../../core/theme.dart';
+import '../../widgets/crisis_fab.dart';
 import '../help/help_screen.dart';
 import '../mood/mood_log_screen.dart';
 import '../mood/mood_log_service.dart';
@@ -173,17 +176,14 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
           ],
         ),
       ),
+      floatingActionButton: const CrisisFab(),
     );
   }
 
   Widget _buildSkeleton(ColorScheme cs) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outline),
-      ),
+      decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -224,11 +224,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
     return [
       Container(
         padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outline),
-        ),
+        decoration: AppElevation.decoration(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -288,7 +284,10 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
         ),
       ),
       if (detail.copingSuggestion != null &&
-          (detail.copingSuggestion!.crisisSignal || moodLog.moodScore <= 2)) ...[
+          shouldShowCrisisChip(
+            crisisSignal: detail.copingSuggestion!.crisisSignal,
+            moodScore: moodLog.moodScore,
+          )) ...[
         const SizedBox(height: 16),
         GestureDetector(
           onTap: () => Navigator.push(
@@ -312,11 +311,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
       const SizedBox(height: 16),
       Container(
         padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.outline),
-        ),
+        decoration: AppElevation.decoration(context),
         child: detail.copingSuggestion != null
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

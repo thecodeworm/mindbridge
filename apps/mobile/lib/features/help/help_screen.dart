@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/elevation.dart';
 import '../../core/theme.dart';
+import '../../widgets/breathing_circle.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -25,6 +27,8 @@ class HelpScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            Center(child: BreathingCircle(color: terra, size: 80)),
+            const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -54,7 +58,10 @@ class HelpScreen extends StatelessWidget {
               name: 'Crisis Text Line',
               description: 'Text HOME to 741741. Free 24/7 support via text.',
               chips: [
-                _Chip(label: 'Text HOME to 741741', url: 'sms:741741?body=HOME'),
+                _Chip(
+                  label: 'Text HOME to 741741',
+                  url: 'sms:741741?body=HOME',
+                ),
               ],
               terraDark: terraDark,
               terraTint: terraTint,
@@ -67,7 +74,10 @@ class HelpScreen extends StatelessWidget {
                   'LGBTQ+ youth crisis support. Call 1-866-488-7386 or text START to 678-678.',
               chips: [
                 _Chip(label: 'Call Trevor Project', url: 'tel:18664887386'),
-                _Chip(label: 'Text START to 678-678', url: 'sms:678678?body=START'),
+                _Chip(
+                  label: 'Text START to 678-678',
+                  url: 'sms:678678?body=START',
+                ),
               ],
               terraDark: terraDark,
               terraTint: terraTint,
@@ -111,17 +121,19 @@ class _ResourceCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outline),
-      ),
+      decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(name, style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            name,
+            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 4),
-          Text(description, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+          Text(
+            description,
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -139,7 +151,10 @@ class _ResourceCard extends StatelessWidget {
                   side: BorderSide(color: terra),
                   backgroundColor: terraTint,
                   minimumSize: const Size(0, 40),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                 ),
                 child: Text(chip.label, style: const TextStyle(fontSize: 13)),
               );

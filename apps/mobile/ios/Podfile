@@ -1,6 +1,12 @@
 # Uncomment this line to define a global platform for your project
 # platform :ios, '13.0'
 
+# CocoaPods CDN (cdn.cocoapods.org, Cloudflare-fronted) resets connections from this
+# machine's Ruby/OpenSSL 3.6.x TLS client (reproducible via direct Net::HTTP tests,
+# unrelated to HTTP method or TLS version — curl to the same host always succeeds).
+# Fall back to the git-based Specs repo, which uses a different transport.
+source 'https://github.com/CocoaPods/Specs.git'
+
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 

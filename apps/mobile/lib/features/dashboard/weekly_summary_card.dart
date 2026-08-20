@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/elevation.dart';
 import '../../core/models.dart';
 
 String _prevWeekStart() {
@@ -101,11 +102,7 @@ class _WeeklySummaryCardState extends State<WeeklySummaryCard> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outline),
-      ),
+      decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

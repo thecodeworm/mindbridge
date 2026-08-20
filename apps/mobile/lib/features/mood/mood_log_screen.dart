@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/mood_color.dart';
+import '../../widgets/breathing_circle.dart';
+import '../../widgets/crisis_fab.dart';
+import '../../widgets/felt_mood_slider.dart';
+import '../../widgets/mood_tag_picker.dart';
 import '../history/history_service.dart';
 import 'activity_tag_picker.dart';
 import 'distortion_picker.dart';
@@ -8,10 +12,20 @@ import 'mood_log_service.dart';
 import 'suggestion_screen.dart';
 
 class MoodLogScreen extends StatefulWidget {
-  const MoodLogScreen({super.key, this.editing});
+  const MoodLogScreen({
+    super.key,
+    this.editing,
+    this.initialScore,
+    this.initialTag,
+  });
 
   /// When set, edits this existing entry. Coping suggestion is not regenerated.
   final EntryDetail? editing;
+
+  /// Pre-fills a new entry (e.g. the mood picked during onboarding).
+  /// Ignored when [editing] is set.
+  final double? initialScore;
+  final String? initialTag;
 
   @override
   State<MoodLogScreen> createState() => _MoodLogScreenState();
@@ -41,8 +55,8 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
   void initState() {
     super.initState();
     final editing = widget.editing;
-    _score = editing?.moodLog.moodScore.toDouble() ?? 5;
-    _tag = editing?.moodLog.moodTag;
+    _score = editing?.moodLog.moodScore.toDouble() ?? widget.initialScore ?? 5;
+    _tag = editing?.moodLog.moodTag ?? widget.initialTag;
     _journalController.text = editing?.journalEntry?.body ?? '';
     _selectedActivities = editing?.activities.map((a) => a.id).toSet() ?? {};
 
@@ -94,7 +108,8 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
       );
       if (!mounted) return;
 
-      if (_selectedActivities.isNotEmpty || widget.editing!.activities.isNotEmpty) {
+      if (_selectedActivities.isNotEmpty ||
+          widget.editing!.activities.isNotEmpty) {
         await _service.setEntryActivities(
           moodLogId: widget.editing!.moodLog.id,
           userId: userId,
@@ -195,10 +210,6 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
     );
   }
 
-  List<Map<String, String>> get _tagsForQuadrant => _quadrant == null
-      ? []
-      : kMoodTags.where((t) => t['quadrant'] == _quadrant).toList();
-
   @override
   Widget build(BuildContext context) {
     final color = moodColor(_score);
@@ -222,10 +233,13 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
                 _handleDistortionDone(_pendingMoodLogId!, distortions, reframe),
             onSkip: () {
               final userId = Supabase.instance.client.auth.currentUser?.id;
-              if (userId != null) _navigateToSuggestion(_pendingMoodLogId!, userId);
+              if (userId != null) {
+                _navigateToSuggestion(_pendingMoodLogId!, userId);
+              }
             },
           ),
         ),
+        floatingActionButton: const CrisisFab(),
       );
     }
 
@@ -243,12 +257,18 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
           children: [
             if (_error != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: cs.errorContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(_error!, style: TextStyle(color: cs.error, fontSize: 14)),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: cs.error, fontSize: 14),
+                ),
               ),
               const SizedBox(height: 16),
             ],
@@ -263,16 +283,13 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
                   style: tt.headlineSmall?.copyWith(
                     color: color,
                     fontWeight: FontWeight.bold,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
             ),
-            Slider(
+            FeltMoodSlider(
               value: _score,
-              min: 1,
-              max: 10,
-              activeColor: color,
-              inactiveColor: color.withValues(alpha: 0.25),
               onChanged: (v) => setState(() => _score = v),
             ),
             Row(
@@ -287,69 +304,27 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
             // Two-step tag picker
             Text('How does it feel?', style: tt.bodyMedium),
             const SizedBox(height: 8),
-            if (_quadrant == null) ...[
-              ...kMoodQuadrants.map((q) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: OutlinedButton(
-                    onPressed: () => setState(() => _quadrant = q['value']),
-                    style: OutlinedButton.styleFrom(
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    child: Text('${q['emoji']}  ${q['label']}'),
-                  ),
-                );
-              }),
-            ] else ...[
-              Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: () => setState(() {
-                      _quadrant = null;
-                      _tag = null;
-                    }),
-                    icon: const Icon(Icons.arrow_back, size: 16),
-                    label: Text(
-                      kMoodQuadrants.firstWhere((q) => q['value'] == _quadrant)['label']!,
-                      style: tt.bodySmall,
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(0, 32),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _tagsForQuadrant.map((t) {
-                  final selected = _tag == t['value'];
-                  return FilterChip(
-                    label: Text('${t['emoji']} ${t['label']}'),
-                    selected: selected,
-                    onSelected: (_) => setState(() => _tag = t['value']),
-                    selectedColor: cs.primaryContainer,
-                    checkmarkColor: cs.primary,
-                    labelStyle: TextStyle(
-                      color: selected ? cs.primary : cs.onSurface,
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+            MoodTagPicker(
+              quadrant: _quadrant,
+              tag: _tag,
+              onQuadrantChanged: (v) => setState(() => _quadrant = v),
+              onTagChanged: (v) => setState(() => _tag = v),
+            ),
             const SizedBox(height: 24),
 
             // Activity tags
             Text('What were you doing?', style: tt.bodyMedium),
             const SizedBox(height: 4),
-            Text('Optional', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+            Text(
+              'Optional',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
             const SizedBox(height: 8),
             if (_loadingTags)
-              const SizedBox(height: 40, child: Center(child: CircularProgressIndicator()))
+              const SizedBox(
+                height: 40,
+                child: Center(child: CircularProgressIndicator()),
+              )
             else
               ActivityTagPicker(
                 tags: _activityTags,
@@ -357,6 +332,17 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
                 onChanged: (next) => setState(() => _selectedActivities = next),
               ),
             const SizedBox(height: 24),
+
+            if (_tag != null && _score <= 3) ...[
+              Center(child: BreathingCircle(color: color, size: 72)),
+              const SizedBox(height: 8),
+              Text(
+                'Take a breath before you write, if that helps.',
+                textAlign: TextAlign.center,
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 24),
+            ],
 
             // Journal
             Text('Journal (optional)', style: tt.bodyMedium),
@@ -376,7 +362,9 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _submitting ? null : () => Navigator.pop(context),
+                    onPressed: _submitting
+                        ? null
+                        : () => Navigator.pop(context),
                     child: const Text('Cancel'),
                   ),
                 ),
@@ -385,7 +373,9 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
                   child: FilledButton(
                     onPressed: _submitting ? null : _submit,
                     child: Text(
-                      _submitting ? 'Saving…' : (_isEditing ? 'Save changes' : 'Save'),
+                      _submitting
+                          ? 'Saving…'
+                          : (_isEditing ? 'Save changes' : 'Save'),
                     ),
                   ),
                 ),
@@ -394,6 +384,7 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
           ],
         ),
       ),
+      floatingActionButton: const CrisisFab(),
     );
   }
 }

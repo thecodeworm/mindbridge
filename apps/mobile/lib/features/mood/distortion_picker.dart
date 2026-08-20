@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/elevation.dart';
 
 const _kDistortions = [
   {'value': 'all_or_nothing', 'label': 'All-or-nothing thinking', 'emoji': '⚫'},
@@ -37,10 +38,10 @@ class _DistortionPickerState extends State<DistortionPicker> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: AppElevation.decoration(
+        context,
+        radius: AppRadius.chip,
         color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outline.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

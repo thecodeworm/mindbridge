@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
 import '../mood/mood_log_service.dart';
 
@@ -52,20 +53,34 @@ class _YearInPixelsState extends State<YearInPixels> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outline),
-      ),
+      decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Year in pixels', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            'Year in pixels',
+            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 12),
           if (_loading)
-            const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()))
-          else
+            const SizedBox(
+              height: 80,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            if (_dayScores.isEmpty) ...[
+              Text(
+                'Your mood history, visualized',
+                style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                'Each square is a day — colors fill in as you log moods.',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: 8),
+            ],
             _PixelGrid(dayScores: _dayScores, cs: cs),
+          ],
         ],
       ),
     );
@@ -124,7 +139,11 @@ class _PixelGrid extends StatelessWidget {
               }
 
               return Tooltip(
-                message: score != null ? '$dStr · mood $score' : dStr == todayStr ? 'Today' : dStr,
+                message: score != null
+                    ? '$dStr · mood $score'
+                    : dStr == todayStr
+                    ? 'Today'
+                    : dStr,
                 child: Container(
                   width: 10,
                   height: 10,

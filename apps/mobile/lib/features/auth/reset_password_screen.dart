@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/recovery_state.dart';
 import '../../core/validators.dart';
+import '../../widgets/crisis_fab.dart';
 import 'auth_service.dart';
 
 /// Shown in place of [HomeScreen]/[SignInScreen] by `AuthGate` when the
@@ -127,6 +128,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
         ),
       ),
+      floatingActionButton: const CrisisFab(),
     );
   }
 
@@ -291,6 +293,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
         ),
       ),
+      floatingActionButton: const CrisisFab(),
     );
   }
 }
