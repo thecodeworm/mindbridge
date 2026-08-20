@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { PASSWORD_HINT, validatePassword, validatePasswordConfirmation } from '../lib/validators'
+import { CrisisChip } from '../components/CrisisChip'
 
 type LinkState = 'pending' | 'ready' | 'expired'
 
@@ -70,7 +71,7 @@ export function ResetPasswordPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-cream p-4">
         {brandHeader}
-        <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 text-center shadow-sm">
+        <div className="card-lg w-full max-w-sm space-y-4 p-8 text-center">
           <div className="text-4xl">✅</div>
           <p className="font-medium text-ink">Password updated</p>
           <p className="text-sm text-muted">You can log in with your new password now.</p>
@@ -81,6 +82,7 @@ export function ResetPasswordPage() {
             Back to log in
           </button>
         </div>
+        <CrisisChip />
       </div>
     )
   }
@@ -89,7 +91,7 @@ export function ResetPasswordPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-cream p-4">
         {brandHeader}
-        <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 text-center shadow-sm">
+        <div className="card-lg w-full max-w-sm space-y-4 p-8 text-center">
           <p className="font-medium text-ink">You signed up with Google</p>
           <p className="text-sm text-muted">
             There's no password to reset — just use the Google button to sign in.
@@ -101,6 +103,7 @@ export function ResetPasswordPage() {
             Back to log in
           </button>
         </div>
+        <CrisisChip />
       </div>
     )
   }
@@ -109,7 +112,7 @@ export function ResetPasswordPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-cream p-4">
         {brandHeader}
-        <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 text-center shadow-sm">
+        <div className="card-lg w-full max-w-sm space-y-4 p-8 text-center">
           <p className="font-medium text-ink">This link has expired</p>
           <p className="text-sm text-muted">
             Reset links only work once and expire after a while. Request a new one from the log in page.
@@ -121,6 +124,7 @@ export function ResetPasswordPage() {
             Request a new link
           </button>
         </div>
+        <CrisisChip />
       </div>
     )
   }
@@ -130,7 +134,7 @@ export function ResetPasswordPage() {
       {brandHeader}
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 shadow-sm"
+        className="card-lg w-full max-w-sm space-y-4 p-8"
       >
         <h1 className="text-xl font-bold text-ink">Set a new password</h1>
         {error && (
@@ -197,6 +201,7 @@ export function ResetPasswordPage() {
           {linkState === 'pending' ? 'Verifying link…' : submitting ? 'Saving…' : 'Save new password'}
         </button>
       </form>
+      <CrisisChip />
     </div>
   )
 }

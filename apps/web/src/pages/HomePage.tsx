@@ -9,6 +9,8 @@ import { StreakBadge } from '../components/StreakBadge'
 import { YearInPixels } from '../components/YearInPixels'
 import { InsightsCard } from '../components/InsightsCard'
 import { WeeklySummaryCard } from '../components/WeeklySummaryCard'
+import { CrisisChip } from '../components/CrisisChip'
+import { clearPendingCheckin, getPendingCheckin } from '../core/onboardingState'
 
 export function HomePage() {
   const { user } = useAuth()
@@ -17,6 +19,7 @@ export function HomePage() {
 
   const [logs, setLogs] = useState<MoodLog[]>([])
   const [loadingLogs, setLoadingLogs] = useState(true)
+  const [showOnboardingNudge, setShowOnboardingNudge] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -26,9 +29,23 @@ export function HomePage() {
       if (cancelled) return
       if (!error) setLogs(logs)
       setLoadingLogs(false)
+      setShowOnboardingNudge(logs.length === 0 && getPendingCheckin() !== null)
     })
     return () => { cancelled = true }
   }, [user])
+
+  function dismissOnboardingNudge() {
+    clearPendingCheckin()
+    setShowOnboardingNudge(false)
+  }
+
+  function saveOnboardingCheckin() {
+    const pending = getPendingCheckin()
+    if (!pending) return
+    clearPendingCheckin()
+    setShowOnboardingNudge(false)
+    navigate('/log', { state: { initialScore: pending.score, initialTag: pending.tag } })
+  }
 
   return (
     <div className="min-h-screen bg-cream p-4 pb-24 sm:p-6">
@@ -48,10 +65,33 @@ export function HomePage() {
           </button>
         </div>
 
+        {showOnboardingNudge && (
+          <div className="card flex items-center gap-3 p-4">
+            <div className="flex-1">
+              <p className="font-medium text-ink">Save the check-in from onboarding?</p>
+              <p className="text-sm text-muted">We'll pre-fill it — takes one tap.</p>
+            </div>
+            <button
+              type="button"
+              onClick={dismissOnboardingNudge}
+              className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-ink"
+            >
+              Not now
+            </button>
+            <button
+              type="button"
+              onClick={saveOnboardingCheckin}
+              className="shrink-0 rounded-lg bg-blue-dark px-3 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90"
+            >
+              Save
+            </button>
+          </div>
+        )}
+
         <StreakBadge logs={logs} />
 
         {loadingLogs ? (
-          <div className="h-72 animate-pulse rounded-xl border border-border bg-surface" />
+          <div className="card h-72 animate-pulse" />
         ) : (
           <MoodTrendChart logs={logs} />
         )}
@@ -72,16 +112,8 @@ export function HomePage() {
             <YearInPixels userId={user.id} />
           </>
         )}
-
-        <div className="border-t border-border pt-4 text-center">
-          <a
-            href="/help"
-            className="text-sm text-terra-dark transition-colors hover:underline"
-          >
-            Crisis resources & help
-          </a>
-        </div>
       </div>
+      <CrisisChip />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import type { SuggestionResponse } from '../../../../shared/types'
 import { generateSuggestion } from '../lib/suggestionService'
 import { updateSuggestionFeedback } from '../lib/feedbackService'
+import { CrisisChip } from '../components/CrisisChip'
 
 interface SuggestionLocationState {
   moodLogId: string
@@ -57,7 +58,7 @@ export function SuggestionPage() {
     <div className="flex min-h-screen items-start justify-center bg-cream p-4 pt-12">
       <div className="w-full max-w-md space-y-4">
         {loading && (
-          <div className="animate-pulse space-y-4 rounded-xl border border-border bg-surface p-8 shadow-sm">
+          <div className="animate-pulse space-y-4 card p-8">
             <div className="h-6 w-2/3 rounded bg-field" />
             <div className="space-y-2"><div className="h-4 w-full rounded bg-field" /><div className="h-4 w-5/6 rounded bg-field" /></div>
             <div className="space-y-2 pt-2"><div className="h-4 w-full rounded bg-border" /><div className="h-4 w-full rounded bg-border" /><div className="h-4 w-3/4 rounded bg-border" /></div>
@@ -65,7 +66,7 @@ export function SuggestionPage() {
         )}
 
         {!loading && error && (
-          <div className="space-y-4 rounded-xl border border-border bg-surface p-8 shadow-sm">
+          <div className="space-y-4 card p-8">
             <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{error}</p>
             <p className="text-sm text-muted">Your mood was saved — you can try generating a suggestion again.</p>
             <div className="flex gap-3">
@@ -86,7 +87,7 @@ export function SuggestionPage() {
               </a>
             )}
 
-            <div className="space-y-4 rounded-xl border border-border bg-surface p-8 shadow-sm">
+            <div className="space-y-4 card p-8">
               <div className="flex items-start justify-between gap-3">
                 <h1 className="text-2xl font-bold text-ink">{suggestion.technique_name}</h1>
                 <button type="button" onClick={toggleSaved} title={saved ? 'Remove from toolkit' : 'Save to toolkit'} className="shrink-0 text-xl transition-opacity hover:opacity-70">
@@ -115,6 +116,7 @@ export function SuggestionPage() {
           </>
         )}
       </div>
+      <CrisisChip />
     </div>
   )
 }

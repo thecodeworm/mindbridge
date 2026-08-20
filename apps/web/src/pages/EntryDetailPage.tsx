@@ -6,6 +6,7 @@ import { deleteEntry, getEntryDetail } from '../lib/historyService'
 import type { EntryDetail } from '../lib/historyService'
 import { moodColor } from '../lib/moodColor'
 import { updateSuggestionFeedback } from '../lib/feedbackService'
+import { CrisisChip } from '../components/CrisisChip'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -127,21 +128,21 @@ export function EntryDetailPage() {
         )}
 
         {loading && (
-          <div className="animate-pulse space-y-4 rounded-xl border border-border bg-surface p-8 shadow-sm">
+          <div className="animate-pulse space-y-4 card p-8">
             <div className="h-6 w-2/3 rounded bg-field" />
             <div className="space-y-2"><div className="h-4 w-full rounded bg-field" /><div className="h-4 w-5/6 rounded bg-field" /></div>
           </div>
         )}
 
         {!loading && error && (
-          <div className="rounded-xl border border-border bg-surface p-8 shadow-sm">
+          <div className="card p-8">
             <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{error}</p>
           </div>
         )}
 
         {!loading && !error && detail && (
           <>
-            <div className="space-y-4 rounded-xl border border-border bg-surface p-8 shadow-sm">
+            <div className="space-y-4 card p-8">
               <div className="flex items-center gap-3">
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold" style={{ backgroundColor: moodColor(detail.moodLog.mood_score), color: '#1C1917' }}>
                   {detail.moodLog.mood_score}
@@ -182,7 +183,7 @@ export function EntryDetailPage() {
             )}
 
             {suggestion && (
-              <div className="space-y-4 rounded-xl border border-border bg-surface p-8 shadow-sm">
+              <div className="space-y-4 card p-8">
                 <div className="flex items-start justify-between gap-3">
                   <h1 className="text-2xl font-bold text-ink">{suggestion.technique_name}</h1>
                   <button type="button" onClick={toggleSaved} title={saved ? 'Remove from toolkit' : 'Save to toolkit'} className="shrink-0 text-xl transition-opacity hover:opacity-70">
@@ -207,13 +208,14 @@ export function EntryDetailPage() {
             )}
 
             {!suggestion && (
-              <div className="rounded-xl border border-border bg-surface p-8 shadow-sm">
+              <div className="card p-8">
                 <p className="text-sm text-muted">No coping suggestion was saved for this entry.</p>
               </div>
             )}
           </>
         )}
       </div>
+      <CrisisChip />
     </div>
   )
 }

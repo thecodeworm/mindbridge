@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { MOOD_TAGS, MOOD_QUADRANTS, moodTagInfo } from '../../../../shared/types'
+import { moodTagInfo } from '../../../../shared/types'
 import type { MoodTag, MoodQuadrant, ActivityTag } from '../../../../shared/types'
 import { logMood, addJournalEntry } from '../lib/moodService'
 import { updateEntry } from '../lib/historyService'
@@ -10,32 +10,37 @@ import { moodColor } from '../lib/moodColor'
 import { getActivityTags, setEntryActivities } from '../lib/activityService'
 import { ActivityTagPicker } from '../components/ActivityTagPicker'
 import { DistortionPicker } from '../components/DistortionPicker'
+import { FeltMoodSlider } from '../components/FeltMoodSlider'
+import { MoodTagPicker } from '../components/MoodTagPicker'
+import { CrisisChip } from '../components/CrisisChip'
+import { BreathingCircle } from '../components/BreathingCircle'
 import { supabase } from '../lib/supabaseClient'
 
-function tagsByQuadrant(q: MoodQuadrant) {
-  return MOOD_TAGS.filter((t) => t.quadrant === q)
+interface MoodLogLocationState {
+  editing?: EntryDetail
+  /** Pre-fills a new entry (e.g. the mood picked during onboarding). Ignored when `editing` is set. */
+  initialScore?: number
+  initialTag?: MoodTag
 }
-
-const chipClass = (selected: boolean) =>
-  [
-    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
-    selected
-      ? 'border-blue-dark bg-blue-tint text-blue-dark'
-      : 'border-border bg-field text-ink hover:bg-blue-tint',
-  ].join(' ')
 
 export function MoodLogPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  const editing = (location.state as { editing?: EntryDetail } | null)?.editing ?? null
+  const state = (location.state as MoodLogLocationState | null) ?? null
+  const editing = state?.editing ?? null
 
-  const [score, setScore] = useState(editing?.moodLog.mood_score ?? 5)
-  const [tag, setTag] = useState<MoodTag | null>(editing?.moodLog.mood_tag ?? null)
+  const [score, setScore] = useState(
+    editing?.moodLog.mood_score ?? state?.initialScore ?? 5,
+  )
+  const [tag, setTag] = useState<MoodTag | null>(
+    editing?.moodLog.mood_tag ?? state?.initialTag ?? null,
+  )
   const [quadrant, setQuadrant] = useState<MoodQuadrant | null>(() => {
-    if (!editing?.moodLog.mood_tag) return null
-    return moodTagInfo(editing.moodLog.mood_tag)?.quadrant ?? null
+    const seedTag = editing?.moodLog.mood_tag ?? state?.initialTag
+    if (!seedTag) return null
+    return moodTagInfo(seedTag)?.quadrant ?? null
   })
   const [journal, setJournal] = useState(editing?.journalEntry?.body ?? '')
   const [activityTags, setActivityTags] = useState<ActivityTag[]>([])
@@ -136,13 +141,11 @@ export function MoodLogPage() {
     navigate('/suggestion', { state: { moodLogId, userId: user.id }, replace: true })
   }
 
-  const tagsForQuadrant = quadrant ? tagsByQuadrant(quadrant) : []
-
   return (
     <div className="flex min-h-screen items-start justify-center bg-cream p-4 pt-12">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md space-y-6 rounded-xl border border-border bg-surface p-8 shadow-sm"
+        className="card-lg w-full max-w-md space-y-6 p-8"
       >
         <h1 className="text-2xl font-bold text-ink">
           {editing ? 'Edit entry' : 'How are you feeling?'}
@@ -153,20 +156,12 @@ export function MoodLogPage() {
         )}
 
         {/* Score */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-muted">Mood score</label>
-            <span className="text-2xl font-bold" style={{ color }}>{roundedScore}</span>
+            <span className="text-2xl font-bold tabular-nums" style={{ color }}>{roundedScore}</span>
           </div>
-          <input
-            type="range"
-            min={1}
-            max={10}
-            step={0.01}
-            value={score}
-            onChange={(e) => setScore(Number(e.target.value))}
-            className="mood-slider w-full"
-          />
+          <FeltMoodSlider value={score} onChange={setScore} />
           <div className="flex justify-between text-xs text-faint">
             <span>1</span>
             <span>10</span>
@@ -176,44 +171,12 @@ export function MoodLogPage() {
         {/* Two-step mood tag picker */}
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted">How would you describe it?</p>
-          {quadrant === null ? (
-            <div className="grid grid-cols-2 gap-2">
-              {MOOD_QUADRANTS.map((q) => (
-                <button
-                  key={q.value}
-                  type="button"
-                  onClick={() => { setQuadrant(q.value); setTag(null) }}
-                  className="flex flex-col items-start gap-1 rounded-xl border border-border bg-field p-3 text-left transition-colors hover:bg-blue-tint"
-                >
-                  <span className="text-lg">{q.emoji}</span>
-                  <span className="text-xs font-medium text-ink">{q.label}</span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => { setQuadrant(null); setTag(null) }}
-                className="text-xs text-muted transition-colors hover:text-ink"
-              >
-                ← Change
-              </button>
-              <div className="flex flex-wrap gap-2">
-                {tagsForQuadrant.map((t) => (
-                  <button
-                    key={t.value}
-                    type="button"
-                    onClick={() => setTag(t.value)}
-                    className={chipClass(tag === t.value)}
-                  >
-                    <span>{t.emoji}</span>
-                    <span>{t.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <MoodTagPicker
+            quadrant={quadrant}
+            tag={tag}
+            onQuadrantChange={(q) => { setQuadrant(q); setTag(null) }}
+            onTagChange={setTag}
+          />
         </div>
 
         {/* Activity tags */}
@@ -222,6 +185,13 @@ export function MoodLogPage() {
           selected={selectedActivities}
           onChange={setSelectedActivities}
         />
+
+        {tag && score <= 3 && (
+          <div className="flex flex-col items-center gap-2 py-2 text-center">
+            <BreathingCircle color={color} size={72} />
+            <p className="text-sm text-muted">Take a breath before you write, if that helps.</p>
+          </div>
+        )}
 
         {/* Journal */}
         <div className="space-y-1">
@@ -286,6 +256,7 @@ export function MoodLogPage() {
           </button>
         </div>
       </form>
+      <CrisisChip />
     </div>
   )
 }

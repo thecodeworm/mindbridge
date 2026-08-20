@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { CrisisChip } from '../components/CrisisChip'
 
 function GoogleIcon() {
   return (
@@ -80,7 +81,7 @@ export function LoginPage() {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-cream p-4">
           {brandHeader}
-          <div className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 shadow-sm text-center">
+          <div className="card-lg w-full max-w-sm space-y-4 p-8 text-center">
             <div className="text-4xl">✉️</div>
             <p className="font-medium text-ink">Check your inbox</p>
             <p className="text-sm text-muted">
@@ -93,6 +94,7 @@ export function LoginPage() {
               Back to log in
             </button>
           </div>
+          <CrisisChip />
         </div>
       )
     }
@@ -102,7 +104,7 @@ export function LoginPage() {
         {brandHeader}
         <form
           onSubmit={handleForgotPassword}
-          className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 shadow-sm"
+          className="card-lg w-full max-w-sm space-y-4 p-8"
         >
           <h1 className="text-xl font-bold text-ink">Reset your password</h1>
           <p className="text-sm text-muted">Enter your email and we'll send you a reset link.</p>
@@ -134,6 +136,7 @@ export function LoginPage() {
             Back to log in
           </button>
         </form>
+        <CrisisChip />
       </div>
     )
   }
@@ -143,7 +146,7 @@ export function LoginPage() {
       {brandHeader}
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 shadow-sm"
+        className="card-lg w-full max-w-sm space-y-4 p-8"
       >
         <h1 className="text-xl font-bold text-ink">Welcome back</h1>
         {error && (
@@ -217,6 +220,7 @@ export function LoginPage() {
           </Link>
         </p>
       </form>
+      <CrisisChip />
     </div>
   )
 }
