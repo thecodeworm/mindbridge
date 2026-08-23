@@ -10,8 +10,11 @@ const DEV_ORIGINS = ['http://localhost:5173', 'http://localhost:5174', 'http://l
 
 function buildCorsHeaders(requestOrigin: string | null) {
   const allowed = [...ALLOWED_ORIGINS, ...DEV_ORIGINS]
+  // Scoped to this project's own Vercel deployments only (production is
+  // usemindbridge.vercel.app; preview deploys are usemindbridge-<hash>.vercel.app)
+  // -- a bare `*.vercel.app` regex would allow any Vercel-hosted app, not just ours.
   const isVercelPreview = requestOrigin !== null &&
-    /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(requestOrigin)
+    /^https:\/\/usemindbridge(-[a-z0-9-]+)?\.vercel\.app$/.test(requestOrigin)
   const allowOrigin = requestOrigin && (allowed.includes(requestOrigin) || isVercelPreview)
     ? requestOrigin
     : allowed[0] ?? ''
