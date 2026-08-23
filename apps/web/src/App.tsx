@@ -1,10 +1,10 @@
 import { Routes, Route } from 'react-router-dom'
 import { ProtectedRoute } from './routes/ProtectedRoute'
-import { OnboardingGate } from './routes/OnboardingGate'
+import { RootRoute } from './routes/RootRoute'
+import { OnboardingFlow } from './features/onboarding/OnboardingFlow'
 import { SignUpPage } from './pages/SignUpPage'
 import { LoginPage } from './pages/LoginPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
-import { HomePage } from './pages/HomePage'
 import { MoodLogPage } from './pages/MoodLogPage'
 import { SuggestionPage } from './pages/SuggestionPage'
 import { EntryDetailPage } from './pages/EntryDetailPage'
@@ -14,22 +14,21 @@ import { ToolkitPage } from './pages/ToolkitPage'
 
 function App() {
   return (
-    <OnboardingGate>
-      <Routes>
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/help" element={<HelpPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/log" element={<MoodLogPage />} />
-          <Route path="/suggestion" element={<SuggestionPage />} />
-          <Route path="/entry/:moodLogId" element={<EntryDetailPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/toolkit" element={<ToolkitPage />} />
-        </Route>
-      </Routes>
-    </OnboardingGate>
+    <Routes>
+      <Route path="/" element={<RootRoute />} />
+      <Route path="/onboarding" element={<OnboardingFlow />} />
+      <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/help" element={<HelpPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/log" element={<MoodLogPage />} />
+        <Route path="/suggestion" element={<SuggestionPage />} />
+        <Route path="/entry/:moodLogId" element={<EntryDetailPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/toolkit" element={<ToolkitPage />} />
+      </Route>
+    </Routes>
   )
 }
 

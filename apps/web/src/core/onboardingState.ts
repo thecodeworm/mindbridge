@@ -2,9 +2,10 @@ import type { MoodTag } from '../../../../shared/types'
 
 // Tracks whether the user has completed (or skipped) onboarding, persisted
 // to localStorage — mirrors apps/mobile/lib/core/onboarding_state.dart's
-// FlutterSecureStorage-backed pattern. `OnboardingGate` in App.tsx reads
-// this to decide whether to show `OnboardingFlow` or fall through to the
-// normal routed app.
+// FlutterSecureStorage-backed pattern. OnboardingFlow marks this true on
+// exit; nothing currently reads it to gate routing (that was the deleted
+// OnboardingGate's job — onboarding is now opt-in via LandingPage's
+// "Get started" link at /onboarding instead of an automatic redirect).
 const STORAGE_KEY = 'mindbridge.onboarding_completed'
 
 export function isOnboardingCompleted(): boolean {
