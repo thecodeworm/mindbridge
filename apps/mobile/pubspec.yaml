@@ -43,6 +43,12 @@ dependencies:
   flutter_local_notifications: ^18.0.0
   local_auth: ^2.3.0
   google_fonts: ^6.2.1
+  # Imported from lib/main.dart (gated behind ENABLE_FLUTTER_DRIVER) to
+  # support the verify-mobile QA driver — must be a real dependency, not
+  # dev_dependencies, since flutter analyze's depend_on_referenced_packages
+  # lint flags any package imported from lib/ that isn't.
+  flutter_driver:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -54,8 +60,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  flutter_driver:
-    sdk: flutter
   integration_test:
     sdk: flutter
 

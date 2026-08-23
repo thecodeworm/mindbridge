@@ -111,10 +111,10 @@ Deno.serve(async (req) => {
 
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-    async function logAiCall(
+    const logAiCall = async (
       usage: { input_tokens?: number; output_tokens?: number },
       latencyMs: number,
-    ) {
+    ) => {
       const { error } = await serviceClient.from('ai_call_logs').insert({
         user_id,
         input_tokens: usage.input_tokens ?? 0,
