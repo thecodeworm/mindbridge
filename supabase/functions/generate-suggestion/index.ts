@@ -6,7 +6,12 @@ const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
   .filter(Boolean)
 
 // Dev fallback so local Vite/Flutter-web runs keep working without an env var.
-const DEV_ORIGINS = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:3000']
+const DEV_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:3000',
+]
 
 function buildCorsHeaders(requestOrigin: string | null) {
   const allowed = [...ALLOWED_ORIGINS, ...DEV_ORIGINS]
@@ -15,9 +20,10 @@ function buildCorsHeaders(requestOrigin: string | null) {
   // -- a bare `*.vercel.app` regex would allow any Vercel-hosted app, not just ours.
   const isVercelPreview = requestOrigin !== null &&
     /^https:\/\/usemindbridge(-[a-z0-9-]+)?\.vercel\.app$/.test(requestOrigin)
-  const allowOrigin = requestOrigin && (allowed.includes(requestOrigin) || isVercelPreview)
-    ? requestOrigin
-    : allowed[0] ?? ''
+  const allowOrigin =
+    requestOrigin && (allowed.includes(requestOrigin) || isVercelPreview)
+      ? requestOrigin
+      : allowed[0] ?? ''
 
   return {
     'Access-Control-Allow-Origin': allowOrigin,
@@ -107,7 +113,8 @@ function isValidSuggestion(parsed: unknown): parsed is {
     Array.isArray(p.steps) &&
     p.steps.length === 3 &&
     p.steps.every((step) =>
-      typeof step === 'string' && step.length > 0 && step.length <= MAX_FIELD_LENGTH
+      typeof step === 'string' && step.length > 0 &&
+      step.length <= MAX_FIELD_LENGTH
     ) &&
     typeof p.crisis_signal === 'boolean'
   )
@@ -208,7 +215,8 @@ Deno.serve(async (req) => {
         technique_name: existing.technique_name,
         description: existing.description,
         steps: existing.steps,
-        show_crisis_resources: moodLog.mood_score <= 2 || existing.crisis_signal === true,
+        show_crisis_resources: moodLog.mood_score <= 2 ||
+          existing.crisis_signal === true,
       })
     }
 
@@ -239,9 +247,9 @@ Deno.serve(async (req) => {
 
     const helpfulSection = helpfulTechniques && helpfulTechniques.length > 0
       ? `\n\nTechniques this user has found helpful before (for reference — vary the approach when mood context differs):\n` +
-        helpfulTechniques.map((t: { technique_name: string; description: string }) =>
-          `- ${t.technique_name}: ${t.description}`
-        ).join('\n')
+        helpfulTechniques.map((
+          t: { technique_name: string; description: string },
+        ) => `- ${t.technique_name}: ${t.description}`).join('\n')
       : ''
 
     const userMessage = `Mood score: ${moodLog.mood_score}/10
@@ -284,7 +292,10 @@ Journal entry: ${
     const anthropicData = await anthropicRes.json()
 
     if (anthropicData.stop_reason === 'refusal') {
-      console.error('Anthropic declined to generate a suggestion for mood_log', mood_log_id)
+      console.error(
+        'Anthropic declined to generate a suggestion for mood_log',
+        mood_log_id,
+      )
       await logAiCall(anthropicData.usage ?? {}, latencyMs)
       return jsonResponse({ error: 'Failed to generate suggestion' }, 502)
     }
