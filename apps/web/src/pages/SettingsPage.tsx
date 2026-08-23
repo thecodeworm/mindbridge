@@ -5,6 +5,7 @@ import { deleteAllUserData, updateDisplayName } from '../lib/settingsService'
 import { getStoredTheme, setTheme } from '../lib/theme'
 import type { ThemeMode } from '../lib/theme'
 import { exportUserData } from '../lib/exportService'
+import { CrisisChip } from '../components/CrisisChip'
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
   { value: 'light', label: 'Light' },
@@ -23,7 +24,7 @@ function chipClass(selected: boolean) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-4 rounded-xl border border-border bg-surface p-6 shadow-sm">
+    <div className="card space-y-4 p-6">
       <h2 className="text-sm font-bold uppercase tracking-wide text-muted">{title}</h2>
       {children}
     </div>
@@ -192,6 +193,7 @@ export function SettingsPage() {
           </div>
         </Section>
       </div>
+      <CrisisChip />
     </div>
   )
 }

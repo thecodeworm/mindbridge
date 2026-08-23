@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getSavedToolkit } from '../lib/feedbackService'
 import { updateSuggestionFeedback } from '../lib/feedbackService'
+import { CrisisChip } from '../components/CrisisChip'
 
 interface Technique {
   id: string
@@ -64,7 +65,7 @@ export function ToolkitPage() {
         )}
 
         {!loading && !error && techniques.length === 0 && (
-          <div className="rounded-xl border border-border bg-surface p-8 text-center">
+          <div className="card p-8 text-center">
             <p className="text-muted">No saved techniques yet.</p>
             <p className="mt-1 text-sm text-faint">
               Bookmark techniques from your coping suggestions to build your toolkit.
@@ -73,7 +74,7 @@ export function ToolkitPage() {
         )}
 
         {techniques.map((t) => (
-          <div key={t.id} className="space-y-3 rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <div key={t.id} className="card space-y-3 p-6">
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-lg font-bold text-ink">{t.technique_name}</h2>
               <button
@@ -99,6 +100,7 @@ export function ToolkitPage() {
           </div>
         ))}
       </div>
+      <CrisisChip />
     </div>
   )
 }

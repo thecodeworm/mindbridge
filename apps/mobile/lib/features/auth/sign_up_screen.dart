@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/validators.dart';
+import '../../widgets/crisis_fab.dart';
 import 'auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -224,6 +225,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         ),
       ),
+      floatingActionButton: const CrisisFab(),
     );
   }
 }

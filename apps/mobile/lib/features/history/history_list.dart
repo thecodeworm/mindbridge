@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
+import '../../widgets/empty_state.dart';
 import '../mood/mood_log_service.dart';
 import 'entry_detail_screen.dart';
 import 'history_service.dart';
@@ -8,7 +10,12 @@ import 'history_service.dart';
 const _kPageSize = 20;
 
 class HistoryList extends StatefulWidget {
-  const HistoryList({super.key, required this.userId, this.onEntryChanged});
+  const HistoryList({
+    super.key,
+    required this.userId,
+    this.onEntryChanged,
+    this.onLogMood,
+  });
 
   final String userId;
 
@@ -16,6 +23,10 @@ class HistoryList extends StatefulWidget {
   /// parent (the dashboard's mood trend chart) can refresh too — edits and
   /// deletes made there aren't otherwise visible outside this widget.
   final VoidCallback? onEntryChanged;
+
+  /// Empty-state CTA — owned by the parent since starting a new mood log is
+  /// a `features/mood` navigation this widget shouldn't import directly.
+  final VoidCallback? onLogMood;
 
   @override
   State<HistoryList> createState() => _HistoryListState();
@@ -77,11 +88,7 @@ class _HistoryListState extends State<HistoryList> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.outline),
-      ),
+      decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -106,14 +113,18 @@ class _HistoryListState extends State<HistoryList> {
                 color: cs.errorContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(_error!, style: TextStyle(color: cs.error, fontSize: 14)),
+              child: Text(
+                _error!,
+                style: TextStyle(color: cs.error, fontSize: 14),
+              ),
             ),
           if (!_loading && _error == null && _entries.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: Text('No entries yet — log your first mood.', style: tt.bodySmall),
-              ),
+            EmptyState(
+              icon: Icons.edit_note_outlined,
+              headline: 'No entries yet',
+              copy: 'Log your first mood to start tracking.',
+              ctaLabel: widget.onLogMood != null ? 'Log a mood' : null,
+              onCta: widget.onLogMood,
             ),
           if (!_loading)
             ..._entries.map(
@@ -122,7 +133,9 @@ class _HistoryListState extends State<HistoryList> {
                 onTap: () async {
                   await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => EntryDetailScreen(moodLogId: entry.id)),
+                    MaterialPageRoute(
+                      builder: (_) => EntryDetailScreen(moodLogId: entry.id),
+                    ),
                   );
                   if (!mounted) return;
                   await _load();
@@ -153,8 +166,18 @@ class MoodLogCard extends StatelessWidget {
   String _formatDate(DateTime d) {
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${weekdays[d.weekday - 1]}, ${months[d.month - 1]} ${d.day}';
   }
@@ -180,7 +203,10 @@ class MoodLogCard extends StatelessWidget {
                 Container(
                   width: 36,
                   height: 36,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
                   alignment: Alignment.center,
                   child: Text(
                     '${entry.moodScore}',
@@ -198,7 +224,10 @@ class MoodLogCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(_formatDate(entry.loggedAt), style: tt.bodyMedium),
+                          Text(
+                            _formatDate(entry.loggedAt),
+                            style: tt.bodyMedium,
+                          ),
                           const SizedBox(width: 6),
                           Text(moodTagInfo(entry.moodTag)?['emoji'] ?? ''),
                         ],
@@ -207,7 +236,9 @@ class MoodLogCard extends StatelessWidget {
                         entry.techniqueName ?? 'No suggestion saved',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),

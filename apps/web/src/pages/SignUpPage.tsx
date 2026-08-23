@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { CrisisChip } from '../components/CrisisChip'
 import {
   MIN_PASSWORD_LENGTH,
   PASSWORD_HINT,
@@ -78,7 +79,7 @@ export function SignUpPage() {
       </div>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-4 rounded-2xl border border-border bg-surface p-8 shadow-sm"
+        className="card-lg w-full max-w-sm space-y-4 p-8"
       >
         <h1 className="text-xl font-bold text-ink">Create your account</h1>
         {error && (
@@ -176,6 +177,7 @@ export function SignUpPage() {
           </Link>
         </p>
       </form>
+      <CrisisChip />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// MindBridge design tokens + light/dark [ThemeData].
 ///
@@ -97,6 +98,27 @@ class AppTheme {
     onErrorContainer: AppColors.dError,
   );
 
+  /// Fraunces (display) + Figtree (body), per
+  /// docs/research/00-design-direction.md §3. `titleLarge` — screen/AppBar
+  /// titles — is treated as a display moment too; `titleMedium`/`titleSmall`
+  /// and everything below stay Figtree for UI-chrome legibility.
+  static TextTheme _textTheme(Color ink) {
+    final base = Typography.material2021(platform: TargetPlatform.iOS).black;
+    final body = GoogleFonts.figtreeTextTheme(base);
+    final display = GoogleFonts.frauncesTextTheme(base);
+    return body
+        .copyWith(
+          displayLarge: display.displayLarge,
+          displayMedium: display.displayMedium,
+          displaySmall: display.displaySmall,
+          headlineLarge: display.headlineLarge,
+          headlineMedium: display.headlineMedium,
+          headlineSmall: display.headlineSmall,
+          titleLarge: display.titleLarge,
+        )
+        .apply(bodyColor: ink, displayColor: ink);
+  }
+
   static ThemeData _build({
     required Brightness brightness,
     required Color scaffold,
@@ -139,9 +161,7 @@ class AppTheme {
       brightness: brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: scaffold,
-      textTheme: Typography.material2021(platform: TargetPlatform.iOS)
-          .black
-          .apply(bodyColor: ink, displayColor: ink),
+      textTheme: _textTheme(ink),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: field,
@@ -162,7 +182,7 @@ class AppTheme {
           foregroundColor: onAccent,
           minimumSize: const Size.fromHeight(52),
           shape: const StadiumBorder(),
-        ),
+        ).copyWith(side: _focusRing(accent)),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -170,11 +190,27 @@ class AppTheme {
           side: BorderSide(color: border),
           minimumSize: const Size.fromHeight(52),
           shape: const StadiumBorder(),
-        ),
+        ).copyWith(side: _focusRing(accent, fallback: BorderSide(color: border))),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: accent),
+        style: TextButton.styleFrom(foregroundColor: accent).copyWith(side: _focusRing(accent)),
       ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(foregroundColor: ink).copyWith(side: _focusRing(accent)),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(focusColor: accent.withValues(alpha: 0.16)),
     );
   }
+}
+
+/// A visible 2px --blue-dark ring on keyboard focus, per the design system's
+/// accessibility rule. [fallback] preserves a button style's unfocused border
+/// (e.g. OutlinedButton's resting side) when one is set.
+WidgetStateProperty<BorderSide?> _focusRing(Color accent, {BorderSide? fallback}) {
+  return WidgetStateProperty.resolveWith((states) {
+    if (states.contains(WidgetState.focused)) {
+      return BorderSide(color: accent, width: 2);
+    }
+    return fallback;
+  });
 }

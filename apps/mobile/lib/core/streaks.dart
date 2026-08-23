@@ -1,12 +1,37 @@
 // Pure streak computation — mirrors apps/web/src/lib/streaks.ts
 // Streak: consecutive calendar days (local timezone) with ≥1 log.
 
-import '../features/mood/mood_log_service.dart';
+import 'models.dart';
 
 class StreakResult {
   const StreakResult({required this.current, required this.longest});
   final int current;
   final int longest;
+}
+
+/// Non-punitive practice metric: how many of the last [windowDays] calendar
+/// days had a log, with no reset-to-zero if a day is skipped. Paired with
+/// [StreakResult.longest] (kept as a "personal best" stat) in the UI instead
+/// of [StreakResult.current], which hard-resets on a single missed day.
+class PracticeWindow {
+  const PracticeWindow({required this.practiced, required this.windowDays});
+  final int practiced;
+  final int windowDays;
+}
+
+PracticeWindow computePracticeWindow(
+  List<MoodLog> logs, {
+  int windowDays = 10,
+}) {
+  final loggedDays = logs.map((l) => _localDateStr(l.loggedAt)).toSet();
+  final today = DateTime.now();
+  var practiced = 0;
+  for (int i = 0; i < windowDays; i++) {
+    if (loggedDays.contains(_localDateStr(today.subtract(Duration(days: i))))) {
+      practiced++;
+    }
+  }
+  return PracticeWindow(practiced: practiced, windowDays: windowDays);
 }
 
 String _localDateStr(DateTime dt) {
@@ -20,7 +45,8 @@ String _localDateStr(DateTime dt) {
 StreakResult computeStreaks(List<MoodLog> logs) {
   if (logs.isEmpty) return const StreakResult(current: 0, longest: 0);
 
-  final days = logs.map((l) => _localDateStr(l.loggedAt)).toSet().toList()..sort();
+  final days = logs.map((l) => _localDateStr(l.loggedAt)).toSet().toList()
+    ..sort();
 
   int longest = 1;
   int run = 1;
@@ -56,5 +82,8 @@ StreakResult computeStreaks(List<MoodLog> logs) {
     }
   }
 
-  return StreakResult(current: current, longest: current > longest ? current : longest);
+  return StreakResult(
+    current: current,
+    longest: current > longest ? current : longest,
+  );
 }

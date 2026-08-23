@@ -10,8 +10,11 @@ on:
 # Least privilege: every job here only reads the checked-out tree. Without
 # this block GITHUB_TOKEN inherits the repo-wide default scopes, which on a
 # public repo can include write access to contents, issues, and packages.
+# pull-requests: read is required by dorny/paths-filter to list changed files
+# via the API on pull_request events (checkout is shallow, fetch-depth: 1).
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -26,8 +29,8 @@ jobs:
       supabase_function: ${{ steps.filter.outputs.supabase_function }}
       supabase_migrations: ${{ steps.filter.outputs.supabase_migrations }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: filter
         with:
           filters: |
@@ -59,8 +62,8 @@ jobs:
       run:
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
           cache: 'npm'
@@ -77,8 +80,8 @@ jobs:
       run:
         working-directory: apps/mobile
     steps:
-      - uses: actions/checkout@v7
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: '3.44.4'
           channel: 'stable'
@@ -95,8 +98,8 @@ jobs:
       run:
         working-directory: supabase/functions
     steps:
-      - uses: actions/checkout@v7
-      - uses: denoland/setup-deno@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2 (2.0.5)
         with:
           deno-version: 'v2.x'
       - run: deno check generate-suggestion/index.ts
@@ -127,7 +130,7 @@ jobs:
       PGUSER: postgres
       PGDATABASE: mindbridge_ci
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Bootstrap minimal auth schema stub
         run: |
@@ -163,7 +166,7 @@ jobs:
             psql -v ON_ERROR_STOP=1 -f "$f"
           done
 
-      - name: Audit RLS coverage on all 5 tables
+      - name: Audit RLS coverage on all 8 tables
         run: |
           psql -v ON_ERROR_STOP=1 <<'SQL'
           do $$
@@ -176,7 +179,7 @@ jobs:
                      coalesce(c.relrowsecurity, false) as rls_enabled,
                      coalesce((select count(*) from pg_policies p
                                where p.schemaname = 'public' and p.tablename = t.table_name), 0) as policy_count
-              from (values ('users'), ('mood_logs'), ('journal_entries'), ('coping_suggestions'), ('ai_call_logs')) as t(table_name)
+              from (values ('users'), ('mood_logs'), ('journal_entries'), ('coping_suggestions'), ('ai_call_logs'), ('activity_tags'), ('mood_log_activities'), ('weekly_summaries')) as t(table_name)
               left join pg_class c on c.relname = t.table_name and c.relnamespace = 'public'::regnamespace
             loop
               if not r.rls_enabled or r.policy_count = 0 then
@@ -188,7 +191,7 @@ jobs:
               raise exception 'RLS audit failed for: %', missing;
             end if;
 
-            raise notice 'RLS audit passed: all 5 tables have RLS enabled with policies.';
+            raise notice 'RLS audit passed: all 8 tables have RLS enabled with policies.';
           end
           $$;
           SQL

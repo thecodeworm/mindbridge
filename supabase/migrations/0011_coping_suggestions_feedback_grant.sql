@@ -1,0 +1,16 @@
+-- Fix broken coping_suggestions UPDATE grant (security review item 1)
+--
+-- 0005_security_hardening.sql revoked insert/update/delete on
+-- public.coping_suggestions from `authenticated`, on the assumption that all
+-- writes went through the service-role edge function. 0007_suggestion_feedback.sql
+-- then added an RLS UPDATE policy so users could set helpful/saved from the
+-- client directly, but never re-granted the underlying table privilege that
+-- 0005 revoked. GRANT-level privilege is checked before RLS, so every
+-- feedback update has been failing with "permission denied for table
+-- coping_suggestions" since 0005 was applied.
+--
+-- Grant UPDATE on exactly the two columns end users are allowed to touch via
+-- the feedback UI. technique_name/description/steps/model_used/crisis_signal
+-- must stay write-protected from direct client writes -- only the
+-- service-role edge function may write those.
+grant update (helpful, saved) on public.coping_suggestions to authenticated;

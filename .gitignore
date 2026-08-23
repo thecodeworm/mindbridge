@@ -18,6 +18,11 @@ dist/
 .vite/
 .cache/
 
+# Python (QA/testing tooling)
+.venv-qa/
+__pycache__/
+*.pyc
+
 # Flutter / Dart
 apps/mobile/.dart_tool/
 apps/mobile/.flutter-plugins

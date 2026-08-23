@@ -48,6 +48,50 @@
   --mood-5: #c4bca9;
   --mood-7: #dfb05e;
   --mood-9: #dd955a;
+
+  /* ── Typography — Fraunces (display) + Figtree (body) ──────
+     Mirrors lib/core/theme.dart's _textTheme(): Figtree is the
+     body/UI base; Fraunces is reserved for headline-weight text. */
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-body: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+
+  /* ── Motion — mirrors lib/core/motion.dart's AppMotion ──────
+     Never use a bare `ease`/`linear` transition; reach for one of
+     these. High-frequency interactions (slider drag ticks, chip
+     taps) should stay at `instant` or skip animation entirely. */
+  --duration-instant: 80ms;
+  --duration-micro: 180ms;
+  --duration-short: 250ms;
+  --duration-medium: 350ms;
+  --duration-long: 500ms;
+  --duration-extra-long: 850ms;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-standard-decelerate: cubic-bezier(0, 0, 0, 1);
+  --ease-standard-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1); /* hero entrances */
+  --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15); /* dismissals */
+  --ease-wobbly: cubic-bezier(0.34, 1.56, 0.64, 1); /* spring-like overshoot, CSS approximation of springWobbly */
+
+  /* ── Elevation — mirrors lib/core/elevation.dart's AppElevation ─
+     Warm terracotta-tinted multi-layer shadows in light mode (never
+     neutral gray/black); dark mode swaps to a black-based shadow +
+     hairline border, since a shadow alone doesn't read against a
+     dark background. Radius scale pairs with elevation level. */
+  --radius-chip: 12px;
+  --radius-card: 16px;
+  --radius-sheet: 24px;
+  --radius-pill: 999px;
+
+  --shadow-resting:
+    0 1px 2px rgba(28, 25, 23, 0.04), 0 4px 12px rgba(184, 132, 96, 0.08),
+    0 12px 24px rgba(184, 132, 96, 0.06);
+  --shadow-elevated:
+    0 2px 4px rgba(28, 25, 23, 0.05), 0 8px 20px rgba(184, 132, 96, 0.12),
+    0 20px 40px rgba(184, 132, 96, 0.1);
+  --shadow-modal:
+    0 8px 16px rgba(184, 132, 96, 0.18), 0 24px 48px rgba(184, 132, 96, 0.15);
+  --elevation-border: transparent;
 }
 
 /* Dark tokens — applied by system preference unless the user has
@@ -80,6 +124,14 @@
 
     /* In dark mode the accent fills are light, so button text is dark. */
     --on-accent: #1c1815;
+
+    /* Dark elevation: shadows alone don't read against a dark
+       background, so pair a black-based shadow with a hairline
+       border (mirrors AppElevation.border in elevation.dart). */
+    --shadow-resting: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.35);
+    --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.45);
+    --shadow-modal: 0 8px 20px rgba(0, 0, 0, 0.45), 0 24px 48px rgba(0, 0, 0, 0.55);
+    --elevation-border: rgba(244, 239, 230, 0.06);
   }
 }
 
@@ -110,6 +162,11 @@
   --error-tint: #2a1815;
 
   --on-accent: #1c1815;
+
+  --shadow-resting: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.45);
+  --shadow-modal: 0 8px 20px rgba(0, 0, 0, 0.45), 0 24px 48px rgba(0, 0, 0, 0.55);
+  --elevation-border: rgba(244, 239, 230, 0.06);
 }
 
 /* Map tokens → Tailwind color utilities (bg-*, text-*, border-*).
@@ -147,12 +204,23 @@
   --color-mood-5: var(--mood-5);
   --color-mood-7: var(--mood-7);
   --color-mood-9: var(--mood-9);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
 }
 
 @layer base {
   html, body {
     background-color: var(--cream);
     color: var(--ink);
+    font-family: var(--font-body);
+  }
+
+  /* Fraunces as the display face — headings read as the serif "display"
+     moment, mirrors _textTheme()'s Fraunces overlay onto display/headline/
+     titleLarge in theme.dart. Body copy stays Figtree throughout. */
+  h1, h2, h3 {
+    font-family: var(--font-display);
   }
 
   /* Required accessibility focus ring — 2px blue-dark, 2px offset,
@@ -166,41 +234,79 @@
     outline: 2px solid var(--blue-dark);
     outline-offset: 2px;
   }
+}
 
-  /* Mood score slider — temperature gradient track (slate → gold).
-     Hex values are absolute (same in light and dark mode per spec).
-     Thumb is a thin vertical bar, not a round node. */
-  .mood-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    height: 10px;
-    border-radius: 9999px;
-    background: linear-gradient(to right, #7c8ba8, #96a9c1, #c4bca9, #dfb05e, #dd955a);
-    outline: none;
-    cursor: pointer;
+@layer components {
+  /* Elevation-token card surfaces — mirrors AppElevation.decoration()'s
+     migration of ad-hoc BoxDecorations in elevation.dart. `.card` = resting
+     (L1), `.card-lg` = same shadow with the sheet radius for full-page
+     forms, `.card-elevated` = L2 for hover/focus-prominent surfaces. */
+  .card {
+    background-color: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-resting);
+    border: 1px solid var(--elevation-border);
+  }
+  .card-lg {
+    background-color: var(--surface);
+    border-radius: var(--radius-sheet);
+    box-shadow: var(--shadow-resting);
+    border: 1px solid var(--elevation-border);
+  }
+  .card-elevated {
+    background-color: var(--surface);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-elevated);
+    border: 1px solid var(--elevation-border);
   }
 
-  .mood-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 4px;
-    height: 24px;
-    border-radius: 2px;
-    background: #ffffff;
-    box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.14), 0 1px 5px rgba(0, 0, 0, 0.18);
+  /* Persistent crisis affordance — terra-tint chip, never a red banner. */
+  .crisis-chip {
+    background-color: var(--terra-tint);
+    color: var(--terra-dark);
+    border: 1px solid var(--terra);
+    box-shadow: var(--shadow-elevated);
+    transition: transform var(--duration-short) var(--ease-standard);
+  }
+  .crisis-chip:hover {
+    transform: scale(1.05);
+  }
+  .crisis-chip:active {
+    transform: scale(0.97);
+  }
+}
+
+@layer utilities {
+  /* Signature breathing-circle keyframes — a soft radial glow that
+     expands/contracts on a breath cadence. Mirrors widgets/breathing_circle.dart's
+     Tween(0.75 -> 1.0) on AppMotion.easeInOutCubic, repeat(reverse: true). */
+  @keyframes breathe {
+    0%, 100% { transform: scale(0.75); }
+    50% { transform: scale(1); }
+  }
+  .animate-breathe {
+    animation: breathe 4s var(--ease-standard-decelerate) infinite alternate;
   }
 
-  .mood-slider::-moz-range-track {
-    height: 10px;
-    border-radius: 9999px;
-    background: linear-gradient(to right, #7c8ba8, #96a9c1, #c4bca9, #dfb05e, #dd955a);
+  /* Felt mood-slider thumb pop — wobbly spring approximation for the
+     drag-start scale-up (mirrors FeltMoodSlider's AnimationController). */
+  @keyframes thumb-pop {
+    0% { transform: scale(1); }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1.16); }
+  }
+  .animate-thumb-pop {
+    animation: thumb-pop var(--duration-short) var(--ease-wobbly) forwards;
   }
 
-  .mood-slider::-moz-range-thumb {
-    width: 4px;
-    height: 24px;
-    border-radius: 2px;
-    background: #ffffff;
-    border: none;
-    box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.14), 0 1px 5px rgba(0, 0, 0, 0.18);
+  /* Onboarding step transition — a lightweight shared-axis-style fade +
+     slide, standing in for Flutter's PageView drag transition (§1's
+     shared-axis pattern for related screens). */
+  @keyframes step-enter {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .animate-step-enter {
+    animation: step-enter var(--duration-medium) var(--ease-standard-decelerate);
   }
 }

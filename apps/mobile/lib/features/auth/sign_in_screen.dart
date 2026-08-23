@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../widgets/crisis_fab.dart';
 import 'auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -213,6 +214,7 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         ),
       ),
+      floatingActionButton: const CrisisFab(),
     );
   }
 }

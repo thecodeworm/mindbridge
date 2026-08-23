@@ -1,8 +1,9 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-Future<String?> exportUserData(String userId) async {
+Future<String?> exportUserData(String userId, {Rect? sharePositionOrigin}) async {
   final client = Supabase.instance.client;
   try {
     final results = await Future.wait([
@@ -36,6 +37,7 @@ Future<String?> exportUserData(String userId) async {
     await Share.share(
       payload,
       subject: 'mindbridge-export-$dateStr.json',
+      sharePositionOrigin: sharePositionOrigin,
     );
     return null;
   } on PostgrestException catch (e) {
