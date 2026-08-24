@@ -14,7 +14,10 @@ const _kStepCount = 5;
 /// swipeable via PageView's native shared-axis-style drag, skippable from
 /// screen 3 onward (never before the privacy screen).
 class OnboardingFlow extends StatefulWidget {
-  const OnboardingFlow({super.key});
+  const OnboardingFlow({super.key, required this.onFinished});
+
+  /// Called after finish/skip, once the persisted completed flag is set.
+  final VoidCallback onFinished;
 
   @override
   State<OnboardingFlow> createState() => _OnboardingFlowState();
@@ -45,6 +48,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       OnboardingState.pendingTag = tag;
     }
     OnboardingState.set(true);
+    widget.onFinished();
   }
 
   @override

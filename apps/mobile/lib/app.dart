@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/app_lock_state.dart';
-import 'core/onboarding_state.dart';
 import 'core/recovery_state.dart';
 import 'core/theme.dart';
 import 'core/theme_controller.dart';
@@ -12,6 +11,7 @@ import 'features/auth/reset_password_screen.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/auth/sign_up_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/onboarding/landing_screen.dart';
 import 'features/onboarding/onboarding_flow.dart';
 
 class App extends StatelessWidget {
@@ -76,18 +76,39 @@ class _AppLockWrapperState extends State<_AppLockWrapper> with WidgetsBindingObs
   }
 }
 
-// Shows onboarding once (per install), then falls through to AuthGate.
-class _OnboardingGate extends StatelessWidget {
+enum _Stage { landing, onboarding, auth }
+
+// DEMO MODE: always opens on LandingScreen, regardless of any persisted
+// "onboarding completed" state or an existing session — deliberately not
+// reading OnboardingState.completed here, so every cold launch replays the
+// same landing -> onboarding -> auth sequence for recording. Revert to
+// checking OnboardingState.completed (see git history) once demo recording
+// is done and this should go back to skipping onboarding for return users.
+class _OnboardingGate extends StatefulWidget {
   const _OnboardingGate();
 
   @override
+  State<_OnboardingGate> createState() => _OnboardingGateState();
+}
+
+class _OnboardingGateState extends State<_OnboardingGate> {
+  _Stage _stage = _Stage.landing;
+
+  @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: OnboardingState.completed,
-      builder: (context, completed, _) {
-        return completed ? const AuthGate() : const OnboardingFlow();
-      },
-    );
+    switch (_stage) {
+      case _Stage.landing:
+        return LandingScreen(
+          onGetStarted: () => setState(() => _stage = _Stage.onboarding),
+          onLogIn: () => setState(() => _stage = _Stage.auth),
+        );
+      case _Stage.onboarding:
+        return OnboardingFlow(
+          onFinished: () => setState(() => _stage = _Stage.auth),
+        );
+      case _Stage.auth:
+        return const AuthGate();
+    }
   }
 }
 
