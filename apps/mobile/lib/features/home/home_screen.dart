@@ -54,16 +54,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadLogs() async {
     final userId = Supabase.instance.client.auth.currentUser!.id;
-    final result = await _moodLogService.getMoodLogsInRange(
-      userId: userId,
-      days: 30,
-    );
+    // Errors are swallowed here by design — the dashboard degrades to an
+    // empty-logs state rather than showing an error.
+    var logs = <MoodLog>[];
+    try {
+      logs = await _moodLogService.getMoodLogsInRange(userId: userId, days: 30);
+    } catch (_) {
+      // ignored, see above
+    }
     if (!mounted) return;
     setState(() {
-      _logs = result.logs;
+      _logs = logs;
       _loadingLogs = false;
-      _showOnboardingNudge =
-          result.logs.isEmpty && OnboardingState.pendingScore != null;
+      _showOnboardingNudge = logs.isEmpty && OnboardingState.pendingScore != null;
     });
   }
 

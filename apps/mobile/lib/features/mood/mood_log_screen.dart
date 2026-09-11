@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 import '../../core/mood_color.dart';
 import '../../widgets/breathing_circle.dart';
 import '../../widgets/crisis_fab.dart';
@@ -70,10 +71,17 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
   }
 
   Future<void> _loadTags() async {
-    final result = await _service.getActivityTags();
+    // Errors are swallowed here by design — the picker degrades to "no
+    // activity tags" rather than showing an error.
+    var tags = <ActivityTag>[];
+    try {
+      tags = await _service.getActivityTags();
+    } catch (_) {
+      // ignored, see above
+    }
     if (!mounted) return;
     setState(() {
-      _activityTags = result.tags;
+      _activityTags = tags;
       _loadingTags = false;
     });
   }
@@ -129,22 +137,22 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
       return;
     }
 
-    final result = await _service.logMood(
-      userId: userId,
-      moodScore: _score.round(),
-      moodTag: _tag!,
-    );
-    if (!mounted) return;
-
-    if (result.error != null || result.moodLogId == null) {
+    final String moodLogId;
+    try {
+      moodLogId = await _service.logMood(
+        userId: userId,
+        moodScore: _score.round(),
+        moodTag: _tag!,
+      );
+    } on AppException catch (e) {
+      if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = result.error ?? 'Something went wrong.';
+        _error = e.message;
       });
       return;
     }
-
-    final moodLogId = result.moodLogId!;
+    if (!mounted) return;
 
     // Save activities
     if (_selectedActivities.isNotEmpty) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 import '../../core/crisis.dart';
 import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
@@ -44,18 +45,25 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
       _loading = true;
       _error = null;
     });
-    final result = await _service.getEntryDetail(
-      moodLogId: widget.moodLogId,
-      userId: userId,
-    );
-    if (!mounted) return;
-    setState(() {
-      _detail = result.detail;
-      _helpful = result.detail?.copingSuggestion?.helpful;
-      _saved = result.detail?.copingSuggestion?.saved ?? false;
-      _error = result.error;
-      _loading = false;
-    });
+    try {
+      final detail = await _service.getEntryDetail(
+        moodLogId: widget.moodLogId,
+        userId: userId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _detail = detail;
+        _helpful = detail.copingSuggestion?.helpful;
+        _saved = detail.copingSuggestion?.saved ?? false;
+        _loading = false;
+      });
+    } on AppException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+        _loading = false;
+      });
+    }
   }
 
   String _formatDate(DateTime d) {

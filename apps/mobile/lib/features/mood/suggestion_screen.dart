@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
 import '../../core/theme.dart';
@@ -50,18 +51,23 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
       _error = null;
     });
 
-    final result = await _service.generateSuggestion(
-      moodLogId: widget.moodLogId,
-      userId: widget.userId,
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _loading = false;
-      _suggestion = result.suggestion;
-      _error = result.error;
-    });
+    try {
+      final suggestion = await _service.generateSuggestion(
+        moodLogId: widget.moodLogId,
+        userId: widget.userId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _suggestion = suggestion;
+      });
+    } on AppException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.message;
+      });
+    }
   }
 
   Future<void> _setHelpful(bool? value) async {

@@ -27,23 +27,30 @@ class _InsightsCardState extends State<InsightsCard> {
   }
 
   Future<void> _load() async {
-    final results = await Future.wait([
-      _service.getActivityTags(),
-      _service.getLogsWithActivities(userId: widget.userId, days: 90),
-    ]);
+    // Errors are swallowed here by design — this card degrades to "not
+    // enough data yet" rather than showing an error state.
+    var tags = <ActivityTag>[];
+    var logsWithActivities = <({MoodLog log, List<ActivityTag> activities})>[];
+    try {
+      final results = await Future.wait([
+        _service.getActivityTags(),
+        _service.getLogsWithActivities(userId: widget.userId, days: 90),
+      ]);
+      tags = results[0] as List<ActivityTag>;
+      logsWithActivities =
+          results[1] as List<({MoodLog log, List<ActivityTag> activities})>;
+    } catch (_) {
+      // ignored, see above
+    }
 
     if (!mounted) return;
 
-    final tagsResult = results[0] as ({List<ActivityTag> tags, String? error});
-    final logsResult =
-        results[1] as ({List<({MoodLog log, List<ActivityTag> activities})> entries, String? error});
-
-    final typed = logsResult.entries
+    final typed = logsWithActivities
         .map<LogWithActivities>((e) => (log: e.log, activities: e.activities))
         .toList();
 
     setState(() {
-      _correlations = computeCorrelations(typed, tagsResult.tags);
+      _correlations = computeCorrelations(typed, tags);
       _loading = false;
     });
   }

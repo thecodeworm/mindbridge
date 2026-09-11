@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 import '../../core/elevation.dart';
 import '../../widgets/crisis_fab.dart';
 import '../../widgets/empty_state.dart';
@@ -29,13 +30,21 @@ class _ToolkitScreenState extends State<ToolkitScreen> {
   Future<void> _load() async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
-    final result = await _service.getSavedToolkit(userId: userId);
-    if (!mounted) return;
-    setState(() {
-      _techniques = result.techniques;
-      _error = result.error;
-      _loading = false;
-    });
+    try {
+      final techniques = await _service.getSavedToolkit(userId: userId);
+      if (!mounted) return;
+      setState(() {
+        _techniques = techniques;
+        _error = null;
+        _loading = false;
+      });
+    } on AppException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _unsave(CopingSuggestionDetail technique) async {

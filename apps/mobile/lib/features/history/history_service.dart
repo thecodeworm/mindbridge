@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 import '../../core/models.dart';
 
 export '../../core/models.dart'
@@ -21,7 +22,7 @@ class HistoryService {
 
   final SupabaseClient _client;
 
-  Future<({List<HistoryEntry> entries, String? error})> getHistory({
+  Future<List<HistoryEntry>> getHistory({
     required String userId,
     int limit = 20,
     int offset = 0,
@@ -34,14 +35,14 @@ class HistoryService {
           await Future.delayed(const Duration(milliseconds: 500));
           return await _fetchHistory(userId: userId, limit: limit, offset: offset);
         } on PostgrestException {
-          return (entries: <HistoryEntry>[], error: _kTransientAuthError);
+          throw const AppException(_kTransientAuthError);
         }
       }
-      return (entries: <HistoryEntry>[], error: e.message);
+      throw AppException(e.message);
     }
   }
 
-  Future<({List<HistoryEntry> entries, String? error})> _fetchHistory({
+  Future<List<HistoryEntry>> _fetchHistory({
     required String userId,
     required int limit,
     required int offset,
@@ -52,15 +53,14 @@ class HistoryService {
         .eq('user_id', userId)
         .order('logged_at', ascending: false)
         .range(offset, offset + limit - 1);
-    final entries = (data as List<dynamic>)
+    return (data as List<dynamic>)
         .map((row) => HistoryEntry.fromJson(row as Map<String, dynamic>))
         .toList();
-    return (entries: entries, error: null);
   }
 
   // Every query filters on user_id as well as row id — RLS enforces this
   // server-side; the explicit filter degrades a policy regression to "not found".
-  Future<({EntryDetail? detail, String? error})> getEntryDetail({
+  Future<EntryDetail> getEntryDetail({
     required String moodLogId,
     required String userId,
   }) async {
@@ -106,18 +106,15 @@ class HistoryService {
           .whereType<ActivityTag>()
           .toList();
 
-      return (
-        detail: EntryDetail(
-          moodLog: moodLog,
-          journalEntry: journalJson != null ? JournalEntry.fromJson(journalJson) : null,
-          copingSuggestion:
-              suggestionJson != null ? CopingSuggestionDetail.fromJson(suggestionJson) : null,
-          activities: activities,
-        ),
-        error: null,
+      return EntryDetail(
+        moodLog: moodLog,
+        journalEntry: journalJson != null ? JournalEntry.fromJson(journalJson) : null,
+        copingSuggestion:
+            suggestionJson != null ? CopingSuggestionDetail.fromJson(suggestionJson) : null,
+        activities: activities,
       );
     } on PostgrestException catch (e) {
-      return (detail: null, error: e.message);
+      throw AppException(e.message);
     }
   }
 
@@ -221,7 +218,7 @@ class HistoryService {
     }
   }
 
-  Future<({List<CopingSuggestionDetail> techniques, String? error})> getSavedToolkit({
+  Future<List<CopingSuggestionDetail>> getSavedToolkit({
     required String userId,
   }) async {
     try {
@@ -234,12 +231,11 @@ class HistoryService {
           .eq('user_id', userId)
           .eq('saved', true)
           .order('generated_at', ascending: false);
-      final techniques = (data as List<dynamic>)
+      return (data as List<dynamic>)
           .map((row) => CopingSuggestionDetail.fromJson(row as Map<String, dynamic>))
           .toList();
-      return (techniques: techniques, error: null);
     } on PostgrestException catch (e) {
-      return (techniques: <CopingSuggestionDetail>[], error: e.message);
+      throw AppException(e.message);
     }
   }
 }

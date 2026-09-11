@@ -30,10 +30,17 @@ class _YearInPixelsState extends State<YearInPixels> {
   }
 
   Future<void> _load() async {
-    final result = await _service.getAllLogsForYear(userId: widget.userId);
+    // Errors are swallowed here by design — this card degrades to an empty
+    // grid rather than showing an error state.
+    var logs = <MoodLog>[];
+    try {
+      logs = await _service.getAllLogsForYear(userId: widget.userId);
+    } catch (_) {
+      // ignored, see above
+    }
     if (!mounted) return;
     final scores = <String, int>{};
-    for (final log in result.logs) {
+    for (final log in logs) {
       final key = _dateStr(log.loggedAt);
       final existing = scores[key];
       if (existing == null || log.moodScore > existing) {

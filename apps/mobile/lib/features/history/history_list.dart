@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
 import '../../widgets/empty_state.dart';
@@ -49,36 +50,52 @@ class _HistoryListState extends State<HistoryList> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final result = await _service.getHistory(
-      userId: widget.userId,
-      limit: _kPageSize + 1,
-      offset: 0,
-    );
-    if (!mounted) return;
-    setState(() {
-      _entries
-        ..clear()
-        ..addAll(result.entries.take(_kPageSize));
-      _error = result.error;
-      _hasMore = result.entries.length > _kPageSize;
-      _loading = false;
-    });
+    try {
+      final entries = await _service.getHistory(
+        userId: widget.userId,
+        limit: _kPageSize + 1,
+        offset: 0,
+      );
+      if (!mounted) return;
+      setState(() {
+        _entries
+          ..clear()
+          ..addAll(entries.take(_kPageSize));
+        _error = null;
+        _hasMore = entries.length > _kPageSize;
+        _loading = false;
+      });
+    } on AppException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _loadMore() async {
     setState(() => _loadingMore = true);
-    final result = await _service.getHistory(
-      userId: widget.userId,
-      limit: _kPageSize + 1,
-      offset: _entries.length,
-    );
-    if (!mounted) return;
-    setState(() {
-      _entries.addAll(result.entries.take(_kPageSize));
-      _error = result.error;
-      _hasMore = result.entries.length > _kPageSize;
-      _loadingMore = false;
-    });
+    try {
+      final entries = await _service.getHistory(
+        userId: widget.userId,
+        limit: _kPageSize + 1,
+        offset: _entries.length,
+      );
+      if (!mounted) return;
+      setState(() {
+        _entries.addAll(entries.take(_kPageSize));
+        _error = null;
+        _hasMore = entries.length > _kPageSize;
+        _loadingMore = false;
+      });
+    } on AppException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+        _loadingMore = false;
+      });
+    }
   }
 
   @override

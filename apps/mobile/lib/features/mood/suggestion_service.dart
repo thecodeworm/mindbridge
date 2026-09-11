@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 
 class SuggestionResult {
   SuggestionResult({
@@ -25,7 +26,7 @@ class SuggestionService {
   SuggestionService(this._client);
   final SupabaseClient _client;
 
-  Future<({SuggestionResult? suggestion, String? error})> generateSuggestion({
+  Future<SuggestionResult> generateSuggestion({
     required String moodLogId,
     required String userId,
   }) async {
@@ -35,12 +36,9 @@ class SuggestionService {
         body: {'mood_log_id': moodLogId, 'user_id': userId},
       );
       final data = res.data as Map<String, dynamic>;
-      return (suggestion: SuggestionResult.fromJson(data), error: null);
+      return SuggestionResult.fromJson(data);
     } on FunctionException catch (_) {
-      return (
-        suggestion: null,
-        error: 'Could not generate a suggestion. Please try again.',
-      );
+      throw const AppException('Could not generate a suggestion. Please try again.');
     }
   }
 }
