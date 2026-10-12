@@ -70,6 +70,7 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm test
       - run: npm run build
 
   mobile:
@@ -88,6 +89,7 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter analyze
+      - run: flutter test
       - run: flutter build apk --debug
 
   supabase-function:
@@ -103,8 +105,10 @@ jobs:
         with:
           deno-version: 'v2.x'
       - run: deno check generate-suggestion/index.ts
-      - run: deno lint generate-suggestion/
-      - run: deno fmt --check generate-suggestion/
+      - run: deno check _shared/*.ts
+      - run: deno lint generate-suggestion/ _shared/
+      - run: deno fmt --check generate-suggestion/ _shared/
+      - run: deno test --allow-env _shared/
 
   rls-check:
     needs: detect-changes
@@ -145,7 +149,10 @@ jobs:
 
           create function auth.uid() returns uuid
             language sql stable
-            as $$ select null::uuid $$;
+            as $$ select (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')::uuid $$;
+
+          grant usage on schema auth to public;
+          grant execute on function auth.uid() to public;
 
           do $$
           begin
@@ -194,6 +201,132 @@ jobs:
             raise notice 'RLS audit passed: all 8 tables have RLS enabled with policies.';
           end
           $$;
+          SQL
+
+      - name: RLS cross-user isolation test
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          insert into auth.users (email) values ('rls-test-a@mindbridge.test') returning id
+          \gset a_
+          insert into auth.users (email) values ('rls-test-b@mindbridge.test') returning id
+          \gset b_
+
+          -- Stash user A's id in a custom GUC so later DO blocks (dollar-quoted,
+          -- so psql's :'var' substitution doesn't reach inside them) and the
+          -- `authenticated` role (no SELECT grant on auth.users) can retrieve it.
+          select set_config('test.user_a_id', :'a_id', false);
+
+          -- Seed user A's data as postgres (superuser, bypasses RLS).
+          insert into public.mood_logs (id, user_id, mood_score, mood_tag)
+            values ('11111111-1111-1111-1111-111111111111', :'a_id', 5, 'calm');
+          insert into public.journal_entries (id, mood_log_id, user_id, body)
+            values ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', :'a_id', 'a private entry');
+          insert into public.coping_suggestions (id, mood_log_id, user_id, technique_name, description, steps, model_used)
+            values ('33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', :'a_id', 'Box breathing', 'desc', '["step1"]'::jsonb, 'claude-haiku');
+          insert into public.ai_call_logs (id, user_id, input_tokens, output_tokens, latency_ms)
+            values ('44444444-4444-4444-4444-444444444444', :'a_id', 10, 20, 500);
+          insert into public.activity_tags (id, user_id, slug, label, emoji)
+            values ('55555555-5555-5555-5555-555555555555', :'a_id', 'private-tag', 'Private Tag', '🔒');
+          insert into public.mood_log_activities (mood_log_id, activity_tag_id, user_id)
+            values ('11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', :'a_id');
+          insert into public.weekly_summaries (id, user_id, week_start, summary)
+            values ('66666666-6666-6666-6666-666666666666', :'a_id', '2026-01-05', 'a private summary');
+
+          -- Switch to user A: positive control, so the test can't pass by
+          -- accident from everything being blocked.
+          set role authenticated;
+          select set_config('request.jwt.claims', '{"sub": "' || :'a_id' || '"}', false);
+
+          do $$
+          declare
+            missing text := '';
+          begin
+            if (select count(*) from public.mood_logs where id = '11111111-1111-1111-1111-111111111111') <> 1 then
+              missing := missing || 'mood_logs; ';
+            end if;
+            if (select count(*) from public.journal_entries where id = '22222222-2222-2222-2222-222222222222') <> 1 then
+              missing := missing || 'journal_entries; ';
+            end if;
+            if (select count(*) from public.coping_suggestions where id = '33333333-3333-3333-3333-333333333333') <> 1 then
+              missing := missing || 'coping_suggestions; ';
+            end if;
+            if (select count(*) from public.ai_call_logs where id = '44444444-4444-4444-4444-444444444444') <> 1 then
+              missing := missing || 'ai_call_logs; ';
+            end if;
+            if (select count(*) from public.activity_tags where id = '55555555-5555-5555-5555-555555555555') <> 1 then
+              missing := missing || 'activity_tags; ';
+            end if;
+            if (select count(*) from public.mood_log_activities where mood_log_id = '11111111-1111-1111-1111-111111111111') <> 1 then
+              missing := missing || 'mood_log_activities; ';
+            end if;
+            if (select count(*) from public.weekly_summaries where id = '66666666-6666-6666-6666-666666666666') <> 1 then
+              missing := missing || 'weekly_summaries; ';
+            end if;
+
+            if missing <> '' then
+              raise exception 'POSITIVE CONTROL FAILED: user A cannot see own rows in: %', missing;
+            end if;
+            raise notice 'Positive control passed: user A sees all own rows.';
+          end
+          $$;
+
+          -- Switch to user B and confirm zero visibility into A's rows.
+          select set_config('request.jwt.claims', '{"sub": "' || :'b_id' || '"}', false);
+
+          do $$
+          declare
+            leaked text := '';
+          begin
+            if (select count(*) from public.mood_logs) <> 0 then leaked := leaked || 'mood_logs; '; end if;
+            if (select count(*) from public.journal_entries) <> 0 then leaked := leaked || 'journal_entries; '; end if;
+            if (select count(*) from public.coping_suggestions) <> 0 then leaked := leaked || 'coping_suggestions; '; end if;
+            if (select count(*) from public.ai_call_logs) <> 0 then leaked := leaked || 'ai_call_logs; '; end if;
+            if (select count(*) from public.activity_tags where user_id is not null) <> 0 then leaked := leaked || 'activity_tags; '; end if;
+            if (select count(*) from public.mood_log_activities) <> 0 then leaked := leaked || 'mood_log_activities; '; end if;
+            if (select count(*) from public.weekly_summaries) <> 0 then leaked := leaked || 'weekly_summaries; '; end if;
+
+            if leaked <> '' then
+              raise exception 'CROSS-USER LEAK: user B can see user A rows in: %', leaked;
+            end if;
+            raise notice 'Isolation confirmed: user B sees none of user A''s rows.';
+          end
+          $$;
+
+          -- Built-in (user_id null) activity_tags remain visible to everyone --
+          -- the one deliberate exception to "sees none of the other user's rows".
+          do $$
+          begin
+            if (select count(*) from public.activity_tags where slug = 'school' and user_id is null) <> 1 then
+              raise exception 'Built-in activity tag not visible to user B';
+            end if;
+            raise notice 'Built-in activity tags remain visible.';
+          end
+          $$;
+
+          -- User B cannot insert a mood_log claiming to be user A. Reads A's id
+          -- back from the test.user_a_id GUC rather than interpolating the psql
+          -- :'a_id' variable, since psql does not substitute variables inside a
+          -- dollar-quoted (DO $$ ... $$) block, and `authenticated` has no
+          -- SELECT grant on auth.users to look it up directly.
+          do $$
+          declare
+            a_id uuid := current_setting('test.user_a_id')::uuid;
+          begin
+            begin
+              insert into public.mood_logs (user_id, mood_score, mood_tag) values (a_id, 6, 'calm');
+              raise exception 'SECURITY FAILURE: user B inserted a mood_log as user A';
+            exception
+              when others then
+                if sqlerrm like 'SECURITY FAILURE%' then
+                  raise;
+                end if;
+                raise notice 'Insert-as-another-user correctly rejected: %', sqlerrm;
+            end;
+          end
+          $$;
+
+          reset role;
+          select set_config('request.jwt.claims', '', false);
           SQL
 
   ci-success:
