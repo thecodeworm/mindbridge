@@ -119,12 +119,12 @@ export function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="w-full rounded-full border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
+            className="w-full rounded-[10px] border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
           />
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-[10px] bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {submitting ? 'Sending…' : 'Send reset link'}
           </button>
@@ -155,7 +155,7 @@ export function LoginPage() {
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-field px-4 py-3 font-medium text-ink transition-colors hover:bg-blue-tint"
+          className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-field px-4 py-3 font-medium text-ink transition-colors hover:bg-blue-tint"
         >
           <GoogleIcon />
           Continue with Google
@@ -175,7 +175,7 @@ export function LoginPage() {
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="w-full rounded-full border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
+          className="w-full rounded-[10px] border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
         />
         <div className="relative">
           <input
@@ -185,7 +185,7 @@ export function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
-            className="w-full rounded-full border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint"
+            className="w-full rounded-[10px] border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint"
           />
           <button
             type="button"
@@ -209,7 +209,7 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-[10px] bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? 'Logging in…' : 'Log in'}
         </button>

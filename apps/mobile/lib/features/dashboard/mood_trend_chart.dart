@@ -66,7 +66,7 @@ class _MoodTrendChartState extends State<MoodTrendChart>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Mood trend', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text('Mood trend', style: tt.titleLarge),
               _RangeToggle(
                 value: _rangeDays,
                 onChanged: (v) {
@@ -127,7 +127,6 @@ class _MoodTrendChartState extends State<MoodTrendChart>
     TextTheme tt,
     List<MoodLog> data,
   ) {
-    final fillColor = moodColor(data.last.moodScore.toDouble());
     return LineChart(
       LineChartData(
         minY: 1,
@@ -216,22 +215,8 @@ class _MoodTrendChartState extends State<MoodTrendChart>
             isCurved: true,
             curveSmoothness: 0.25,
             preventCurveOverShooting: true,
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              // fl_chart's gradient requires >=2 stops even for a single
-              // data point, so duplicate the lone color into a flat gradient.
-              colors: data.length > 1
-                  ? [for (final d in data) moodColor(d.moodScore.toDouble())]
-                  : [
-                      moodColor(data.first.moodScore.toDouble()),
-                      moodColor(data.first.moodScore.toDouble()),
-                    ],
-              stops: data.length > 1
-                  ? [for (int i = 0; i < data.length; i++) i / (data.length - 1)]
-                  : [0.0, 1.0],
-            ),
-            barWidth: 3,
+            color: cs.onSurface,
+            barWidth: 2.5,
             isStrokeCapRound: true,
             belowBarData: BarAreaData(
               show: true,
@@ -239,8 +224,8 @@ class _MoodTrendChartState extends State<MoodTrendChart>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  fillColor.withValues(alpha: 0.25),
-                  fillColor.withValues(alpha: 0),
+                  cs.primary.withValues(alpha: 0.12),
+                  cs.primary.withValues(alpha: 0),
                 ],
               ),
             ),
@@ -280,7 +265,7 @@ class _RangeToggle extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
             color: selected ? cs.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: selected
                 ? const [BoxShadow(color: Color(0x14000000), offset: Offset(0, 1), blurRadius: 3)]
                 : null,
@@ -301,7 +286,7 @@ class _RangeToggle extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: cs.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

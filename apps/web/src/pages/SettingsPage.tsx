@@ -15,7 +15,7 @@ const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
 
 function chipClass(selected: boolean) {
   return [
-    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+    'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
     selected
       ? 'border-blue-dark bg-blue-tint text-blue-dark'
       : 'border-border bg-field text-ink hover:bg-blue-tint',
@@ -25,7 +25,7 @@ function chipClass(selected: boolean) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="card space-y-4 p-6">
-      <h2 className="font-body text-lg font-semibold text-ink">{title}</h2>
+      <h2 className="text-xl text-ink">{title}</h2>
       {children}
     </div>
   )
@@ -119,7 +119,7 @@ export function SettingsPage() {
         <Section title="Profile">
           <form onSubmit={handleSaveName} className="space-y-3">
             <label className="block text-sm font-medium text-muted" htmlFor="displayName">Display name</label>
-            <input id="displayName" type="text" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setNameSaved(false) }} maxLength={60} className="w-full rounded-full border border-border bg-field px-4 py-2.5 text-ink placeholder:text-faint" />
+            <input id="displayName" type="text" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setNameSaved(false) }} maxLength={60} className="w-full rounded-[10px] border border-border bg-field px-4 py-2.5 text-ink placeholder:text-faint" />
             {nameError && <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{nameError}</p>}
             {nameSaved && !nameError && <p className="text-sm text-success">Saved.</p>}
             <button type="submit" disabled={nameSaving} className="rounded-lg bg-blue-dark px-4 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50">

@@ -77,7 +77,7 @@ export function ResetPasswordPage() {
           <p className="text-sm text-muted">You can log in with your new password now.</p>
           <button
             onClick={() => navigate('/login')}
-            className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
+            className="w-full rounded-[10px] bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
           >
             Back to log in
           </button>
@@ -98,7 +98,7 @@ export function ResetPasswordPage() {
           </p>
           <button
             onClick={async () => { await supabase.auth.signOut(); navigate('/login') }}
-            className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
+            className="w-full rounded-[10px] bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
           >
             Back to log in
           </button>
@@ -119,7 +119,7 @@ export function ResetPasswordPage() {
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="w-full rounded-full border border-border bg-field px-4 py-3 font-medium text-ink transition-colors hover:bg-blue-tint"
+            className="w-full rounded-[10px] border border-border bg-field px-4 py-3 font-medium text-ink transition-colors hover:bg-blue-tint"
           >
             Request a new link
           </button>
@@ -150,7 +150,7 @@ export function ResetPasswordPage() {
               required
               autoComplete="new-password"
               disabled={linkState !== 'ready'}
-              className="w-full rounded-full border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint disabled:opacity-50"
+              className="w-full rounded-[10px] border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint disabled:opacity-50"
             />
             <button
               type="button"
@@ -177,7 +177,7 @@ export function ResetPasswordPage() {
             required
             autoComplete="new-password"
             disabled={linkState !== 'ready'}
-            className="w-full rounded-full border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint disabled:opacity-50"
+            className="w-full rounded-[10px] border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint disabled:opacity-50"
           />
           <button
             type="button"
@@ -196,7 +196,7 @@ export function ResetPasswordPage() {
         <button
           type="submit"
           disabled={submitting || linkState !== 'ready'}
-          className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-[10px] bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {linkState === 'pending' ? 'Verifying link…' : submitting ? 'Saving…' : 'Save new password'}
         </button>

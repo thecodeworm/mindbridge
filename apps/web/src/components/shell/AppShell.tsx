@@ -27,7 +27,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
     <div className="min-h-screen bg-cream">
       <header className="sticky top-0 z-30 border-b border-border bg-cream/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center gap-4 px-4 sm:px-6">
-          <Link to="/" className="font-display text-xl font-semibold text-blue-dark">
+          <Link to="/" className="font-display text-xl font-black tracking-tight text-ink">
             MindBridge
           </Link>
           <nav aria-label="Main" className="ml-4 hidden flex-1 gap-1 sm:flex">
@@ -37,8 +37,8 @@ export function AppShell({ children }: { children?: ReactNode }) {
                 to={t.to}
                 end={t.to === '/'}
                 className={({ isActive }) =>
-                  `rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-                    isActive ? 'bg-blue-tint text-blue-dark' : 'text-muted hover:text-ink'
+                  `border-b-2 px-3 py-1.5 font-display text-sm font-extrabold transition-colors ${
+                    isActive ? 'border-blue-dark text-ink' : 'border-transparent text-muted hover:text-ink'
                   }`
                 }
               >
@@ -76,12 +76,12 @@ export function AppShell({ children }: { children?: ReactNode }) {
               to={t.to}
               end={t.to === '/'}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-1 py-2.5 text-xs font-semibold ${isActive ? 'text-blue-dark' : 'text-muted'}`
+                `flex flex-col items-center gap-1 py-2.5 text-xs font-bold ${isActive ? 'text-ink' : 'text-muted'}`
               }
             >
               {({ isActive }) => (
                 <>
-                  <span className={`rounded-full px-4 py-1 ${isActive ? 'bg-blue-tint' : ''}`}>
+                  <span className={`border-b-2 px-4 pb-1 ${isActive ? 'border-blue-dark' : 'border-transparent'}`}>
                     <TabIcon d={t.icon} />
                   </span>
                   {t.label}

@@ -66,7 +66,7 @@ export function YearInPixels({ userId }: { userId: string }) {
 
   return (
     <div className="card relative p-4 sm:p-6">
-      <h2 className="font-body text-lg font-semibold text-ink">Year in pixels</h2>
+      <h2 className="text-xl text-ink">Year in pixels</h2>
       <p className="mb-4 mt-1 text-sm text-muted">
         {logged === 0
           ? 'One square per day. They fill with color as you check in.'

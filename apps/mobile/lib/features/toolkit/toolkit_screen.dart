@@ -222,14 +222,14 @@ class _TechniqueCardState extends State<_TechniqueCard> {
                                     height: 24,
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                      color: cs.primaryContainer,
-                                      shape: BoxShape.circle,
+                                      color: cs.primary,
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       '${i + 1}',
                                       style: tt.labelMedium?.copyWith(
-                                        color: cs.primary,
-                                        fontWeight: FontWeight.w700,
+                                        color: cs.onPrimary,
+                                        fontWeight: FontWeight.w800,
                                       ),
                                     ),
                                   ),

@@ -5,7 +5,9 @@ import '../../core/app_exception.dart';
 import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
 import '../../widgets/empty_state.dart';
+import '../../core/theme.dart';
 import '../../widgets/inline_notice.dart';
+import '../../widgets/notebook.dart';
 import '../mood/mood_log_service.dart';
 import 'entry_detail_screen.dart';
 import 'history_service.dart';
@@ -112,8 +114,6 @@ class _HistoryListState extends State<HistoryList> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
     final children = <Widget>[];
     String? lastMonth;
@@ -123,10 +123,7 @@ class _HistoryListState extends State<HistoryList> {
       if (month != lastMonth) {
         children.add(Padding(
           padding: EdgeInsets.only(top: lastMonth == null ? 0 : 20, bottom: 10, left: 4),
-          child: Text(
-            month,
-            style: tt.titleSmall?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600),
-          ),
+          child: SectionLabel(month),
         ));
         lastMonth = month;
       }
@@ -224,12 +221,12 @@ class MoodLogCard extends StatelessWidget {
                   Container(
                     width: 44,
                     height: 44,
-                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)),
                     alignment: Alignment.center,
                     child: Text(
                       '${entry.moodScore}',
                       style: tt.titleMedium?.copyWith(
-                        color: const Color(0xFF1C1917),
+                        color: AppColors.onMood,
                         fontWeight: FontWeight.w600,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),

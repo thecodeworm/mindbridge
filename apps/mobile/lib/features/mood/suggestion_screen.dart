@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../widgets/breathing_circle.dart';
 import '../../widgets/crisis_fab.dart';
 import '../../widgets/feedback_chip.dart';
+import '../../widgets/notebook.dart';
 import '../history/history_service.dart';
 import '../help/help_screen.dart';
 import 'suggestion_service.dart';
@@ -113,6 +114,8 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
           tooltip: 'Close',
           onPressed: _done,
         ),
+        titleSpacing: 0,
+        title: ready ? const SectionLabel('Try this now') : null,
         actions: const [HelpAction()],
       ),
       body: AnimatedSwitcher(
@@ -152,7 +155,7 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
               size: 180,
             ),
             const SizedBox(height: 32),
-            Text('Breathe with the circle', style: tt.headlineSmall, textAlign: TextAlign.center),
+            Text('Breathe with the circle', style: tt.headlineMedium, textAlign: TextAlign.center),
             const SizedBox(height: 8),
             Text(
               'Finding one small thing that could help right now.',
@@ -172,7 +175,7 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
       children: [
         Icon(Icons.cloud_off_outlined, size: 40, color: cs.onSurfaceVariant),
         const SizedBox(height: 16),
-        Text('Your check-in is saved', style: tt.headlineSmall),
+        Text('Your check-in is saved', style: tt.headlineMedium),
         const SizedBox(height: 8),
         Text(_error!, style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.45)),
         const SizedBox(height: 28),
@@ -199,7 +202,7 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
             color: terraTint,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.card),
-              side: BorderSide(color: terra.withValues(alpha: 0.5)),
+              side: BorderSide(color: terra),
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(AppRadius.card),
@@ -238,9 +241,10 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
           ),
           const SizedBox(height: 24),
         ],
-        Text(
+        Highlight(
           suggestion.techniqueName,
-          style: tt.displaySmall?.copyWith(fontSize: 34, height: 1.1, letterSpacing: -0.5),
+          color: _tone,
+          style: tt.displaySmall?.copyWith(fontSize: 34),
         ),
         const SizedBox(height: 12),
         Text(
@@ -249,8 +253,8 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
         ),
         const SizedBox(height: 24),
         Container(
-          padding: const EdgeInsets.fromLTRB(18, 20, 18, 8),
-          decoration: AppElevation.decoration(context, radius: 20),
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
+          decoration: AppElevation.decoration(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -261,16 +265,16 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 30,
-                        height: 30,
+                        width: 28,
+                        height: 28,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: _tone.withValues(alpha: 0.22),
-                          shape: BoxShape.circle,
+                          color: cs.primary,
+                          borderRadius: BorderRadius.circular(7),
                         ),
                         child: Text(
                           '${i + 1}',
-                          style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700, color: cs.onSurface),
+                          style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800, color: cs.onPrimary),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -287,7 +291,7 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        Text('Did this help?', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+        const SectionLabel('Did this help?'),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,

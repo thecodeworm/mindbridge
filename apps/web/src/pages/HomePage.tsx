@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getMoodLogsInRange } from '../lib/moodService'
@@ -17,10 +18,8 @@ const QUICK_SCORES = [2, 4, 6, 8, 10]
 function greeting(): string {
   const h = new Date().getHours()
   if (h < 5) return 'Still up'
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  if (h < 22) return 'Good evening'
-  return 'Winding down'
+  if (h < 12) return 'Morning'
+  return 'Hey'
 }
 
 function sameDay(a: Date, b: Date) {
@@ -82,11 +81,13 @@ export function HomePage() {
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-muted">
-          {now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+        <p className="label">
+          {now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
         </p>
-        <h1 className="mt-1 text-3xl font-semibold text-ink sm:text-4xl">
-          {firstName ? `${greeting()}, ${firstName}` : greeting()}
+        <h1 className="mt-2 text-4xl text-ink sm:text-5xl">
+          {firstName ? `${greeting()}, ${firstName}.` : `${greeting()}.`}
+          <br />
+          <span className="hl">{todays ? 'Nice work today.' : "How's today?"}</span>
         </h1>
       </div>
 
@@ -103,14 +104,14 @@ export function HomePage() {
                 clearPendingCheckin()
                 setShowOnboardingNudge(false)
               }}
-              className="rounded-full px-4 py-2 font-semibold text-muted hover:text-ink"
+              className="rounded-[10px] px-4 py-2 font-semibold text-muted hover:text-ink"
             >
               Not now
             </button>
             <button
               type="button"
               onClick={saveOnboardingCheckin}
-              className="rounded-full bg-blue-dark px-4 py-2 font-semibold text-on-accent hover:opacity-90"
+              className="rounded-[10px] bg-blue-dark px-4 py-2 font-semibold text-on-accent hover:opacity-90"
             >
               Save it
             </button>
@@ -123,13 +124,11 @@ export function HomePage() {
       ) : todays ? (
         <CheckedInCard log={todays} techniqueName={todaysTechnique} />
       ) : (
-        <section className="card rounded-[20px] p-5 sm:p-7" aria-labelledby="checkin-heading">
-          <h2 id="checkin-heading" className="text-2xl font-semibold text-ink">
-            How are you, really?
+        <section className="card p-4 sm:p-6" aria-labelledby="checkin-heading">
+          <h2 id="checkin-heading" className="label">
+            Pick the closest
           </h2>
-          <p className="mt-1.5 max-w-md text-muted">
-            Tap the closest feeling. You'll get one small thing to try, right away.
-          </p>
+          <p className="mt-1 max-w-md text-muted">You'll get one small thing to try, right away.</p>
           <div className="mt-6 flex justify-between gap-2 sm:justify-start sm:gap-6">
             {QUICK_SCORES.map((s) => (
               <button
@@ -140,8 +139,8 @@ export function HomePage() {
                 className="group flex flex-col items-center gap-1.5 rounded-2xl p-1"
               >
                 <span
-                  className="h-11 w-11 rounded-full transition-transform duration-200 group-hover:-translate-y-0.5 sm:h-12 sm:w-12"
-                  style={{ backgroundColor: moodColor(s), boxShadow: `0 4px 10px ${moodColor(s)}59` }}
+                  className="h-12 w-12 rounded-[10px] transition-transform duration-200 group-hover:-translate-y-0.5 sm:h-14 sm:w-14"
+                  style={{ backgroundColor: moodColor(s) }}
                 />
                 <span className="text-sm font-medium text-muted">{moodWord(s)}</span>
               </button>
@@ -150,16 +149,16 @@ export function HomePage() {
           <button
             type="button"
             onClick={() => navigate('/log')}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-blue-dark px-6 py-3.5 font-semibold text-on-accent transition-opacity hover:opacity-90"
+            className="mt-6 w-full rounded-[10px] bg-blue-dark px-6 py-3.5 font-display text-lg font-extrabold text-on-accent transition-opacity hover:opacity-90"
           >
-            <span aria-hidden className="text-lg leading-none">+</span> Check in
+            Check in
           </button>
         </section>
       )}
 
       {!loading && (
         <section aria-labelledby="week-heading">
-          <h2 id="week-heading" className="mb-3 font-body text-lg font-semibold text-ink">
+          <h2 id="week-heading" className="label mb-3">
             This week
           </h2>
           <div className="card space-y-4 p-4 sm:p-5">
@@ -177,10 +176,10 @@ export function HomePage() {
       {!loading && recent.length > 0 && (
         <section aria-labelledby="recent-heading">
           <div className="mb-3 flex items-center justify-between">
-            <h2 id="recent-heading" className="font-body text-lg font-semibold text-ink">
+            <h2 id="recent-heading" className="label">
               Recent
             </h2>
-            <Link to="/journal" className="rounded-full px-3 py-1 font-semibold text-blue-dark hover:bg-blue-tint">
+            <Link to="/journal" className="rounded-[10px] px-3 py-1 font-semibold text-blue-dark hover:bg-blue-tint">
               See all
             </Link>
           </div>
@@ -200,23 +199,24 @@ function CheckedInCard({ log, techniqueName }: { log: MoodLog; techniqueName: st
   const tag = MOOD_TAGS.find((t) => t.value === log.mood_tag)
   const color = moodColor(log.mood_score)
   return (
-    <section className="card overflow-hidden rounded-[20px]">
-      <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${color}8c, ${color})` }} />
+    <section className="card overflow-hidden">
       <button
         type="button"
         onClick={() => navigate(`/entry/${log.id}`)}
         className="flex w-full items-center gap-4 px-5 py-5 text-left hover:bg-surface/50"
       >
         <span
-          className="tabular flex h-14 w-14 shrink-0 items-center justify-center rounded-full font-display text-2xl font-semibold"
+          className="tabular flex h-14 w-14 shrink-0 items-center justify-center rounded-[12px] font-display text-2xl font-black"
           style={{ backgroundColor: color, color: '#1C1917' }}
         >
           {log.mood_score}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm text-muted">You checked in</span>
-          <span className="block font-display text-2xl font-semibold text-ink">
-            {tag ? `${tag.label} ${tag.emoji}` : moodWord(log.mood_score)}
+          <span className="label block">You checked in</span>
+          <span className="mt-1 block font-display text-2xl font-black tracking-tight">
+            <span className="hl" style={{ '--mark': color } as CSSProperties}>
+              {tag ? tag.label : moodWord(log.mood_score)}
+            </span>
           </span>
           <span className="block text-sm text-muted">
             {new Date(log.logged_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
@@ -224,7 +224,7 @@ function CheckedInCard({ log, techniqueName }: { log: MoodLog; techniqueName: st
         </span>
       </button>
       {techniqueName && (
-        <div className="mx-5 flex items-center gap-2.5 rounded-xl bg-surface px-4 py-3">
+        <div className="mx-5 flex items-center gap-2.5 rounded-lg bg-surface px-4 py-3">
           <span className="text-blue-dark" aria-hidden>✦</span>
           <span className="truncate font-semibold text-ink">{techniqueName}</span>
         </div>
@@ -233,7 +233,7 @@ function CheckedInCard({ log, techniqueName }: { log: MoodLog; techniqueName: st
         <button
           type="button"
           onClick={() => navigate('/log')}
-          className="rounded-full px-3 py-2 font-semibold text-blue-dark hover:bg-blue-tint"
+          className="rounded-[10px] px-3 py-2 font-semibold text-blue-dark hover:bg-blue-tint"
         >
           + Check in again
         </button>
@@ -262,10 +262,10 @@ function WeekStrip({ logs }: { logs: MoodLog[] }) {
               {d.toLocaleDateString(undefined, { weekday: 'narrow' })}
             </span>
             <span
-              className={`tabular flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
-                log ? '' : isToday ? 'border-2 border-blue-dark' : 'border-[1.5px] border-border'
+              className={`tabular flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold ${
+                isToday ? 'border-2 border-ink' : log ? '' : 'border-[1.5px] border-border'
               }`}
-              style={log ? { backgroundColor: moodColor(log.mood_score), color: '#1C1917' } : undefined}
+              style={log ? { backgroundColor: moodColor(log.mood_score), color: '#14161B' } : undefined}
               title={log ? `${d.toLocaleDateString()}: ${log.mood_score}` : d.toLocaleDateString()}
             >
               {log?.mood_score}

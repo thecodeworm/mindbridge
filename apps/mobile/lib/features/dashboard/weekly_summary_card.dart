@@ -118,7 +118,7 @@ class _WeeklySummaryCardState extends State<WeeklySummaryCard> {
               Icon(Icons.auto_awesome_outlined, size: 20, color: cs.primary),
               const SizedBox(width: 8),
               Expanded(
-                child: Text('Your week in review', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                child: Text('Your week in review', style: tt.titleLarge),
               ),
               Text(_weekLabel(), style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
             ],
@@ -144,7 +144,7 @@ class _WeeklySummaryCardState extends State<WeeklySummaryCard> {
                         child: Container(
                           width: 6,
                           height: 6,
-                          decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: cs.primary, borderRadius: BorderRadius.circular(2)),
                         ),
                       ),
                       Expanded(

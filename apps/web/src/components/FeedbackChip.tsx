@@ -15,7 +15,7 @@ export function FeedbackChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 font-semibold transition-colors ${
+      className={`inline-flex items-center gap-2 rounded-lg border-[1.5px] px-4 py-2 font-semibold transition-colors ${
         active ? 'border-blue-dark bg-blue-tint text-blue-dark' : 'border-border bg-card text-ink hover:bg-blue-tint'
       }`}
     >

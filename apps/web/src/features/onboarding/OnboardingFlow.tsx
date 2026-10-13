@@ -57,7 +57,7 @@ export function OnboardingFlow() {
         <button
           type="button"
           onClick={() => finish('/login')}
-          className="absolute right-4 top-4 rounded-full px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-ink"
+          className="absolute right-4 top-4 rounded-[10px] px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-ink"
         >
           Skip
         </button>

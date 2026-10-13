@@ -93,14 +93,14 @@ export function FirstCheckinStep({ onCreateAccount, onHaveAccount }: Props) {
         <button
           type="button"
           onClick={() => tag && onCreateAccount(score, tag)}
-          className="mt-8 w-full rounded-full bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
+          className="mt-8 w-full rounded-[10px] bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
         >
           Save this and create my account
         </button>
         <button
           type="button"
           onClick={onHaveAccount}
-          className="mt-2 w-full rounded-full px-6 py-3 text-sm font-medium text-blue-dark transition-colors hover:underline"
+          className="mt-2 w-full rounded-[10px] px-6 py-3 text-sm font-medium text-blue-dark transition-colors hover:underline"
         >
           I already have an account
         </button>
@@ -136,7 +136,7 @@ export function FirstCheckinStep({ onCreateAccount, onHaveAccount }: Props) {
             type="button"
             disabled={!tag}
             onClick={reveal}
-            className="w-full rounded-full bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="w-full rounded-[10px] bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             See what you'd get
           </button>

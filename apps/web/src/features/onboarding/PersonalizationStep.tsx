@@ -35,7 +35,7 @@ export function PersonalizationStep({ selected, onSelect, onNext }: Props) {
               type="button"
               onClick={() => onSelect(isSelected ? null : o.value)}
               className={[
-                'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
                 isSelected
                   ? 'border-blue-dark bg-blue-tint text-blue-dark'
                   : 'border-border bg-field text-ink hover:bg-blue-tint',
@@ -50,7 +50,7 @@ export function PersonalizationStep({ selected, onSelect, onNext }: Props) {
       <button
         type="button"
         onClick={onNext}
-        className="mt-12 w-full max-w-xs rounded-full bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
+        className="mt-12 w-full max-w-xs rounded-[10px] bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
       >
         Next
       </button>

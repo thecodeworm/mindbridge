@@ -4,6 +4,7 @@ import '../../../core/mood_color.dart';
 import '../../../widgets/breathing_circle.dart';
 import '../../../widgets/felt_mood_slider.dart';
 import '../../../widgets/mood_tag_picker.dart';
+import '../../../widgets/notebook.dart';
 
 /// A small, honest sample bank keyed by quadrant — NOT a real Claude Haiku
 /// call. There's no session/user_id yet at this point in onboarding, so a
@@ -97,10 +98,7 @@ class _FirstCheckinStepState extends State<FirstCheckinStep> {
               child: ListView(
                 children: [
                   const SizedBox(height: 8),
-                  Text(
-                    sample.name,
-                    style: tt.displaySmall?.copyWith(fontSize: 32, height: 1.1),
-                  ),
+                  Highlight(sample.name, color: color, style: tt.displaySmall?.copyWith(fontSize: 32)),
                   const SizedBox(height: 8),
                   Text(
                     'A sample of what you get after every real check-in: one technique, three small steps.',
@@ -109,7 +107,7 @@ class _FirstCheckinStepState extends State<FirstCheckinStep> {
                   const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.fromLTRB(18, 20, 18, 4),
-                    decoration: AppElevation.decoration(context, radius: 20),
+                    decoration: AppElevation.decoration(context),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -124,10 +122,10 @@ class _FirstCheckinStepState extends State<FirstCheckinStep> {
                                   height: 28,
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.25),
-                                    shape: BoxShape.circle,
+                                    color: cs.primary,
+                                    borderRadius: BorderRadius.circular(7),
                                   ),
-                                  child: Text('${i + 1}', style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
+                                  child: Text('${i + 1}', style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800, color: cs.onPrimary)),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -180,10 +178,7 @@ class _FirstCheckinStepState extends State<FirstCheckinStep> {
                 style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(width: 10),
-              Text(
-                moodWord(_score),
-                style: tt.titleLarge?.copyWith(color: Color.lerp(color, cs.onSurface, 0.45)),
-              ),
+              Highlight(moodWord(_score), color: color, style: tt.headlineSmall),
             ],
           ),
           FeltMoodSlider(value: _score, onChanged: (v) => setState(() => _score = v)),

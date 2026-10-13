@@ -33,14 +33,14 @@ export function HistoryRow({ entry, onClick }: { entry: HistoryEntry; onClick: (
       className="card flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-shadow hover:shadow-[var(--shadow-elevated)]"
     >
       <span
-        className="tabular flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-semibold"
-        style={{ backgroundColor: moodColor(entry.mood_score), color: '#1C1917' }}
+        className="tabular flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] font-semibold"
+        style={{ backgroundColor: moodColor(entry.mood_score), color: '#14161B' }}
       >
         {entry.mood_score}
       </span>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-ink">
-          {tag ? `${tag.label} ${tag.emoji}` : moodWord(entry.mood_score)}
+          {tag ? tag.label : moodWord(entry.mood_score)}
         </p>
         {entry.technique_name && <p className="truncate text-muted">{entry.technique_name}</p>}
         <p className="text-sm text-muted">{formatDate(entry.logged_at)}</p>
@@ -103,7 +103,7 @@ export function HistoryList({ userId }: { userId: string }) {
     return (
       <div className="flex items-center gap-3 rounded-2xl bg-error-tint px-4 py-3.5">
         <p className="flex-1 text-ink">{error}</p>
-        <button type="button" onClick={() => setVersion((v) => v + 1)} className="rounded-full px-3 py-1.5 font-semibold text-blue-dark hover:bg-blue-tint">
+        <button type="button" onClick={() => setVersion((v) => v + 1)} className="rounded-[10px] px-3 py-1.5 font-semibold text-blue-dark hover:bg-blue-tint">
           Retry
         </button>
       </div>
@@ -118,7 +118,7 @@ export function HistoryList({ userId }: { userId: string }) {
         <button
           type="button"
           onClick={() => navigate('/log')}
-          className="mt-5 rounded-full bg-blue-dark px-6 py-2.5 font-semibold text-on-accent hover:opacity-90"
+          className="mt-5 rounded-[10px] bg-blue-dark px-6 py-2.5 font-semibold text-on-accent hover:opacity-90"
         >
           Check in
         </button>
@@ -136,7 +136,7 @@ export function HistoryList({ userId }: { userId: string }) {
         return (
           <div key={entry.id}>
             {header && (
-              <h2 className={`mb-2.5 px-1 font-body text-sm font-semibold text-muted ${i === 0 ? '' : 'mt-6'}`}>{month}</h2>
+              <h2 className={`label mb-2.5 px-1 ${i === 0 ? '' : 'mt-6'}`}>{month}</h2>
             )}
             <div className="mb-2.5">
               <HistoryRow entry={entry} onClick={() => navigate(`/entry/${entry.id}`)} />
@@ -150,7 +150,7 @@ export function HistoryList({ userId }: { userId: string }) {
           type="button"
           onClick={loadMore}
           disabled={loadingMore}
-          className="mt-2 w-full rounded-full border border-border bg-card px-4 py-2.5 font-semibold text-ink transition-colors hover:bg-blue-tint disabled:opacity-50"
+          className="mt-2 w-full rounded-[10px] border border-border bg-card px-4 py-2.5 font-semibold text-ink transition-colors hover:bg-blue-tint disabled:opacity-50"
         >
           {loadingMore ? 'Loading…' : 'Show older entries'}
         </button>

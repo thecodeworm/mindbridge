@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { moodTagInfo } from '../../../../shared/types'
@@ -148,12 +149,14 @@ export function EntryDetailPage() {
           <>
             <div className="card space-y-4 p-5 sm:p-6">
               <div className="flex items-center gap-4">
-                <span className="tabular flex h-14 w-14 shrink-0 items-center justify-center rounded-full font-display text-2xl font-semibold" style={{ backgroundColor: moodColor(detail.moodLog.mood_score), color: '#1C1917' }}>
+                <span className="tabular flex h-14 w-14 shrink-0 items-center justify-center rounded-[10px] font-display text-2xl font-semibold" style={{ backgroundColor: moodColor(detail.moodLog.mood_score), color: '#1C1917' }}>
                   {detail.moodLog.mood_score}
                 </span>
                 <div>
-                  <p className="font-display text-2xl font-semibold text-ink">
-                    {moodTagInfo(detail.moodLog.mood_tag)?.label} {moodTagInfo(detail.moodLog.mood_tag)?.emoji}
+                  <p className="font-display text-2xl font-black tracking-tight">
+                    <span className="hl" style={{ '--mark': moodColor(detail.moodLog.mood_score) } as CSSProperties}>
+                      {moodTagInfo(detail.moodLog.mood_tag)?.label}
+                    </span>
                   </p>
                   <p className="text-sm text-muted">{formatDate(detail.moodLog.logged_at)}</p>
                 </div>
@@ -162,7 +165,7 @@ export function EntryDetailPage() {
               {detail.activities.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {detail.activities.map((a) => (
-                    <span key={a.id} className="rounded-full bg-surface px-3 py-1 text-sm text-ink">
+                    <span key={a.id} className="rounded-lg bg-surface px-3 py-1 text-sm text-ink">
                       {a.emoji} {a.label}
                     </span>
                   ))}
@@ -171,7 +174,7 @@ export function EntryDetailPage() {
 
               {detail.journalEntry && (
                 <div className="space-y-1 border-t border-border pt-4">
-                  <p className="text-sm font-semibold text-muted">Journal</p>
+                  <p className="label">Journal</p>
                   <p className="whitespace-pre-wrap text-lg leading-relaxed text-ink">{detail.journalEntry.body}</p>
                 </div>
               )}
@@ -180,7 +183,7 @@ export function EntryDetailPage() {
             {showCrisis && (
               <Link
                 to="/help"
-                className="block rounded-2xl border border-terra/50 bg-terra-tint px-4 py-3.5 text-terra-dark transition-colors hover:bg-terra-tint/70"
+                className="block rounded-xl border border-terra bg-terra-tint px-4 py-3.5 text-terra-dark transition-colors hover:bg-terra-tint/70"
               >
                 You don't have to carry this alone. Call or text 988, or text HOME to 741741. Tap for more.
               </Link>
@@ -188,15 +191,12 @@ export function EntryDetailPage() {
 
             {suggestion && (
               <div className="card space-y-4 p-5 sm:p-6">
-                <h1 className="text-2xl font-semibold text-ink">{suggestion.technique_name}</h1>
+                <h1 className="text-3xl text-ink">{suggestion.technique_name}</h1>
                 <p className="leading-relaxed text-muted">{suggestion.description}</p>
                 <ol className="space-y-3">
                   {suggestion.steps.slice(0, 3).map((step, i) => (
                     <li key={i} className="flex gap-3">
-                      <span
-                        className="tabular flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-ink"
-                        style={{ backgroundColor: `${moodColor(detail.moodLog.mood_score)}40` }}
-                      >
+                      <span className="tabular flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] bg-blue-dark text-sm font-bold text-on-accent">
                         {i + 1}
                       </span>
                       <span className="pt-0.5 leading-relaxed text-ink">{step}</span>

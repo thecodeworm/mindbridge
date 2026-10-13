@@ -144,7 +144,7 @@ class _StreakBadgeState extends State<StreakBadge>
             height: 36,
             decoration: BoxDecoration(
               color: successTint,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(9),
             ),
             child: Icon(Icons.spa_outlined, size: 20, color: success),
           ),

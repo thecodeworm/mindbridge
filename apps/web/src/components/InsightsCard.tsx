@@ -15,7 +15,7 @@ function CorrelationRow({ r, valence }: { r: CorrelationResult; valence: 'positi
       </div>
       {/* Sage for lifts, slate (low end of the mood ramp) for dips: never red/green judgement. */}
       <span
-        className="tabular rounded-full px-2.5 py-1 text-sm font-semibold text-ink"
+        className="tabular rounded-lg px-2.5 py-1 text-sm font-semibold text-ink"
         style={{ backgroundColor: valence === 'positive' ? 'color-mix(in srgb, var(--success) 16%, transparent)' : 'color-mix(in srgb, #7c8ba8 18%, transparent)' }}
       >
         {valence === 'positive' ? '+' : ''}{r.delta.toFixed(1)}
@@ -48,7 +48,7 @@ export function InsightsCard({ userId }: { userId: string }) {
 
   return (
     <div className="card p-4 sm:p-6">
-      <h2 className="font-body text-lg font-semibold text-ink">What lifts you</h2>
+      <h2 className="text-xl text-ink">What lifts you</h2>
       <p className="mb-4 mt-1 text-sm text-muted">
         Activities tagged on 5+ check-ins in the last 90 days, compared with your average. Patterns, not causes.
       </p>

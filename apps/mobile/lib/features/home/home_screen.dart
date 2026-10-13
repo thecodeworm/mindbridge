@@ -5,7 +5,9 @@ import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
 import '../../core/onboarding_state.dart';
 import '../../features/dashboard/streak_badge.dart';
+import '../../core/theme.dart';
 import '../../widgets/crisis_fab.dart';
+import '../../widgets/notebook.dart';
 import '../history/entry_detail_screen.dart';
 import '../history/history_list.dart';
 import '../history/history_service.dart';
@@ -94,6 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  bool get _todayChecked => _todaysLatest != null;
+
   MoodLog? get _todaysLatest {
     final now = DateTime.now();
     MoodLog? latest;
@@ -113,7 +117,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final firstName = (rawName == null || rawName.trim().isEmpty)
         ? null
         : rawName.trim().split(' ').first;
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return SafeArea(
@@ -126,12 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // ── Header ───────────────────────────────────────────────
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    _formatToday(DateTime.now()),
-                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
+                Expanded(child: SectionLabel(_formatToday(DateTime.now()))),
                 const HelpChip(),
                 const SizedBox(width: 4),
                 IconButton(
@@ -144,12 +142,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
-              firstName == null ? _greeting() : '${_greeting()}, $firstName',
-              style: tt.headlineMedium?.copyWith(height: 1.15),
+              firstName == null ? '${_greeting()}.' : '${_greeting()}, $firstName.',
+              style: tt.headlineLarge?.copyWith(fontSize: 34),
             ),
-            const SizedBox(height: 24),
+            Highlight(
+              _todayChecked ? 'Nice work today.' : "How's today?",
+              color: moodColor(5),
+              style: tt.headlineLarge?.copyWith(fontSize: 34),
+            ),
+            const SizedBox(height: 22),
 
             if (_showOnboardingNudge) ...[
               _OnboardingNudge(
@@ -186,8 +189,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // ── This week ────────────────────────────────────────────
             if (!_loading) ...[
-              _SectionHeader(title: 'This week'),
-              const SizedBox(height: 12),
+              const SectionLabel('This week'),
+              const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
                 decoration: AppElevation.decoration(context),
@@ -209,12 +212,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // ── Recent entries ───────────────────────────────────────
             if (!_loading && _recent.isNotEmpty) ...[
-              _SectionHeader(
-                title: 'Recent',
-                actionLabel: 'See all',
-                onAction: () => MainShell.goToTab(context, MainShell.journal),
+              SectionLabel(
+                'Recent',
+                trailing: TextButton(
+                  onPressed: () => MainShell.goToTab(context, MainShell.journal),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: const Size(48, 32),
+                  ),
+                  child: const Text('See all'),
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               for (final entry in _recent)
                 MoodLogCard(entry: entry, onTap: () => _openEntry(entry.id)),
             ],
@@ -228,49 +237,17 @@ class _HomeScreenState extends State<HomeScreen> {
 String _greeting() {
   final h = DateTime.now().hour;
   if (h < 5) return 'Still up';
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  if (h < 22) return 'Good evening';
-  return 'Winding down';
+  if (h < 12) return 'Morning';
+  return 'Hey';
 }
 
-const _kWeekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const _kMonths = [
-  'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-  'September', 'October', 'November', 'December',
-];
+const _kWeekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const _kMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 String _formatToday(DateTime d) => '${_kWeekdays[d.weekday - 1]}, ${_kMonths[d.month - 1]} ${d.day}';
 
 String _formatTime(BuildContext context, DateTime d) =>
     TimeOfDay.fromDateTime(d.toLocal()).format(context);
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, this.actionLabel, this.onAction});
-
-  final String title;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        Expanded(child: Text(title, style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600))),
-        if (actionLabel != null)
-          TextButton(
-            onPressed: onAction,
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: const Size(48, 36),
-            ),
-            child: Text(actionLabel!),
-          ),
-      ],
-    );
-  }
-}
 
 /// Not-yet-checked-in state. Five mood-temperature dots double as a
 /// one-tap shortcut into the log screen with the score pre-set.
@@ -288,18 +265,18 @@ class _CheckInPrompt extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
-      decoration: AppElevation.decoration(context, radius: 20),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('How are you, really?', style: tt.headlineSmall),
-          const SizedBox(height: 6),
+          const SectionLabel('Pick the closest'),
+          const SizedBox(height: 4),
           Text(
-            'Tap the closest feeling. You\'ll get one small thing to try, right away.',
+            "You'll get one small thing to try, right away.",
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -308,11 +285,7 @@ class _CheckInPrompt extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: onCheckIn,
-            icon: const Icon(Icons.add, size: 20),
-            label: const Text('Check in'),
-          ),
+          FilledButton(onPressed: onCheckIn, child: const Text('Check in')),
         ],
       ),
     );
@@ -335,24 +308,17 @@ class _MoodDot extends StatelessWidget {
       label: 'Check in feeling ${moodWord(score)}',
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(4),
           child: Column(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
                   color: color,
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.35),
-                      offset: const Offset(0, 4),
-                      blurRadius: 10,
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
               const SizedBox(height: 6),
@@ -391,17 +357,11 @@ class _CheckedInCard extends StatelessWidget {
     final tag = moodTagInfo(log.moodTag);
 
     return Container(
-      decoration: AppElevation.decoration(context, radius: 20),
+      decoration: AppElevation.decoration(context),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            height: 6,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [color.withValues(alpha: 0.55), color]),
-            ),
-          ),
           InkWell(
             onTap: onOpen,
             child: Padding(
@@ -414,14 +374,12 @@ class _CheckedInCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'You checked in',
-                          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          tag != null ? '${tag['label']} ${tag['emoji']}' : moodWord(log.moodScore),
-                          style: tt.titleLarge,
+                        const SectionLabel('You checked in'),
+                        const SizedBox(height: 4),
+                        Highlight(
+                          tag != null ? tag['label']! : moodWord(log.moodScore),
+                          color: color,
+                          style: tt.headlineSmall,
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -443,7 +401,7 @@ class _CheckedInCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: cs.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
@@ -490,12 +448,12 @@ class _ScoreBubble extends StatelessWidget {
       width: size,
       height: size,
       alignment: Alignment.center,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: moodColor(score)),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: moodColor(score)),
       child: Text(
         '$score',
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: const Color(0xFF1C1917),
-              fontWeight: FontWeight.w600,
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: AppColors.onMood,
+              fontWeight: FontWeight.w900,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
       ),
@@ -548,21 +506,20 @@ class _WeekStrip extends StatelessWidget {
                   height: 34,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(8),
                     color: log != null ? moodColor(log.moodScore) : Colors.transparent,
-                    border: log == null
-                        ? Border.all(
-                            color: isToday ? cs.primary : cs.outline,
-                            width: isToday ? 2 : 1.5,
-                          )
-                        : null,
+                    border: isToday
+                        ? Border.all(color: cs.onSurface, width: 2)
+                        : log == null
+                            ? Border.all(color: cs.outline, width: 1.5)
+                            : null,
                   ),
                   child: log != null
                       ? Text(
                           '${log.moodScore}',
                           style: tt.labelLarge?.copyWith(
-                            color: const Color(0xFF1C1917),
-                            fontWeight: FontWeight.w600,
+                            color: AppColors.onMood,
+                            fontWeight: FontWeight.w700,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         )

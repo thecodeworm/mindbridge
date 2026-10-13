@@ -71,26 +71,18 @@ export function MoodTrendChart({ logs }: MoodTrendChartProps) {
     return logs
   }, [logs, range])
 
-  // Stroke/fill follow the mood-temperature ramp point by point, matching
-  // the Flutter chart's gradient line (slate lows, gold highs).
-  const stops = data.map((d, i) => ({
-    offset: data.length > 1 ? `${(i / (data.length - 1)) * 100}%` : '0%',
-    color: moodColor(d.mood_score),
-  }))
-  const lastColor = data.length ? moodColor(data[data.length - 1].mood_score) : 'var(--blue)'
-
   return (
     <div className="card p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="font-body text-lg font-semibold text-ink">Mood trend</h2>
-        <div className="flex gap-1 rounded-full bg-surface p-1" role="group" aria-label="Range">
+        <h2 className="text-xl text-ink">Mood trend</h2>
+        <div className="flex gap-1 rounded-lg bg-surface p-1" role="group" aria-label="Range">
           {([7, 30] as const).map((d) => (
             <button
               key={d}
               type="button"
               onClick={() => setRange(d)}
               className={[
-                'rounded-full px-3.5 py-1 text-sm font-semibold transition-colors',
+                'rounded-lg px-3.5 py-1 text-sm font-semibold transition-colors',
                 range === d ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink',
               ].join(' ')}
               aria-pressed={range === d}
@@ -110,14 +102,9 @@ export function MoodTrendChart({ logs }: MoodTrendChartProps) {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="moodStroke" x1="0" y1="0" x2="1" y2="0">
-                  {stops.length > 1
-                    ? stops.map((s, i) => <stop key={i} offset={s.offset} stopColor={s.color} />)
-                    : [<stop key="a" offset="0%" stopColor={lastColor} />, <stop key="b" offset="100%" stopColor={lastColor} />]}
-                </linearGradient>
                 <linearGradient id="moodFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={lastColor} stopOpacity={0.28} />
-                  <stop offset="100%" stopColor={lastColor} stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--blue-dark)" stopOpacity={0.12} />
+                  <stop offset="100%" stopColor="var(--blue-dark)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" vertical={false} />
@@ -143,8 +130,8 @@ export function MoodTrendChart({ logs }: MoodTrendChartProps) {
               <Area
                 type="monotone"
                 dataKey="mood_score"
-                stroke="url(#moodStroke)"
-                strokeWidth={3}
+                stroke="var(--ink)"
+                strokeWidth={2.5}
                 strokeLinecap="round"
                 fill="url(#moodFill)"
                 dot={<MoodDot />}

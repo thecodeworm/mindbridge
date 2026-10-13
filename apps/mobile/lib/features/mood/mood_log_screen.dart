@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_exception.dart';
-import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
 import '../../core/motion.dart';
 import '../../widgets/breathing_circle.dart';
@@ -9,6 +8,7 @@ import '../../widgets/crisis_fab.dart';
 import '../../widgets/felt_mood_slider.dart';
 import '../../widgets/mood_tag_picker.dart';
 import '../../widgets/inline_notice.dart';
+import '../../widgets/notebook.dart';
 import '../history/history_service.dart';
 import 'activity_tag_picker.dart';
 import 'distortion_picker.dart';
@@ -274,55 +274,47 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
           ],
 
           // ── Score ────────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            decoration: AppElevation.decoration(context, radius: 20),
-            child: Column(
-              children: [
-                Text('How are you feeling?', style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant)),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '${_score.round()}',
-                      style: tt.displayMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    AnimatedSwitcher(
-                      duration: AppMotion.short,
-                      child: Text(
-                        moodWord(_score),
-                        key: ValueKey(moodWord(_score)),
-                        style: tt.headlineSmall?.copyWith(color: Color.lerp(color, cs.onSurface, 0.45)),
-                      ),
-                    ),
-                  ],
+          const SectionLabel('How are you feeling?'),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '${_score.round()}',
+                style: tt.displayLarge?.copyWith(
+                  fontSize: 92,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
-                const SizedBox(height: 8),
-                FeltMoodSlider(
-                  value: _score,
-                  onChanged: (v) => setState(() => _score = v),
+              ),
+              const SizedBox(width: 12),
+              AnimatedSwitcher(
+                duration: AppMotion.short,
+                child: Highlight(
+                  moodWord(_score),
+                  key: ValueKey(moodWord(_score)),
+                  color: color,
+                  style: tt.headlineMedium,
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Heavy', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
-                    Text('Great', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          FeltMoodSlider(
+            value: _score,
+            onChanged: (v) => setState(() => _score = v),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Heavy', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+              Text('Great', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+            ],
           ),
           const SizedBox(height: 28),
 
           // ── Feeling word ─────────────────────────────────────────
-          const _SectionTitle(title: 'Which word fits?'),
+          const SectionLabel('Which word fits?'),
           const SizedBox(height: 12),
           MoodTagPicker(
             quadrant: _quadrant,
@@ -336,7 +328,7 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
           const SizedBox(height: 28),
 
           // ── Activities ───────────────────────────────────────────
-          const _SectionTitle(title: 'What were you up to?', subtitle: 'Optional. Helps spot patterns over time.'),
+          const SectionLabel('What were you up to? (optional)'),
           const SizedBox(height: 12),
           if (_loadingTags)
             const SizedBox(height: 40, child: Center(child: CircularProgressIndicator()))
@@ -360,26 +352,12 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
           ],
 
           // ── Journal ──────────────────────────────────────────────
-          const _SectionTitle(title: "What's on your mind?", subtitle: 'Optional. Only you can see this.'),
+          const SectionLabel("What's on your mind? (optional)"),
           const SizedBox(height: 12),
-          TextField(
+          RuledTextField(
             controller: _journalController,
-            maxLines: 5,
-            minLines: 3,
             maxLength: 500,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              hintText: 'A sentence or two is plenty.',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.card),
-                borderSide: BorderSide(color: cs.outline),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.card),
-                borderSide: BorderSide(color: cs.primary, width: 2),
-              ),
-            ),
+            hintText: 'A sentence or two is plenty. Only you can see this.',
           ),
         ],
       ),
@@ -394,29 +372,6 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, this.subtitle});
-
-  final String title;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-        if (subtitle != null) ...[
-          const SizedBox(height: 2),
-          Text(subtitle!, style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
-        ],
-      ],
     );
   }
 }

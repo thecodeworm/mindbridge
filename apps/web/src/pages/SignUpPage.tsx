@@ -88,7 +88,7 @@ export function SignUpPage() {
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-field px-4 py-3 font-medium text-ink transition-colors hover:bg-blue-tint"
+          className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-field px-4 py-3 font-medium text-ink transition-colors hover:bg-blue-tint"
         >
           <GoogleIcon />
           Continue with Google
@@ -108,7 +108,7 @@ export function SignUpPage() {
           onChange={(e) => setDisplayName(e.target.value)}
           required
           autoComplete="name"
-          className="w-full rounded-full border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
+          className="w-full rounded-[10px] border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
         />
         <input
           type="email"
@@ -117,7 +117,7 @@ export function SignUpPage() {
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
-          className="w-full rounded-full border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
+          className="w-full rounded-[10px] border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
         />
         <div className="space-y-1">
           <div className="relative">
@@ -129,7 +129,7 @@ export function SignUpPage() {
               required
               minLength={MIN_PASSWORD_LENGTH}
               autoComplete="new-password"
-              className="w-full rounded-full border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint"
+              className="w-full rounded-[10px] border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint"
             />
             <button
               type="button"
@@ -151,7 +151,7 @@ export function SignUpPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className="w-full rounded-full border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint"
+            className="w-full rounded-[10px] border border-border bg-field px-4 py-3 pr-11 text-ink placeholder:text-faint"
           />
           <button
             type="button"
@@ -166,7 +166,7 @@ export function SignUpPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-full bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-[10px] bg-blue-dark px-4 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? 'Creating account…' : 'Create account'}
         </button>

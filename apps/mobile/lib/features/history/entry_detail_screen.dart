@@ -7,6 +7,7 @@ import '../../core/mood_color.dart';
 import '../../core/theme.dart';
 import '../../widgets/crisis_fab.dart';
 import '../../widgets/feedback_chip.dart';
+import '../../widgets/notebook.dart';
 import '../help/help_screen.dart';
 import '../mood/mood_log_screen.dart';
 import '../mood/mood_log_service.dart';
@@ -242,12 +243,12 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
                   alignment: Alignment.center,
                   child: Text(
                     '${moodLog.moodScore}',
                     style: const TextStyle(
-                      color: Color(0xFF1C1917),
+                      color: AppColors.onMood,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -333,7 +334,11 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(detail.copingSuggestion!.techniqueName, style: tt.headlineSmall),
+                  Highlight(
+                    detail.copingSuggestion!.techniqueName,
+                    color: moodColor(detail.moodLog.moodScore),
+                    style: tt.headlineMedium,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     detail.copingSuggestion!.description,
@@ -351,10 +356,10 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                             height: 26,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: moodColor(detail.moodLog.moodScore).withValues(alpha: 0.25),
-                              shape: BoxShape.circle,
+                              color: cs.primary,
+                              borderRadius: BorderRadius.circular(7),
                             ),
-                            child: Text('${i + 1}', style: tt.labelMedium?.copyWith(fontWeight: FontWeight.w700)),
+                            child: Text('${i + 1}', style: tt.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: cs.onPrimary)),
                           ),
                           const SizedBox(width: 12),
                           Expanded(

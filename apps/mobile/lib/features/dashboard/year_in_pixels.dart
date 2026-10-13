@@ -64,7 +64,7 @@ class _YearInPixelsState extends State<YearInPixels> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Year in pixels', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          Text('Year in pixels', style: tt.titleLarge),
           const SizedBox(height: 4),
           Text(
             _dayScores.isEmpty && !_loading

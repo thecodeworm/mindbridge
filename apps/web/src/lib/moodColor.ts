@@ -1,36 +1,22 @@
-// Mood scale color stops — matches CLAUDE.md § Mood Scale Stops.
-// Temperature ramp (slate -> gold), never red -> green.
+// Mood scale as highlighter-pen colors (the "Notebook" direction), heavy to
+// great. Matches CLAUDE.md § Mood Scale Stops and mobile core/mood_color.dart.
+// Still a temperature ramp: no red, no green, nothing that reads as "bad day".
 const MOOD_COLORS: [number, string][] = [
-  [1, '#7C8BA8'],
-  [3, '#96A9C1'],
-  [5, '#C4BCA9'],
-  [7, '#DFB05E'],
-  [10, '#DD955A'],
+  [1, '#B9B3F2'],
+  [2.5, '#9ED3F5'],
+  [4.5, '#F2E58A'],
+  [6.5, '#FFC07A'],
+  [8.5, '#FF9FCB'],
 ]
 
-function lerpHex(a: string, b: string, t: number): string {
-  const parse = (h: string) => [
-    parseInt(h.slice(1, 3), 16),
-    parseInt(h.slice(3, 5), 16),
-    parseInt(h.slice(5, 7), 16),
-  ]
-  const [ar, ag, ab] = parse(a)
-  const [br, bg, bb] = parse(b)
-  const r = Math.round(ar + (br - ar) * t)
-  const g = Math.round(ag + (bg - ag) * t)
-  const bv = Math.round(ab + (bb - ab) * t)
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${bv.toString(16).padStart(2, '0')}`
-}
-
+/**
+ * Notebook mood colors are five solid highlighter shades, one per band of two
+ * scores (1-2, 3-4, 5-6, 7-8, 9-10). No blending: mixing sky blue into
+ * butter yellow produces a green, and green would read as "good".
+ */
 export function moodColor(score: number): string {
   for (let i = MOOD_COLORS.length - 1; i >= 0; i--) {
-    if (score >= MOOD_COLORS[i][0]) {
-      const [lo, loColor] = MOOD_COLORS[i]
-      const [hi, hiColor] = MOOD_COLORS[i + 1] ?? MOOD_COLORS[i]
-      if (lo === hi) return loColor
-      const t = (score - lo) / (hi - lo)
-      return lerpHex(loColor, hiColor, t)
-    }
+    if (score >= MOOD_COLORS[i][0]) return MOOD_COLORS[i][1]
   }
   return MOOD_COLORS[0][1]
 }

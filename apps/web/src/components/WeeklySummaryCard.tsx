@@ -48,7 +48,7 @@ export function WeeklySummaryCard() {
     return (
       <div className="card p-4 sm:p-6">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-body text-lg font-semibold text-ink">Your week in review</h2>
+          <h2 className="text-xl text-ink">Your week in review</h2>
           <p className="shrink-0 text-sm text-muted">{formatWeek(weekStart)}</p>
         </div>
         <p className="mt-1 text-muted">
@@ -57,7 +57,7 @@ export function WeeklySummaryCard() {
         <button
           type="button"
           onClick={open}
-          className="mt-4 rounded-full border border-border bg-card px-5 py-2.5 font-semibold text-ink transition-colors hover:bg-blue-tint"
+          className="mt-4 rounded-[10px] border border-border bg-card px-5 py-2.5 font-semibold text-ink transition-colors hover:bg-blue-tint"
         >
           ✦ Write my week in review
         </button>
@@ -68,7 +68,7 @@ export function WeeklySummaryCard() {
   return (
     <div className="card p-4 sm:p-6">
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="font-body text-lg font-semibold text-ink">Your week in review</h2>
+        <h2 className="text-xl text-ink">Your week in review</h2>
         <p className="shrink-0 text-sm text-muted">{formatWeek(weekStart)}</p>
       </div>
 

@@ -14,49 +14,53 @@
    ───────────────────────────────────────────────────────────── */
 
 :root {
-  --cream: #fcf3e3;
-  --surface: #f4efe6;
-  --border: #e5ddd0;
+  --cream: #f6f7f9;
+  --surface: #eef0f4;
+  --border: #e1e4eb;
   --field: #ffffff;
   /* Card fill: lifted slightly off the cream page. The darker beige
      --surface stays for inset wells, toggles and chips. */
-  --card: #fffcf7;
+  --card: #ffffff;
 
-  --blue: #4a80b5;
-  --blue-dark: #3a6a9a;
-  --blue-tint: #eef4fa;
+  --blue: #3d5be0;
+  --blue-dark: #2446d8;
+  --blue-tint: #e8ecfc;
 
-  --terra: #c97b52;
-  --terra-dark: #b56840;
-  --terra-tint: #fbf0e9;
+  --terra: #e07aab;
+  --terra-dark: #a3245f;
+  --terra-tint: #fff0f6;
 
-  --ink: #1c1917;
-  --muted: #78716c;
-  --faint: #a8a29e;
+  --ink: #14161b;
+  --muted: #5c6270;
+  --faint: #8a909c;
 
-  --success: #5b8c6e;
-  --success-tint: #eaf1eb;
-  --caution: #b98a34;
-  --caution-tint: #faf1de;
-  --error: #b4534b;
-  --error-tint: #f9ebea;
+  --success: #2f7d5b;
+  --success-tint: #e6f4ec;
+  --caution: #9a6b00;
+  --caution-tint: #fff4d6;
+  --error: #b0365f;
+  --error-tint: #fcebf1;
 
   /* Text color for filled blue/terra buttons — must contrast the
      button fill in BOTH modes, so it is a token, not a fixed white. */
   --on-accent: #ffffff;
 
-  /* Mood scale (temperature, not red→green) */
-  --mood-1: #7c8ba8;
-  --mood-3: #96a9c1;
-  --mood-5: #c4bca9;
-  --mood-7: #dfb05e;
-  --mood-9: #dd955a;
+  /* Highlighter: a low band under ink text in light mode; in dark mode the
+     marker covers the whole word with dark text so nothing goes dark-on-dark. */
+  --hl-top: 52%;
+  --hl-ink: inherit;
 
-  /* ── Typography — Fraunces (display) + Figtree (body) ──────
-     Mirrors lib/core/theme.dart's _textTheme(): Figtree is the
-     body/UI base; Fraunces is reserved for headline-weight text. */
-  --font-display: 'Fraunces', ui-serif, Georgia, serif;
-  --font-body: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  /* Mood scale (temperature, not red→green) */
+  --mood-1: #b9b3f2;
+  --mood-3: #9ed3f5;
+  --mood-5: #f2e58a;
+  --mood-7: #ffc07a;
+  --mood-9: #ff9fcb;
+
+  /* Typography: Schibsted Grotesk (display, heavy and tight) + Hanken
+     Grotesk (body). Mirrors lib/core/theme.dart's _textTheme(). */
+  --font-display: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
 
   /* ── Motion — mirrors lib/core/motion.dart's AppMotion ──────
      Never use a bare `ease`/`linear` transition; reach for one of
@@ -81,97 +85,96 @@
      neutral gray/black); dark mode swaps to a black-based shadow +
      hairline border, since a shadow alone doesn't read against a
      dark background. Radius scale pairs with elevation level. */
-  --radius-chip: 12px;
-  --radius-card: 16px;
-  --radius-sheet: 24px;
+  --radius-chip: 8px;
+  --radius-card: 12px;
+  --radius-sheet: 16px;
   --radius-pill: 999px;
 
-  --shadow-resting:
-    0 1px 2px rgba(28, 25, 23, 0.04), 0 4px 12px rgba(184, 132, 96, 0.08),
-    0 12px 24px rgba(184, 132, 96, 0.06);
-  --shadow-elevated:
-    0 2px 4px rgba(28, 25, 23, 0.05), 0 8px 20px rgba(184, 132, 96, 0.12),
-    0 20px 40px rgba(184, 132, 96, 0.1);
-  --shadow-modal:
-    0 8px 16px rgba(184, 132, 96, 0.18), 0 24px 48px rgba(184, 132, 96, 0.15);
-  --elevation-border: transparent;
+  --shadow-resting: 0 1px 2px rgba(20, 22, 27, 0.04);
+  --shadow-elevated: 0 2px 6px rgba(20, 22, 27, 0.06), 0 8px 20px rgba(20, 22, 27, 0.06);
+  --shadow-modal: 0 8px 16px rgba(20, 22, 27, 0.1), 0 24px 48px rgba(20, 22, 27, 0.1);
+  --elevation-border: var(--border);
 }
 
 /* Dark tokens — applied by system preference unless the user has
    explicitly forced light via [data-theme="light"]. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --cream: #1c1815;
-    --surface: #2a2420;
-    --border: #3d3530;
-    --field: #322b26;
-    --card: #26201c;
+    --cream: #101216;
+    --surface: #20242c;
+    --border: #262a33;
+    --field: #181b21;
+    --card: #181b21;
 
-    --blue: #6b9dce;
-    --blue-dark: #8bb5e0;
-    --blue-tint: #1a2636;
+    --blue: #6a84ff;
+    --blue-dark: #7d95ff;
+    --blue-tint: #1c2340;
 
-    --terra: #d89468;
-    --terra-dark: #e8a882;
-    --terra-tint: #2d1f16;
+    --terra: #e88bb8;
+    --terra-dark: #ffb3d5;
+    --terra-tint: #3a1527;
 
-    --ink: #f4efe6;
-    --muted: #b8afa6;
-    --faint: #7a6e67;
+    --ink: #eceff4;
+    --muted: #9097a3;
+    --faint: #6b7180;
 
-    --success: #7aaf8e;
-    --success-tint: #1a2920;
-    --caution: #d4a84a;
-    --caution-tint: #2a2210;
-    --error: #d47068;
-    --error-tint: #2a1815;
+    --success: #6fcf9f;
+    --success-tint: #15281f;
+    --caution: #e7c15a;
+    --caution-tint: #2a2310;
+    --error: #f08aae;
+    --error-tint: #341622;
 
     /* In dark mode the accent fills are light, so button text is dark. */
-    --on-accent: #1c1815;
+    --on-accent: #0b1030;
+  --hl-top: 8%;
+  --hl-ink: #14161b;
+    --hl-top: 8%;
+    --hl-ink: #14161b;
 
     /* Dark elevation: shadows alone don't read against a dark
        background, so pair a black-based shadow with a hairline
        border (mirrors AppElevation.border in elevation.dart). */
-    --shadow-resting: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.35);
+    --shadow-resting: none;
     --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.45);
     --shadow-modal: 0 8px 20px rgba(0, 0, 0, 0.45), 0 24px 48px rgba(0, 0, 0, 0.55);
-    --elevation-border: rgba(244, 239, 230, 0.06);
+    --elevation-border: var(--border);
   }
 }
 
 /* Manual override — always wins over system preference. */
 :root[data-theme="dark"] {
-  --cream: #1c1815;
-  --surface: #2a2420;
-  --border: #3d3530;
-  --field: #322b26;
-  --card: #26201c;
+  --cream: #101216;
+  --surface: #20242c;
+  --border: #262a33;
+  --field: #181b21;
+  --card: #181b21;
 
-  --blue: #6b9dce;
-  --blue-dark: #8bb5e0;
-  --blue-tint: #1a2636;
+  --blue: #6a84ff;
+  --blue-dark: #7d95ff;
+  --blue-tint: #1c2340;
 
-  --terra: #d89468;
-  --terra-dark: #e8a882;
-  --terra-tint: #2d1f16;
+  --terra: #e88bb8;
+  --terra-dark: #ffb3d5;
+  --terra-tint: #3a1527;
 
-  --ink: #f4efe6;
-  --muted: #b8afa6;
-  --faint: #7a6e67;
+  --ink: #eceff4;
+  --muted: #9097a3;
+  --faint: #6b7180;
 
-  --success: #7aaf8e;
-  --success-tint: #1a2920;
-  --caution: #d4a84a;
-  --caution-tint: #2a2210;
-  --error: #d47068;
-  --error-tint: #2a1815;
+  --success: #6fcf9f;
+  --success-tint: #15281f;
+  --caution: #e7c15a;
+  --caution-tint: #2a2310;
+  --error: #f08aae;
+  --error-tint: #341622;
 
-  --on-accent: #1c1815;
+  --on-accent: #0b1030;
 
-  --shadow-resting: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-resting: none;
   --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.45);
   --shadow-modal: 0 8px 20px rgba(0, 0, 0, 0.45), 0 24px 48px rgba(0, 0, 0, 0.55);
-  --elevation-border: rgba(244, 239, 230, 0.06);
+  --elevation-border: var(--border);
 }
 
 /* Map tokens → Tailwind color utilities (bg-*, text-*, border-*).
@@ -222,12 +225,12 @@
     font-family: var(--font-body);
   }
 
-  /* Fraunces as the display face — headings read as the serif "display"
-     moment, mirrors _textTheme()'s Fraunces overlay onto display/headline/
-     titleLarge in theme.dart. Body copy stays Figtree throughout. */
+  /* Schibsted Grotesk for headings: heavy weight, tight tracking. */
   h1, h2, h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.015em;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
     text-wrap: balance;
   }
 
@@ -297,6 +300,35 @@
   }
   .crisis-chip:active {
     transform: scale(0.97);
+  }
+}
+
+@layer components {
+  /* Notebook signature: a highlighter-pen band behind the lower part of
+     each line. Text stays dark on the light marker in both themes. */
+  .hl {
+    --mark: var(--mood-5);
+    color: var(--hl-ink);
+    background-image: linear-gradient(transparent var(--hl-top), var(--mark) var(--hl-top), var(--mark) 92%, transparent 92%);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding: 0 0.08em;
+  }
+  /* Small uppercase tracked section label ("THIS WEEK"). */
+  .label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  /* Journal textarea drawn on ruled lines (28px rhythm). */
+  .ruled {
+    background-color: var(--card);
+    background-image: repeating-linear-gradient(transparent 0 27px, var(--border) 27px 28px);
+    background-attachment: local;
+    line-height: 28px;
   }
 }
 

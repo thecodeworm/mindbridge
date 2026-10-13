@@ -10,7 +10,7 @@ interface Props {
 
 const chipClass = (selected: boolean) =>
   [
-    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+    'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
     selected
       ? 'border-blue-dark bg-blue-tint text-blue-dark'
       : 'border-border bg-field text-ink hover:bg-blue-tint',

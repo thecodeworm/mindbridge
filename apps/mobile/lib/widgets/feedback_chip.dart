@@ -31,7 +31,7 @@ class FeedbackChip extends StatelessWidget {
           side: BorderSide(color: active ? cs.primary : cs.outline),
         ),
         child: InkWell(
-          customBorder: const StadiumBorder(),
+          customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),

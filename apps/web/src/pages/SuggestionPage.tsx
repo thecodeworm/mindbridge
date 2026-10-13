@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { SuggestionResponse } from '../../../../shared/types'
 import { generateSuggestion } from '../lib/suggestionService'
@@ -95,10 +96,10 @@ export function SuggestionPage() {
             <h1 className="text-2xl font-semibold text-ink">Your check-in is saved</h1>
             <p className="mt-2 text-lg leading-relaxed text-muted">{error}</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button type="button" onClick={() => load(state.moodLogId, state.userId)} className="rounded-full bg-blue-dark px-6 py-3 font-semibold text-on-accent hover:opacity-90">
+              <button type="button" onClick={() => load(state.moodLogId, state.userId)} className="rounded-[10px] bg-blue-dark px-6 py-3 font-semibold text-on-accent hover:opacity-90">
                 Try again
               </button>
-              <button type="button" onClick={done} className="rounded-full border border-border bg-card px-6 py-3 font-semibold text-ink hover:bg-blue-tint">
+              <button type="button" onClick={done} className="rounded-[10px] border border-border bg-card px-6 py-3 font-semibold text-ink hover:bg-blue-tint">
                 Back to Today
               </button>
             </div>
@@ -110,7 +111,7 @@ export function SuggestionPage() {
             {suggestion.show_crisis_resources && (
               <Link
                 to="/help"
-                className="mb-8 flex items-start gap-3 rounded-2xl border border-terra/50 bg-terra-tint p-4 text-terra-dark transition-colors hover:bg-terra-tint/70"
+                className="mb-8 flex items-start gap-3 rounded-xl border border-terra bg-terra-tint p-4 text-terra-dark transition-colors hover:bg-terra-tint/70"
               >
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden>
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -122,15 +123,17 @@ export function SuggestionPage() {
               </Link>
             )}
 
-            <h1 className="text-4xl font-semibold leading-tight text-ink">{suggestion.technique_name}</h1>
+            <p className="label">Try this now</p>
+            <h1 className="mt-2 text-4xl text-ink sm:text-5xl">
+              <span className="hl" style={{ '--mark': tone } as CSSProperties}>{suggestion.technique_name}</span>
+            </h1>
             <p className="mt-3 text-lg leading-relaxed text-muted">{suggestion.description}</p>
 
-            <ol className="card mt-6 space-y-4 rounded-[20px] p-5 sm:p-6">
+            <ol className="card mt-6 space-y-4 p-5 sm:p-6">
               {suggestion.steps.slice(0, 3).map((step, i) => (
                 <li key={i} className="flex gap-3.5">
                   <span
-                    className="tabular flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold text-ink"
-                    style={{ backgroundColor: `${tone}38` }}
+                    className="tabular flex h-8 w-8 shrink-0 items-center justify-center rounded-[7px] bg-blue-dark font-bold text-on-accent"
                   >
                     {i + 1}
                   </span>
@@ -139,14 +142,14 @@ export function SuggestionPage() {
               ))}
             </ol>
 
-            <p className="mt-8 text-muted">Did this help?</p>
+            <p className="label mt-8">Did this help?</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <FeedbackChip active={helpful === true} onClick={() => toggleHelpful(true)} icon={THUMB_UP} label="Helpful" />
               <FeedbackChip active={helpful === false} onClick={() => toggleHelpful(false)} icon={THUMB_DOWN} label="Not for me" />
               <FeedbackChip active={saved} onClick={toggleSaved} icon={BOOKMARK} label={saved ? 'In your toolkit' : 'Save to toolkit'} />
             </div>
 
-            <button type="button" onClick={done} className="mt-10 w-full rounded-full bg-blue-dark px-6 py-3.5 font-semibold text-on-accent hover:opacity-90">
+            <button type="button" onClick={done} className="mt-10 w-full rounded-[10px] bg-blue-dark px-6 py-3.5 font-display text-lg font-extrabold text-on-accent hover:opacity-90">
               Done
             </button>
           </div>

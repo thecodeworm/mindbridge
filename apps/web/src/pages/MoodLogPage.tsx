@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { moodTagInfo } from '../../../../shared/types'
@@ -164,12 +165,12 @@ export function MoodLogPage() {
         {error && <p className="mt-4 rounded-2xl bg-error-tint px-4 py-3 text-ink">{error}</p>}
 
         {/* Score */}
-        <section className="card mt-6 rounded-[20px] px-5 pb-4 pt-5 text-center">
-          <p className="font-medium text-muted">How are you feeling?</p>
-          <p className="mt-1 flex items-baseline justify-center gap-2.5">
-            <span className="tabular font-display text-6xl font-semibold text-ink">{roundedScore}</span>
-            <span className="font-display text-2xl" style={{ color: `color-mix(in srgb, ${color} 55%, var(--ink))` }}>
-              {moodWord(score)}
+        <section className="mt-6">
+          <p className="label">How are you feeling?</p>
+          <p className="mt-1 flex items-baseline gap-3">
+            <span className="tabular font-display text-[96px] font-black leading-none tracking-[-0.05em] text-ink">{roundedScore}</span>
+            <span className="font-display text-4xl font-black tracking-tight">
+              <span className="hl" style={{ '--mark': color } as CSSProperties}>{moodWord(score)}</span>
             </span>
           </p>
           <div className="mt-3">
@@ -183,7 +184,7 @@ export function MoodLogPage() {
 
         {/* Two-step mood tag picker */}
         <section className="mt-8 space-y-3">
-          <h2 className="font-body text-lg font-semibold text-ink">Which word fits?</h2>
+          <h2 className="label">Which word fits?</h2>
           <MoodTagPicker
             quadrant={quadrant}
             tag={tag}
@@ -194,10 +195,7 @@ export function MoodLogPage() {
 
         {/* Activity tags */}
         <section className="mt-8 space-y-3">
-          <div>
-            <h2 className="font-body text-lg font-semibold text-ink">What were you up to?</h2>
-            <p className="text-muted">Optional. Helps spot patterns over time.</p>
-          </div>
+          <h2 className="label">What were you up to? (optional)</h2>
           <ActivityTagPicker
             tags={activityTags}
             selected={selectedActivities}
@@ -214,20 +212,17 @@ export function MoodLogPage() {
 
         {/* Journal */}
         <section className="mt-8 space-y-3">
-          <div>
-            <label className="font-body text-lg font-semibold text-ink" htmlFor="journal">
-              What's on your mind?
-            </label>
-            <p className="text-muted">Optional. Only you can see this.</p>
-          </div>
+          <label className="label block" htmlFor="journal">
+            What's on your mind? (optional)
+          </label>
           <textarea
             id="journal"
             value={journal}
             onChange={(e) => { setJournal(e.target.value); setDistortionsDone(false) }}
             maxLength={500}
             rows={4}
-            placeholder="A sentence or two is plenty."
-            className="w-full resize-none rounded-2xl border border-border bg-field px-4 py-3 text-ink placeholder:text-faint focus:border-blue-dark"
+            placeholder="A sentence or two is plenty. Only you can see this."
+            className="ruled w-full resize-none rounded-xl border border-border px-4 pb-1 pt-0 text-ink placeholder:text-faint focus:border-blue-dark"
           />
           <p className="tabular text-right text-sm text-faint">{journal.length} / 500</p>
 
@@ -236,7 +231,7 @@ export function MoodLogPage() {
             <button
               type="button"
               onClick={() => setShowDistortions(true)}
-              className="rounded-full border border-border bg-card px-4 py-2 font-semibold text-ink hover:bg-blue-tint"
+              className="rounded-[10px] border border-border bg-card px-4 py-2 font-semibold text-ink hover:bg-blue-tint"
             >
               Notice any thinking traps? (optional)
             </button>
@@ -266,7 +261,7 @@ export function MoodLogPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-full bg-blue-dark px-6 py-3.5 font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="w-full rounded-[10px] bg-blue-dark px-6 py-3.5 font-display text-lg font-extrabold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {submitting ? 'Saving…' : editing ? 'Save changes' : 'Get my technique'}
             </button>

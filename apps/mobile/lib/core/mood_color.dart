@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
 
-// Mood scale color stops — matches CLAUDE.md § Mood Scale Stops and
-// MoodTrendChart.tsx / moodColor.ts on web. Temperature ramp (slate ->
-// gold), never red -> green; same hex values in light and dark mode.
+// Mood scale as highlighter-pen colors (the "Notebook" direction), heavy
+// to great: lavender, sky, butter, tangerine, pink. Matches CLAUDE.md §
+// Mood Scale Stops and apps/web/src/lib/moodColor.ts. Still a temperature
+// ramp: no red, no green, nothing that reads as "bad day". Same values in
+// light and dark; text on top always uses AppColors.onMood.
 const _kMoodStops = [
-  (1.0, Color(0xFF7C8BA8)),
-  (3.0, Color(0xFF96A9C1)),
-  (5.0, Color(0xFFC4BCA9)),
-  (7.0, Color(0xFFDFB05E)),
-  (10.0, Color(0xFFDD955A)),
+  (1.0, Color(0xFFB9B3F2)),
+  (2.5, Color(0xFF9ED3F5)),
+  (4.5, Color(0xFFF2E58A)),
+  (6.5, Color(0xFFFFC07A)),
+  (8.5, Color(0xFFFF9FCB)),
 ];
 
+/// Five solid highlighter shades, one per band of two scores (1-2, 3-4,
+/// 5-6, 7-8, 9-10). No blending: mixing sky blue into butter yellow makes a
+/// green, and green would read as "good".
 Color moodColor(num score) {
   final s = score.toDouble();
   for (int i = _kMoodStops.length - 1; i >= 0; i--) {
-    if (s >= _kMoodStops[i].$1) {
-      if (i == _kMoodStops.length - 1) return _kMoodStops[i].$2;
-      final lo = _kMoodStops[i];
-      final hi = _kMoodStops[i + 1];
-      final t = (s - lo.$1) / (hi.$1 - lo.$1);
-      return Color.lerp(lo.$2, hi.$2, t)!;
-    }
+    if (s >= _kMoodStops[i].$1) return _kMoodStops[i].$2;
   }
   return _kMoodStops[0].$2;
 }

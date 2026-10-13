@@ -90,7 +90,7 @@ class _HowItWorksStepState extends State<HowItWorksStep> {
                   Text(
                     frame['title']!,
                     textAlign: TextAlign.center,
-                    style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: tt.titleLarge,
                   ),
                   const SizedBox(height: 4),
                   Text(

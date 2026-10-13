@@ -67,7 +67,7 @@ class _InsightsCardState extends State<InsightsCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('What lifts you', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          Text('What lifts you', style: tt.titleLarge),
           const SizedBox(height: 4),
           Text(
             'Activities tagged on 5+ check-ins in the last 90 days, compared with your average. Patterns, not causes.',

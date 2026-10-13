@@ -27,7 +27,7 @@ class HelpChip extends StatelessWidget {
         child: Material(
           color: terraTint,
           shape: StadiumBorder(
-            side: BorderSide(color: terra.withValues(alpha: 0.45)),
+            side: BorderSide(color: terra.withValues(alpha: 0.6)),
           ),
           child: InkWell(
             customBorder: const StadiumBorder(),

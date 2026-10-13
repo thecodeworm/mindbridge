@@ -55,7 +55,7 @@ export function ToolkitPage() {
             <button
               type="button"
               onClick={() => navigate('/log')}
-              className="mt-5 rounded-full bg-blue-dark px-6 py-2.5 font-semibold text-on-accent hover:opacity-90"
+              className="mt-5 rounded-[10px] bg-blue-dark px-6 py-2.5 font-semibold text-on-accent hover:opacity-90"
             >
               Check in
             </button>
@@ -66,7 +66,7 @@ export function ToolkitPage() {
           <details key={t.id} className="card group p-5 sm:p-6">
             <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
               <span className="min-w-0">
-                <span className="block font-display text-xl font-semibold text-ink">{t.technique_name}</span>
+                <span className="block font-display text-xl font-black tracking-tight text-ink">{t.technique_name}</span>
                 <span className="mt-1 block text-muted group-open:hidden line-clamp-2">{t.description}</span>
               </span>
               <button
@@ -88,7 +88,7 @@ export function ToolkitPage() {
             <ol className="mt-4 space-y-2.5">
               {t.steps.map((step, i) => (
                 <li key={i} className="flex gap-3 text-ink">
-                  <span className="tabular flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-tint text-xs font-bold text-blue-dark">
+                  <span className="tabular flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] bg-blue-dark text-xs font-bold text-on-accent">
                     {i + 1}
                   </span>
                   <span>{step}</span>
@@ -98,7 +98,7 @@ export function ToolkitPage() {
             <button
               type="button"
               onClick={() => navigate(`/entry/${t.mood_log_id}`)}
-              className="mt-3 rounded-full px-2 py-1 font-semibold text-blue-dark hover:bg-blue-tint"
+              className="mt-3 rounded-[10px] px-2 py-1 font-semibold text-blue-dark hover:bg-blue-tint"
             >
               See the check-in
             </button>
