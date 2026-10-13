@@ -69,25 +69,37 @@ def main() -> int:
         # dashboard sections (streak, history rows) fetch async after the shell
         # renders -- wait for an actual history row badge, not just "networkidle"
         try:
-            page.wait_for_selector("span.font-bold", timeout=15000)
+            page.wait_for_selector("text=This week", timeout=15000)
         except Exception:
             pass
         page.screenshot(path=str(out_dir / "01_dashboard.png"), full_page=True)
 
-        # 2. Dashboard: streak + mood trend chart rendered with real data
+        # 2. Today: practice line + recent entries; Insights: trend chart
         body = page.inner_text("body")
-        check(results, "dashboard shows streak", "day streak" in body.lower(), body[:120])
+        check(results, "today shows practice streak", "practiced" in body.lower(), body[:120])
+        check(results, "today shows recent entries", "Recent" in body)
+        page.goto(f"{BASE_URL}/insights")
+        try:
+            page.wait_for_selector(".recharts-surface", timeout=15000)
+        except Exception:
+            pass
         check(
             results,
-            "dashboard shows mood trend chart",
-            page.locator("svg").count() > 0,
-            f"{page.locator('svg').count()} svg elements found",
+            "insights shows mood trend chart",
+            page.locator(".recharts-surface").count() > 0,
+            f"{page.locator('.recharts-surface').count()} recharts surfaces found",
         )
-        check(results, "dashboard shows history entries", "Box Breathing" in body)
+        page.screenshot(path=str(out_dir / "01b_insights.png"), full_page=True)
 
-        # 3. History -> entry detail for the lowest-mood seeded day -> crisis chip visible
-        # the score badge is a <span class="...font-bold">N</span> inside the row <button>
-        page.locator('span.font-bold:text-is("2")').first.locator(
+        # 3. Journal -> entry detail for the lowest-mood seeded day -> crisis chip visible
+        # the score badge is a <span class="tabular ...">N</span> inside the row <button>
+        page.goto(f"{BASE_URL}/journal")
+        try:
+            page.wait_for_selector('button span.tabular', timeout=15000)
+        except Exception:
+            pass
+        check(results, "journal lists entries", page.locator("button span.tabular").count() > 0)
+        page.locator('button span.tabular:text-is("2")').first.locator(
             "xpath=ancestor::button[1]"
         ).click()
         page.wait_for_load_state("networkidle")

@@ -17,7 +17,6 @@ from __future__ import annotations
 import datetime as dt
 import json
 import pathlib
-import random
 import ssl
 import sys
 import urllib.error
@@ -30,6 +29,55 @@ _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 QA_EMAIL = "qa-demo@mindbridge.test"
 QA_PASSWORD = "MindBridgeQA2026!"
 QA_DISPLAY_NAME = "QA Demo"
+
+# Varied fixture techniques so Journal/Toolkit don't read as one repeated row.
+FIXTURE_TECHNIQUES = [
+    {
+        "technique_name": "Box Breathing",
+        "description": "A simple grounding technique to slow your breathing and calm your body.",
+        "steps": [
+            "Breathe in slowly for 4 counts.",
+            "Hold your breath for 4 counts.",
+            "Breathe out slowly for 4 counts.",
+        ],
+    },
+    {
+        "technique_name": "5-4-3-2-1 Grounding",
+        "description": "Pulls your attention out of a spiral and into the room around you.",
+        "steps": [
+            "Name 5 things you can see right now.",
+            "Name 4 things you can touch and 3 you can hear.",
+            "Finish with 2 things you can smell and 1 you can taste.",
+        ],
+    },
+    {
+        "technique_name": "Cognitive Reframe",
+        "description": "Catch a thought that feels true and check it against the evidence.",
+        "steps": [
+            "Write down the exact thought that's bothering you.",
+            "Ask what you'd tell a friend who said this about themselves.",
+            "Write one more balanced version of the thought.",
+        ],
+    },
+    {
+        "technique_name": "Savoring the Moment",
+        "description": "Stretch a good moment out a little longer so it actually sticks.",
+        "steps": [
+            "Name one specific thing that felt good today.",
+            "Notice where you feel it in your body.",
+            "Write one sentence about it for future-you.",
+        ],
+    },
+    {
+        "technique_name": "Progressive Muscle Relaxation",
+        "description": "Releases physical tension you might not notice you're carrying.",
+        "steps": [
+            "Tense your shoulders up toward your ears for 5 seconds.",
+            "Release them all at once and notice the difference.",
+            "Move down through your arms, hands, and legs the same way.",
+        ],
+    },
+]
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 ENV_FILE = REPO_ROOT / "apps" / "web" / ".env.local"
@@ -171,9 +219,21 @@ def main() -> int:
         8: 6, 7: 8, 6: 7, 5: 3, 4: 6,
         3: 9, 2: 5, 1: 6, 0: 7,
     }
-    # must be one of the 8 values the mood_tag check constraint allows
-    # (migration 0005) -- also what's interpolated into the Claude prompt.
-    tags = ["happy", "calm", "meh", "sad", "anxious", "angry", "tired", "confused"]
+    # Tags stay within the original 8 values migration 0005 allows (a subset
+    # of 0014's full vocabulary), and are picked to *fit* the score -- a demo
+    # entry reading "2 · Happy" looks broken on camera.
+    def tag_for(score: int) -> str:
+        if score <= 2:
+            return "sad"
+        if score <= 3:
+            return "tired"
+        if score <= 4:
+            return "anxious"
+        if score <= 5:
+            return "meh"
+        if score <= 6:
+            return "calm"
+        return "happy"
 
     mood_log_ids: dict[int, str] = {}
     for days_ago, score in scores_by_days_ago.items():
@@ -187,7 +247,7 @@ def main() -> int:
             {
                 "user_id": user_id,
                 "mood_score": score,
-                "mood_tag": random.choice(tags),
+                "mood_tag": tag_for(score),
                 "logged_at": logged_at,
             },
         )
@@ -228,7 +288,8 @@ def main() -> int:
     # has explicit grants here per migration 0004, matching what the real
     # generate-suggestion edge function does) ---
     suggestion_ok = 0
-    for days_ago, mood_log_id in mood_log_ids.items():
+    for i, (days_ago, mood_log_id) in enumerate(mood_log_ids.items()):
+        technique = FIXTURE_TECHNIQUES[i % len(FIXTURE_TECHNIQUES)]
         status, row = request(
             "POST",
             f"{supabase_url}/rest/v1/coping_suggestions",
@@ -236,13 +297,11 @@ def main() -> int:
             {
                 "mood_log_id": mood_log_id,
                 "user_id": user_id,
-                "technique_name": "Box Breathing",
-                "description": "A simple grounding technique to slow your breathing and calm your body.",
-                "steps": [
-                    "Breathe in slowly for 4 counts.",
-                    "Hold your breath for 4 counts.",
-                    "Breathe out slowly for 4 counts.",
-                ],
+                "technique_name": technique["technique_name"],
+                "description": technique["description"],
+                "steps": technique["steps"],
+                # A few saved so the Toolkit tab isn't empty in QA runs.
+                "saved": i % 4 == 0,
                 "model_used": "qa-fixture",
                 "crisis_signal": scores_by_days_ago[days_ago] <= 2,
                 "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
