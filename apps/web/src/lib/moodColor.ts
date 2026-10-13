@@ -34,3 +34,13 @@ export function moodColor(score: number): string {
   }
   return MOOD_COLORS[0][1]
 }
+
+/** One plain word for a 1–10 score; gentle at the low end, never "bad". */
+export function moodWord(score: number): string {
+  const s = Math.round(score)
+  if (s <= 2) return 'Heavy'
+  if (s <= 4) return 'Low'
+  if (s <= 6) return 'Okay'
+  if (s <= 8) return 'Good'
+  return 'Great'
+}

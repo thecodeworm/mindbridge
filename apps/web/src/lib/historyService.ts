@@ -1,3 +1,4 @@
+import { friendlyError } from './friendlyError'
 import type { ActivityTag, CopingSuggestion, JournalEntry, MoodLog, MoodTag } from '../../../../shared/types'
 import { supabase } from './supabaseClient'
 
@@ -20,7 +21,7 @@ export async function getHistory(
     .order('logged_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  if (error) return { entries: [], error: error.message }
+  if (error) return { entries: [], error: friendlyError(error.message) }
 
   const entries: HistoryEntry[] = (data ?? []).map((row) => {
     const suggestion = row.coping_suggestions as unknown as { technique_name: string } | null
@@ -77,7 +78,7 @@ export async function getEntryDetail(
       .eq('user_id', userId),
   ])
 
-  if (moodLogRes.error) return { detail: null, error: moodLogRes.error.message }
+  if (moodLogRes.error) return { detail: null, error: friendlyError(moodLogRes.error.message) }
 
   const activities = ((activityRes.data ?? []) as unknown as Array<{ activity_tags: ActivityTag | null }>)
     .map((r) => r.activity_tags)
@@ -107,7 +108,7 @@ export async function deleteEntry(
     .eq('user_id', userId)
     .select('id')
 
-  if (error) return { error: error.message }
+  if (error) return { error: friendlyError(error.message) }
   if (!data || data.length === 0) return { error: NOT_FOUND }
   return { error: null }
 }
@@ -131,7 +132,7 @@ export async function updateEntry({
     .eq('id', moodLogId)
     .eq('user_id', userId)
     .select('id')
-  if (moodError) return { error: moodError.message }
+  if (moodError) return { error: friendlyError(moodError.message) }
   if (!updatedMood || updatedMood.length === 0) return { error: NOT_FOUND }
 
   const trimmed = journalBody.trim()
@@ -141,7 +142,7 @@ export async function updateEntry({
     .eq('mood_log_id', moodLogId)
     .eq('user_id', userId)
     .maybeSingle()
-  if (fetchError) return { error: fetchError.message }
+  if (fetchError) return { error: friendlyError(fetchError.message) }
 
   if (trimmed) {
     const { data, error } = existing
@@ -155,7 +156,7 @@ export async function updateEntry({
           .from('journal_entries')
           .insert({ mood_log_id: moodLogId, user_id: userId, body: trimmed })
           .select('id')
-    if (error) return { error: error.message }
+    if (error) return { error: friendlyError(error.message) }
     if (!data || data.length === 0) return { error: NOT_FOUND }
   } else if (existing) {
     const { data, error } = await supabase
@@ -164,7 +165,7 @@ export async function updateEntry({
       .eq('id', existing.id)
       .eq('user_id', userId)
       .select('id')
-    if (error) return { error: error.message }
+    if (error) return { error: friendlyError(error.message) }
     if (!data || data.length === 0) return { error: NOT_FOUND }
   }
 

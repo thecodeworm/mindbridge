@@ -32,7 +32,7 @@ export function WeeklySummaryCard() {
 
     const { data: sessionData } = await supabase.auth.getSession()
     const token = sessionData.session?.access_token
-    if (!token) { setError('Not signed in'); setLoading(false); return }
+    if (!token) { setError("We couldn't confirm you're signed in. Sign out and back in, then try again."); setLoading(false); return }
 
     const { summary: result, error: err } = await getOrGenerateWeeklySummary(
       user.id,
@@ -46,49 +46,52 @@ export function WeeklySummaryCard() {
 
   if (!opened) {
     return (
-      <div className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-ink">Weekly review</h2>
-            <p className="text-sm text-muted">{formatWeek(weekStart)}</p>
-          </div>
-          <button
-            type="button"
-            onClick={open}
-            className="rounded-lg bg-blue-dark px-4 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90"
-          >
-            Generate
-          </button>
+      <div className="card p-4 sm:p-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-body text-lg font-semibold text-ink">Your week in review</h2>
+          <p className="shrink-0 text-sm text-muted">{formatWeek(weekStart)}</p>
         </div>
+        <p className="mt-1 text-muted">
+          A short, kind reflection on last week: what stood out and what seemed to help.
+        </p>
+        <button
+          type="button"
+          onClick={open}
+          className="mt-4 rounded-full border border-border bg-card px-5 py-2.5 font-semibold text-ink transition-colors hover:bg-blue-tint"
+        >
+          ✦ Write my week in review
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-6">
-      <h2 className="mb-1 text-lg font-bold text-ink">Weekly review</h2>
-      <p className="mb-4 text-xs text-muted">{formatWeek(weekStart)}</p>
+    <div className="card p-4 sm:p-6">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 className="font-body text-lg font-semibold text-ink">Your week in review</h2>
+        <p className="shrink-0 text-sm text-muted">{formatWeek(weekStart)}</p>
+      </div>
 
       {loading && (
         <div className="space-y-2">
-          <div className="h-4 w-full animate-pulse rounded bg-field" />
-          <div className="h-4 w-4/5 animate-pulse rounded bg-field" />
-          <div className="h-4 w-3/5 animate-pulse rounded bg-field" />
+          <div className="h-4 w-full animate-pulse rounded bg-surface" />
+          <div className="h-4 w-4/5 animate-pulse rounded bg-surface" />
+          <div className="h-4 w-3/5 animate-pulse rounded bg-surface" />
         </div>
       )}
 
       {!loading && error && (
-        <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{error}</p>
+        <p className="rounded-xl bg-error-tint px-4 py-3 text-ink">{error}</p>
       )}
 
       {!loading && !error && summary && (
         <div className="space-y-4">
-          <p className="text-sm text-ink">{summary.summary}</p>
+          <p className="text-lg leading-relaxed text-ink">{summary.summary}</p>
           {summary.highlights.length > 0 && (
-            <ul className="space-y-1">
+            <ul className="space-y-1.5">
               {summary.highlights.map((h, i) => (
-                <li key={i} className="flex gap-2 text-sm text-muted">
-                  <span>•</span>
+                <li key={i} className="flex gap-2.5 text-muted">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-dark" aria-hidden />
                   <span>{h}</span>
                 </li>
               ))}

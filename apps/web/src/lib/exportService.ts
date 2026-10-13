@@ -1,3 +1,4 @@
+import { friendlyError } from './friendlyError'
 import { supabase } from './supabaseClient'
 
 export async function exportUserData(userId: string): Promise<{ error: string | null }> {
@@ -19,7 +20,7 @@ export async function exportUserData(userId: string): Promise<{ error: string | 
       .order('generated_at', { ascending: false }),
   ])
 
-  if (moodRes.error) return { error: moodRes.error.message }
+  if (moodRes.error) return { error: friendlyError(moodRes.error.message) }
 
   const payload = {
     exported_at: new Date().toISOString(),

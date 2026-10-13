@@ -1,3 +1,4 @@
+import { friendlyError } from './friendlyError'
 import type { ActivityTag } from '../../../../shared/types'
 import { supabase } from './supabaseClient'
 
@@ -7,7 +8,7 @@ export async function getActivityTags(): Promise<{ tags: ActivityTag[]; error: s
     .select('id, user_id, slug, label, emoji, created_at')
     .order('label', { ascending: true })
 
-  if (error) return { tags: [], error: error.message }
+  if (error) return { tags: [], error: friendlyError(error.message) }
   return { tags: (data ?? []) as ActivityTag[], error: null }
 }
 
@@ -22,7 +23,7 @@ export async function setEntryActivities(
     .eq('mood_log_id', moodLogId)
     .eq('user_id', userId)
 
-  if (deleteError) return { error: deleteError.message }
+  if (deleteError) return { error: friendlyError(deleteError.message) }
 
   if (tagIds.length === 0) return { error: null }
 
@@ -30,7 +31,7 @@ export async function setEntryActivities(
     .from('mood_log_activities')
     .insert(tagIds.map((id) => ({ mood_log_id: moodLogId, activity_tag_id: id, user_id: userId })))
 
-  return { error: insertError?.message ?? null }
+  return { error: (insertError ? friendlyError(insertError.message) : null) }
 }
 
 export async function getEntryActivities(
@@ -43,7 +44,7 @@ export async function getEntryActivities(
     .eq('mood_log_id', moodLogId)
     .eq('user_id', userId)
 
-  if (error) return { tags: [], error: error.message }
+  if (error) return { tags: [], error: friendlyError(error.message) }
 
   const tags = (data ?? [])
     .map((row) => (row as unknown as { activity_tags: ActivityTag | null }).activity_tags)
@@ -75,7 +76,7 @@ export async function getLogsWithActivities(
     .gte('logged_at', since.toISOString())
     .order('logged_at', { ascending: true })
 
-  if (error) return { entries: [], error: error.message }
+  if (error) return { entries: [], error: friendlyError(error.message) }
 
   const entries: LogWithActivities[] = (data ?? []).map((row) => {
     const actRows = (row.mood_log_activities ?? []) as unknown as Array<{ activity_tags: ActivityTag | null }>

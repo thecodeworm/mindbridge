@@ -61,28 +61,34 @@ export function YearInPixels({ userId }: { userId: string }) {
   const weeks = buildWeeks()
   const todayStr = toLocalDateStr(new Date().toISOString())
 
-  if (loading) return <div className="h-28 animate-pulse rounded-xl border border-border bg-surface" />
+  if (loading) return <div className="card h-40 animate-pulse" />
+  const logged = Object.keys(scoreByDay).length
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-6 relative">
-      <h2 className="mb-3 text-lg font-bold text-ink">Year in review</h2>
-      <div className="overflow-x-auto">
-        <div className="flex gap-0.5">
+    <div className="card relative p-4 sm:p-6">
+      <h2 className="font-body text-lg font-semibold text-ink">Year in pixels</h2>
+      <p className="mb-4 mt-1 text-sm text-muted">
+        {logged === 0
+          ? 'One square per day. They fill with color as you check in.'
+          : `${logged} day${logged === 1 ? '' : 's'} logged in the past year.`}
+      </p>
+      <div className="overflow-x-auto pb-1" ref={(el) => { if (el) el.scrollLeft = el.scrollWidth }}>
+        <div className="flex w-max gap-[3px]">
           {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-0.5">
+            <div key={wi} className="flex flex-col gap-[3px]">
               {week.map((day) => {
                 const score = scoreByDay[day]
                 const isFuture = day > todayStr
                 return (
                   <div
                     key={day}
-                    className="h-3 w-3 rounded-sm cursor-default"
+                    className={`h-3 w-3 cursor-default rounded-[3px] ${day === todayStr ? 'ring-[1.5px] ring-blue-dark' : ''}`}
                     style={{
                       backgroundColor: isFuture
                         ? 'transparent'
                         : score != null
                         ? moodColor(score)
-                        : 'var(--border)',
+                        : 'var(--surface)',
                     }}
                     title={score != null ? `${day}: ${score}/10` : day}
                     onMouseEnter={() => score != null && setTooltip({ date: day, score })}
@@ -94,8 +100,15 @@ export function YearInPixels({ userId }: { userId: string }) {
           ))}
         </div>
       </div>
+      <div className="mt-3 flex items-center gap-1.5 text-xs text-muted">
+        Heavy
+        {[1.5, 3.5, 5.5, 7.5, 9.5].map((v) => (
+          <span key={v} className="h-3 w-3 rounded-[3px]" style={{ backgroundColor: moodColor(v) }} />
+        ))}
+        Great
+      </div>
       {tooltip && (
-        <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-md border border-border bg-surface px-2 py-1 text-xs shadow-md">
+        <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 card-elevated px-2 py-1 text-xs">
           {tooltip.date}: {tooltip.score}/10
         </div>
       )}

@@ -6,13 +6,16 @@ export interface Distortion {
   description: string
 }
 
+// Canonical IDs are snake_case and identical to apps/mobile/lib/features/
+// mood/distortion_picker.dart (and allowed by migration 0012's
+// is_valid_distortions check), so both platforms write the same values.
 const DISTORTIONS: Distortion[] = [
-  { id: 'catastrophizing',   name: 'Catastrophizing',   description: 'Assuming the worst possible outcome will happen.' },
-  { id: 'mind-reading',      name: 'Mind reading',      description: "Believing you know what others are thinking, usually negatively." },
-  { id: 'all-or-nothing',    name: 'All-or-nothing',    description: 'Seeing things in black and white, with no middle ground.' },
-  { id: 'fortune-telling',   name: 'Fortune telling',   description: 'Predicting a negative future as if it were certain.' },
-  { id: 'personalization',   name: 'Personalization',   description: 'Blaming yourself for things outside your control.' },
-  { id: 'emotional-reasoning', name: 'Emotional reasoning', description: "Believing something is true because it feels true." },
+  { id: 'all_or_nothing',      name: 'All-or-nothing thinking', description: 'Seeing things in black and white, with no middle ground.' },
+  { id: 'catastrophizing',     name: 'Catastrophizing',         description: 'Assuming the worst possible outcome will happen.' },
+  { id: 'mind_reading',        name: 'Mind reading',            description: 'Believing you know what others are thinking, usually negatively.' },
+  { id: 'overgeneralization',  name: 'Overgeneralization',      description: 'Treating one bad moment as a pattern that will always repeat.' },
+  { id: 'emotional_reasoning', name: 'Emotional reasoning',     description: 'Believing something is true because it feels true.' },
+  { id: 'should_statements',   name: '"Should" statements',     description: 'Holding yourself to rigid rules about how things should be.' },
 ]
 
 interface Props {

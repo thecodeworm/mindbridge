@@ -5,19 +5,21 @@ import { computeCorrelations, type CorrelationResult } from '../lib/correlations
 
 function CorrelationRow({ r, valence }: { r: CorrelationResult; valence: 'positive' | 'negative' }) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-border bg-field px-3 py-2.5">
-      <span className="text-lg">{r.tagEmoji}</span>
+    <div className="flex items-center gap-3 py-2">
+      <span className="text-lg" aria-hidden>{r.tagEmoji}</span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-ink">
-          {r.tagLabel}
-          <span className={`ml-2 text-xs font-normal ${valence === 'positive' ? 'text-success' : 'text-error'}`}>
-            {valence === 'positive' ? '+' : ''}{r.delta.toFixed(1)}
-          </span>
-        </p>
-        <p className="text-xs text-muted">
+        <p className="font-medium text-ink">{r.tagLabel}</p>
+        <p className="text-sm text-muted">
           Avg {r.avgWith}/10 with · {r.avgWithout}/10 without · {r.sampleSize} days
         </p>
       </div>
+      {/* Sage for lifts, slate (low end of the mood ramp) for dips: never red/green judgement. */}
+      <span
+        className="tabular rounded-full px-2.5 py-1 text-sm font-semibold text-ink"
+        style={{ backgroundColor: valence === 'positive' ? 'color-mix(in srgb, var(--success) 16%, transparent)' : 'color-mix(in srgb, #7c8ba8 18%, transparent)' }}
+      >
+        {valence === 'positive' ? '+' : ''}{r.delta.toFixed(1)}
+      </span>
     </div>
   )
 }
@@ -42,31 +44,31 @@ export function InsightsCard({ userId }: { userId: string }) {
     )
   }, [userId])
 
-  if (loading) return <div className="h-24 animate-pulse rounded-xl border border-border bg-surface" />
+  if (loading) return <div className="card h-32 animate-pulse" />
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-6">
-      <h2 className="mb-1 text-lg font-bold text-ink">Insights</h2>
-      <p className="mb-4 text-xs text-faint">
-        Correlations, not causes. Patterns appear after about a week of tagging.
+    <div className="card p-4 sm:p-6">
+      <h2 className="font-body text-lg font-semibold text-ink">What lifts you</h2>
+      <p className="mb-4 mt-1 text-sm text-muted">
+        Activities tagged on 5+ check-ins in the last 90 days, compared with your average. Patterns, not causes.
       </p>
 
       {empty && (
-        <p className="py-4 text-center text-sm text-muted">
-          Keep tagging activities — patterns appear after about a week.
+        <p className="rounded-xl bg-surface px-4 py-3.5 text-muted">
+          Tag what you were doing when you check in. After about a week, patterns show up here.
         </p>
       )}
 
       {positive.length > 0 && (
-        <div className="mb-4 space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-success">Boosts mood</p>
+        <div className="mb-4">
+          <p className="text-sm font-semibold text-muted">Tends to lift your mood</p>
           {positive.map((r) => <CorrelationRow key={r.tagId} r={r} valence="positive" />)}
         </div>
       )}
 
       {negative.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-error">Lowers mood</p>
+        <div>
+          <p className="text-sm font-semibold text-muted">Tends to weigh on you</p>
           {negative.map((r) => <CorrelationRow key={r.tagId} r={r} valence="negative" />)}
         </div>
       )}

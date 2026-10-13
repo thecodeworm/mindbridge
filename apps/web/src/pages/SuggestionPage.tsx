@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { SuggestionResponse } from '../../../../shared/types'
 import { generateSuggestion } from '../lib/suggestionService'
 import { updateSuggestionFeedback } from '../lib/feedbackService'
 import { CrisisChip } from '../components/CrisisChip'
+import { BOOKMARK, FeedbackChip, THUMB_DOWN, THUMB_UP } from '../components/FeedbackChip'
+import { BreathingCircle } from '../components/BreathingCircle'
+import { moodColor } from '../lib/moodColor'
 
 interface SuggestionLocationState {
   moodLogId: string
   userId: string
+  moodScore?: number
 }
 
 export function SuggestionPage() {
@@ -54,69 +58,100 @@ export function SuggestionPage() {
 
   if (!state) return null
 
+  const tone = moodColor(state.moodScore ?? 5.5)
+  const done = () => navigate('/', { replace: true })
+
   return (
-    <div className="flex min-h-screen items-start justify-center bg-cream p-4 pt-12">
-      <div className="w-full max-w-md space-y-4">
+    <div className="min-h-screen bg-cream">
+      <div className="mx-auto flex w-full max-w-xl items-center justify-between px-4 pt-4 sm:px-6">
+        <button
+          type="button"
+          onClick={done}
+          aria-label="Close"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-ink hover:bg-surface"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+        <CrisisChip inline />
+      </div>
+
+      <div className="mx-auto w-full max-w-xl px-4 pb-16 pt-4 sm:px-6">
         {loading && (
-          <div className="animate-pulse space-y-4 card p-8">
-            <div className="h-6 w-2/3 rounded bg-field" />
-            <div className="space-y-2"><div className="h-4 w-full rounded bg-field" /><div className="h-4 w-5/6 rounded bg-field" /></div>
-            <div className="space-y-2 pt-2"><div className="h-4 w-full rounded bg-border" /><div className="h-4 w-full rounded bg-border" /><div className="h-4 w-3/4 rounded bg-border" /></div>
+          <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+            <BreathingCircle
+              colors={state.moodScore != null ? undefined : [moodColor(1), moodColor(5.5), moodColor(10)]}
+              color={state.moodScore != null ? tone : undefined}
+              size={180}
+            />
+            <h1 className="mt-8 text-2xl font-semibold text-ink">Breathe with the circle</h1>
+            <p className="mt-2 text-lg text-muted">Finding one small thing that could help right now.</p>
           </div>
         )}
 
         {!loading && error && (
-          <div className="space-y-4 card p-8">
-            <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{error}</p>
-            <p className="text-sm text-muted">Your mood was saved — you can try generating a suggestion again.</p>
-            <div className="flex gap-3">
-              <button type="button" onClick={() => navigate('/', { replace: true })} className="flex-1 rounded-lg border border-border bg-field px-3 py-2 font-medium text-ink transition-colors hover:bg-blue-tint">Back home</button>
-              <button type="button" onClick={() => load(state.moodLogId, state.userId)} className="flex-1 rounded-lg bg-blue-dark px-3 py-2 font-medium text-on-accent transition-opacity hover:opacity-90">Try again</button>
+          <div className="pt-8">
+            <h1 className="text-2xl font-semibold text-ink">Your check-in is saved</h1>
+            <p className="mt-2 text-lg leading-relaxed text-muted">{error}</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button type="button" onClick={() => load(state.moodLogId, state.userId)} className="rounded-full bg-blue-dark px-6 py-3 font-semibold text-on-accent hover:opacity-90">
+                Try again
+              </button>
+              <button type="button" onClick={done} className="rounded-full border border-border bg-card px-6 py-3 font-semibold text-ink hover:bg-blue-tint">
+                Back to Today
+              </button>
             </div>
           </div>
         )}
 
         {!loading && !error && suggestion && (
-          <>
+          <div className="animate-step-enter">
             {suggestion.show_crisis_resources && (
-              <a
-                href="/help"
-                className="block rounded-lg border border-terra bg-terra-tint px-4 py-3 text-sm text-terra-dark transition-colors hover:bg-terra"
+              <Link
+                to="/help"
+                className="mb-8 flex items-start gap-3 rounded-2xl border border-terra/50 bg-terra-tint p-4 text-terra-dark transition-colors hover:bg-terra-tint/70"
               >
-                If you're in crisis, you're not alone — call or text 988, or text HOME to 741741. →
-              </a>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0" aria-hidden>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                <span>
+                  <span className="block font-semibold">You don't have to carry this alone</span>
+                  <span className="block">Call or text 988 any time, or text HOME to 741741. Tap for more ways to reach someone now.</span>
+                </span>
+              </Link>
             )}
 
-            <div className="space-y-4 card p-8">
-              <div className="flex items-start justify-between gap-3">
-                <h1 className="text-2xl font-bold text-ink">{suggestion.technique_name}</h1>
-                <button type="button" onClick={toggleSaved} title={saved ? 'Remove from toolkit' : 'Save to toolkit'} className="shrink-0 text-xl transition-opacity hover:opacity-70">
-                  {saved ? '🔖' : '🏷️'}
-                </button>
-              </div>
-              <p className="text-muted">{suggestion.description}</p>
-              <ol className="list-decimal space-y-2 pl-5 text-ink">
-                {suggestion.steps.slice(0, 3).map((step, i) => <li key={i}>{step}</li>)}
-              </ol>
+            <h1 className="text-4xl font-semibold leading-tight text-ink">{suggestion.technique_name}</h1>
+            <p className="mt-3 text-lg leading-relaxed text-muted">{suggestion.description}</p>
 
-              <div className="flex items-center gap-3 border-t border-border pt-4">
-                <p className="text-sm text-muted">Was this helpful?</p>
-                <button type="button" onClick={() => toggleHelpful(true)} className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${helpful === true ? 'border-success bg-success-tint text-success' : 'border-border bg-field text-ink hover:bg-blue-tint'}`}>
-                  👍 Yes
-                </button>
-                <button type="button" onClick={() => toggleHelpful(false)} className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${helpful === false ? 'border-error bg-error-tint text-error' : 'border-border bg-field text-ink hover:bg-blue-tint'}`}>
-                  👎 No
-                </button>
-              </div>
+            <ol className="card mt-6 space-y-4 rounded-[20px] p-5 sm:p-6">
+              {suggestion.steps.slice(0, 3).map((step, i) => (
+                <li key={i} className="flex gap-3.5">
+                  <span
+                    className="tabular flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bold text-ink"
+                    style={{ backgroundColor: `${tone}38` }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="pt-1 text-lg leading-relaxed text-ink">{step}</span>
+                </li>
+              ))}
+            </ol>
 
-              <button type="button" onClick={() => navigate('/', { replace: true })} className="w-full rounded-lg bg-blue-dark px-3 py-2 font-medium text-on-accent transition-opacity hover:opacity-90">
-                Done
-              </button>
+            <p className="mt-8 text-muted">Did this help?</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <FeedbackChip active={helpful === true} onClick={() => toggleHelpful(true)} icon={THUMB_UP} label="Helpful" />
+              <FeedbackChip active={helpful === false} onClick={() => toggleHelpful(false)} icon={THUMB_DOWN} label="Not for me" />
+              <FeedbackChip active={saved} onClick={toggleSaved} icon={BOOKMARK} label={saved ? 'In your toolkit' : 'Save to toolkit'} />
             </div>
-          </>
+
+            <button type="button" onClick={done} className="mt-10 w-full rounded-full bg-blue-dark px-6 py-3.5 font-semibold text-on-accent hover:opacity-90">
+              Done
+            </button>
+          </div>
         )}
       </div>
-      <CrisisChip />
     </div>
   )
 }

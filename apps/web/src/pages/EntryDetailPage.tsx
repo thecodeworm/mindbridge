@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { moodTagInfo } from '../../../../shared/types'
 import { useAuth } from '../context/AuthContext'
 import { deleteEntry, getEntryDetail } from '../lib/historyService'
@@ -7,6 +7,7 @@ import type { EntryDetail } from '../lib/historyService'
 import { moodColor } from '../lib/moodColor'
 import { updateSuggestionFeedback } from '../lib/feedbackService'
 import { CrisisChip } from '../components/CrisisChip'
+import { BOOKMARK, FeedbackChip, THUMB_DOWN, THUMB_UP } from '../components/FeedbackChip'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {
@@ -80,16 +81,21 @@ export function EntryDetailPage() {
   const showCrisis = suggestion && (suggestion.crisis_signal || (detail?.moodLog.mood_score ?? 11) <= 2)
 
   return (
-    <div className="flex min-h-screen items-start justify-center bg-cream p-4 pt-12">
-      <div className="w-full max-w-md space-y-4">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-cream">
+      <div className="mx-auto w-full max-w-xl space-y-4 px-4 pb-16 pt-4 sm:px-6">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => navigate('/')}
-            className="text-sm font-medium text-muted transition-colors hover:text-ink"
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/journal'))}
+            aria-label="Back"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-ink hover:bg-surface"
           >
-            ← Back to history
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="m15 18-6-6 6-6" />
+            </svg>
           </button>
+          <p className="flex-1 font-display text-2xl font-semibold text-ink">Entry</p>
+          <CrisisChip inline />
 
           {!loading && !error && detail && (
             <div className="relative">
@@ -98,14 +104,14 @@ export function EntryDetailPage() {
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="Entry options"
                 aria-expanded={menuOpen}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-muted transition-colors hover:bg-blue-tint hover:text-ink"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold text-muted transition-colors hover:bg-surface hover:text-ink"
               >
                 ⋮
               </button>
               {menuOpen && (
                 <>
                   <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} className="fixed inset-0 z-10 cursor-default" />
-                  <div className="absolute right-0 z-20 mt-1 w-36 overflow-hidden rounded-lg border border-border bg-surface shadow-md">
+                  <div className="card-elevated absolute right-0 z-20 mt-1 w-40 overflow-hidden">
                     <button type="button" onClick={handleEdit} className="block w-full px-4 py-2 text-left text-sm font-medium text-ink transition-colors hover:bg-blue-tint">Edit</button>
                     <button type="button" onClick={() => { setMenuOpen(false); setConfirmingDelete(true) }} className="block w-full px-4 py-2 text-left text-sm font-medium text-error transition-colors hover:bg-error-tint">Delete</button>
                   </div>
@@ -116,7 +122,7 @@ export function EntryDetailPage() {
         </div>
 
         {confirmingDelete && (
-          <div className="space-y-3 rounded-xl border border-border bg-surface p-4 shadow-sm">
+          <div className="card space-y-3 p-5">
             <p className="text-sm font-medium text-ink">Delete this entry?</p>
             <p className="text-sm text-muted">This removes the mood log, journal entry, and coping suggestion. This can't be undone.</p>
             {deleteError && <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{deleteError}</p>}
@@ -128,28 +134,26 @@ export function EntryDetailPage() {
         )}
 
         {loading && (
-          <div className="animate-pulse space-y-4 card p-8">
-            <div className="h-6 w-2/3 rounded bg-field" />
-            <div className="space-y-2"><div className="h-4 w-full rounded bg-field" /><div className="h-4 w-5/6 rounded bg-field" /></div>
+          <div className="card animate-pulse space-y-4 p-6">
+            <div className="h-6 w-2/3 rounded bg-surface" />
+            <div className="space-y-2"><div className="h-4 w-full rounded bg-surface" /><div className="h-4 w-5/6 rounded bg-surface" /></div>
           </div>
         )}
 
         {!loading && error && (
-          <div className="card p-8">
-            <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{error}</p>
-          </div>
+          <p className="rounded-2xl bg-error-tint px-4 py-3.5 text-ink">{error}</p>
         )}
 
         {!loading && !error && detail && (
           <>
-            <div className="space-y-4 card p-8">
-              <div className="flex items-center gap-3">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold" style={{ backgroundColor: moodColor(detail.moodLog.mood_score), color: '#1C1917' }}>
+            <div className="card space-y-4 p-5 sm:p-6">
+              <div className="flex items-center gap-4">
+                <span className="tabular flex h-14 w-14 shrink-0 items-center justify-center rounded-full font-display text-2xl font-semibold" style={{ backgroundColor: moodColor(detail.moodLog.mood_score), color: '#1C1917' }}>
                   {detail.moodLog.mood_score}
                 </span>
                 <div>
-                  <p className="font-medium text-ink">
-                    {moodTagInfo(detail.moodLog.mood_tag)?.emoji} {moodTagInfo(detail.moodLog.mood_tag)?.label}
+                  <p className="font-display text-2xl font-semibold text-ink">
+                    {moodTagInfo(detail.moodLog.mood_tag)?.label} {moodTagInfo(detail.moodLog.mood_tag)?.emoji}
                   </p>
                   <p className="text-sm text-muted">{formatDate(detail.moodLog.logged_at)}</p>
                 </div>
@@ -158,7 +162,7 @@ export function EntryDetailPage() {
               {detail.activities.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {detail.activities.map((a) => (
-                    <span key={a.id} className="rounded-full border border-border bg-field px-2.5 py-1 text-xs text-muted">
+                    <span key={a.id} className="rounded-full bg-surface px-3 py-1 text-sm text-ink">
                       {a.emoji} {a.label}
                     </span>
                   ))}
@@ -167,55 +171,54 @@ export function EntryDetailPage() {
 
               {detail.journalEntry && (
                 <div className="space-y-1 border-t border-border pt-4">
-                  <p className="text-sm font-medium text-muted">Journal</p>
-                  <p className="whitespace-pre-wrap text-ink">{detail.journalEntry.body}</p>
+                  <p className="text-sm font-semibold text-muted">Journal</p>
+                  <p className="whitespace-pre-wrap text-lg leading-relaxed text-ink">{detail.journalEntry.body}</p>
                 </div>
               )}
             </div>
 
             {showCrisis && (
-              <a
-                href="/help"
-                className="block rounded-lg border border-terra bg-terra-tint px-4 py-3 text-sm text-terra-dark transition-colors hover:bg-terra"
+              <Link
+                to="/help"
+                className="block rounded-2xl border border-terra/50 bg-terra-tint px-4 py-3.5 text-terra-dark transition-colors hover:bg-terra-tint/70"
               >
-                If you're in crisis, you're not alone — call or text 988, or text HOME to 741741. →
-              </a>
+                You don't have to carry this alone. Call or text 988, or text HOME to 741741. Tap for more.
+              </Link>
             )}
 
             {suggestion && (
-              <div className="space-y-4 card p-8">
-                <div className="flex items-start justify-between gap-3">
-                  <h1 className="text-2xl font-bold text-ink">{suggestion.technique_name}</h1>
-                  <button type="button" onClick={toggleSaved} title={saved ? 'Remove from toolkit' : 'Save to toolkit'} className="shrink-0 text-xl transition-opacity hover:opacity-70">
-                    {saved ? '🔖' : '🏷️'}
-                  </button>
-                </div>
-                <p className="text-muted">{suggestion.description}</p>
-                <ol className="list-decimal space-y-2 pl-5 text-ink">
-                  {suggestion.steps.slice(0, 3).map((step, i) => <li key={i}>{step}</li>)}
+              <div className="card space-y-4 p-5 sm:p-6">
+                <h1 className="text-2xl font-semibold text-ink">{suggestion.technique_name}</h1>
+                <p className="leading-relaxed text-muted">{suggestion.description}</p>
+                <ol className="space-y-3">
+                  {suggestion.steps.slice(0, 3).map((step, i) => (
+                    <li key={i} className="flex gap-3">
+                      <span
+                        className="tabular flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-ink"
+                        style={{ backgroundColor: `${moodColor(detail.moodLog.mood_score)}40` }}
+                      >
+                        {i + 1}
+                      </span>
+                      <span className="pt-0.5 leading-relaxed text-ink">{step}</span>
+                    </li>
+                  ))}
                 </ol>
-
-                <div className="flex items-center gap-3 border-t border-border pt-4">
-                  <p className="text-sm text-muted">Was this helpful?</p>
-                  <button type="button" onClick={() => toggleHelpful(true)} className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${helpful === true ? 'border-success bg-success-tint text-success' : 'border-border bg-field text-ink hover:bg-blue-tint'}`}>
-                    👍 Yes
-                  </button>
-                  <button type="button" onClick={() => toggleHelpful(false)} className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${helpful === false ? 'border-error bg-error-tint text-error' : 'border-border bg-field text-ink hover:bg-blue-tint'}`}>
-                    👎 No
-                  </button>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <FeedbackChip active={helpful === true} onClick={() => toggleHelpful(true)} icon={THUMB_UP} label="Helpful" />
+                  <FeedbackChip active={helpful === false} onClick={() => toggleHelpful(false)} icon={THUMB_DOWN} label="Not for me" />
+                  <FeedbackChip active={saved} onClick={toggleSaved} icon={BOOKMARK} label={saved ? 'In your toolkit' : 'Save to toolkit'} />
                 </div>
               </div>
             )}
 
             {!suggestion && (
-              <div className="card p-8">
-                <p className="text-sm text-muted">No coping suggestion was saved for this entry.</p>
+              <div className="card p-6">
+                <p className="text-muted">No coping suggestion was saved for this entry.</p>
               </div>
             )}
           </>
         )}
       </div>
-      <CrisisChip />
     </div>
   )
 }

@@ -18,6 +18,9 @@
   --surface: #f4efe6;
   --border: #e5ddd0;
   --field: #ffffff;
+  /* Card fill: lifted slightly off the cream page. The darker beige
+     --surface stays for inset wells, toggles and chips. */
+  --card: #fffcf7;
 
   --blue: #4a80b5;
   --blue-dark: #3a6a9a;
@@ -102,6 +105,7 @@
     --surface: #2a2420;
     --border: #3d3530;
     --field: #322b26;
+    --card: #26201c;
 
     --blue: #6b9dce;
     --blue-dark: #8bb5e0;
@@ -141,6 +145,7 @@
   --surface: #2a2420;
   --border: #3d3530;
   --field: #322b26;
+  --card: #26201c;
 
   --blue: #6b9dce;
   --blue-dark: #8bb5e0;
@@ -177,6 +182,7 @@
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-field: var(--field);
+  --color-card: var(--card);
 
   --color-blue: var(--blue);
   --color-blue-dark: var(--blue-dark);
@@ -221,6 +227,24 @@
      titleLarge in theme.dart. Body copy stays Figtree throughout. */
   h1, h2, h3 {
     font-family: var(--font-display);
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  /* Browser surfaces carry the palette too. */
+  ::selection {
+    background-color: var(--blue-tint);
+    color: var(--ink);
+  }
+  input, textarea {
+    caret-color: var(--blue-dark);
+  }
+  html {
+    scrollbar-color: var(--border) transparent;
+    -webkit-font-smoothing: antialiased;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 
   /* Required accessibility focus ring — 2px blue-dark, 2px offset,
@@ -242,19 +266,19 @@
      (L1), `.card-lg` = same shadow with the sheet radius for full-page
      forms, `.card-elevated` = L2 for hover/focus-prominent surfaces. */
   .card {
-    background-color: var(--surface);
+    background-color: var(--card);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-resting);
     border: 1px solid var(--elevation-border);
   }
   .card-lg {
-    background-color: var(--surface);
+    background-color: var(--card);
     border-radius: var(--radius-sheet);
     box-shadow: var(--shadow-resting);
     border: 1px solid var(--elevation-border);
   }
   .card-elevated {
-    background-color: var(--surface);
+    background-color: var(--card);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-elevated);
     border: 1px solid var(--elevation-border);
@@ -264,12 +288,12 @@
   .crisis-chip {
     background-color: var(--terra-tint);
     color: var(--terra-dark);
-    border: 1px solid var(--terra);
-    box-shadow: var(--shadow-elevated);
-    transition: transform var(--duration-short) var(--ease-standard);
+    border: 1px solid color-mix(in srgb, var(--terra) 45%, transparent);
+    transition: transform var(--duration-short) var(--ease-standard),
+      background-color var(--duration-micro) var(--ease-standard);
   }
   .crisis-chip:hover {
-    transform: scale(1.05);
+    background-color: color-mix(in srgb, var(--terra-tint) 80%, var(--terra) 20%);
   }
   .crisis-chip:active {
     transform: scale(0.97);
