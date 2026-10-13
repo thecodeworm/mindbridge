@@ -69,7 +69,7 @@ export function DistortionPicker({ onDone, onSkip }: Props) {
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="font-semibold text-ink">Notice any thinking traps?</h3>
-          <p className="text-xs text-muted">Optional — totally skippable</p>
+          <p className="text-xs text-muted">Optional, totally skippable</p>
         </div>
         <button
           type="button"

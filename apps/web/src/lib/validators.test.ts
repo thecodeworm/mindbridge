@@ -26,7 +26,7 @@ describe('validatePasswordConfirmation', () => {
 
   test('mismatched confirmation returns mismatch error', () => {
     expect(validatePasswordConfirmation('password1', 'different')).toBe(
-      "Passwords don't match — give that another try.",
+      "Passwords don't match. Give that another try.",
     )
   })
 

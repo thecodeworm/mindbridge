@@ -18,7 +18,7 @@ const SAMPLE_TECHNIQUES: Record<MoodQuadrant, { name: string; steps: string[] }>
     name: 'Savoring the moment',
     steps: [
       'Pause and name one specific thing that felt good just now.',
-      "Notice where you feel it in your body — that's the savoring.",
+      "Notice where you feel it in your body. That's the savoring.",
       'Write one sentence about it so future-you can look back on it.',
     ],
   },
@@ -95,7 +95,7 @@ export function FirstCheckinStep({ onCreateAccount, onHaveAccount }: Props) {
           onClick={() => tag && onCreateAccount(score, tag)}
           className="mt-8 w-full rounded-full bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
         >
-          Save this — create my account
+          Save this and create my account
         </button>
         <button
           type="button"
@@ -111,7 +111,7 @@ export function FirstCheckinStep({ onCreateAccount, onHaveAccount }: Props) {
   return (
     <div className="mx-auto w-full max-w-md px-8 text-center">
       <h1 className="font-display text-xl font-bold text-ink">
-        Let's try it — how are you feeling right now?
+        Let's try it. How are you feeling right now?
       </h1>
       <div className="mt-6 flex items-center justify-between text-left">
         <span className="text-sm text-muted">Mood score</span>

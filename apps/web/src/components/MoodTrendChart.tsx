@@ -103,7 +103,7 @@ export function MoodTrendChart({ logs }: MoodTrendChartProps) {
 
       {data.length === 0 ? (
         <p className="py-12 text-center text-muted">
-          No entries in this range yet — log a mood to start your trend.
+          No check-ins in this range yet. Log one to start your trend.
         </p>
       ) : (
         <div className="h-56 w-full sm:h-64">

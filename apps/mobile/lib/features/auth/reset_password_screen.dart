@@ -197,7 +197,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            "There's no password to reset — just use the Google button to sign in.",
+            "There's no password to reset. Just use the Google button to sign in.",
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 24),

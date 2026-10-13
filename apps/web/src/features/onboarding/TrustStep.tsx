@@ -15,7 +15,7 @@ export function TrustStep({ onNext }: { onNext: () => void }) {
       </h1>
       <div className="card mt-6 p-4">
         <p className="text-sm text-muted">
-          Nobody else — not friends, not family, not even MindBridge staff — can read
+          Not friends, not family, not even MindBridge staff can read
           your mood logs or journal entries. What you write here stays yours.
         </p>
       </div>

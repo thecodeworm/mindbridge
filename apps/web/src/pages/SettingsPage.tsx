@@ -186,7 +186,7 @@ export function SettingsPage() {
           <div className="space-y-3 border-t border-border pt-4">
             <div>
               <p className="font-medium text-ink">Delete my data</p>
-              <p className="text-sm text-muted">Permanently deletes every mood log, journal entry, and coping suggestion. Your login stays active — this clears your data, it doesn't close your account.</p>
+              <p className="text-sm text-muted">Permanently deletes every mood log, journal entry, and coping suggestion. Your login stays active. This clears your data but doesn't close your account.</p>
             </div>
             {!confirmingDelete ? (
               <button type="button" onClick={() => setConfirmingDelete(true)} className="rounded-lg border border-error px-4 py-2 text-sm font-medium text-error transition-colors hover:bg-error-tint">Delete my data</button>

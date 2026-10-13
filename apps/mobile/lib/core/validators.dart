@@ -25,7 +25,7 @@ String? validatePasswordConfirmation(String? confirmPassword, String password) {
     return 'Please confirm your password';
   }
   if (confirmPassword != password) {
-    return "Passwords don't match — give that another try";
+    return "Passwords don't match. Give that another try";
   }
   return null;
 }

@@ -24,7 +24,7 @@ export function PersonalizationStep({ selected, onSelect, onNext }: Props) {
     <div className="flex flex-col items-center justify-center px-8 text-center">
       <h1 className="font-display text-2xl font-bold text-ink">What brings you here?</h1>
       <p className="mt-1 text-sm text-muted">
-        Totally optional — just helps us tailor a few things.
+        Totally optional. It just helps us tailor a few things.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
         {PERSONALIZATION_OPTIONS.map((o) => {

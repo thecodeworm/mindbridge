@@ -40,7 +40,7 @@ class PersonalizationStep extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Totally optional — just helps us tailor a few things.',
+            'Totally optional. It just helps us tailor a few things.',
             textAlign: TextAlign.center,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),

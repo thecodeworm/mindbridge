@@ -94,7 +94,7 @@ export function ResetPasswordPage() {
         <div className="card-lg w-full max-w-sm space-y-4 p-8 text-center">
           <p className="font-medium text-ink">You signed up with Google</p>
           <p className="text-sm text-muted">
-            There's no password to reset — just use the Google button to sign in.
+            There's no password to reset. Just use the Google button to sign in.
           </p>
           <button
             onClick={async () => { await supabase.auth.signOut(); navigate('/login') }}

@@ -14,7 +14,7 @@ String _weekLabel() {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   final start = DateTime.parse(_prevWeekStart());
   final end = start.add(const Duration(days: 6));
-  return '${months[start.month - 1]} ${start.day} – ${months[end.month - 1]} ${end.day}';
+  return '${months[start.month - 1]} ${start.day} to ${months[end.month - 1]} ${end.day}';
 }
 
 class WeeklySummaryCard extends StatefulWidget {

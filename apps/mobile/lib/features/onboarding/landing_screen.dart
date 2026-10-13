@@ -86,7 +86,7 @@ class LandingScreen extends StatelessWidget {
               Text(
                 'MindBridge is a private mood tracker for teens. Rate how you '
                 'feel, jot a quick note if you want, and get an '
-                'evidence-based coping technique picked for you — instantly, '
+                'evidence-based coping technique picked for you, instantly, '
                 'every time.',
                 textAlign: TextAlign.center,
                 style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -94,7 +94,7 @@ class LandingScreen extends StatelessWidget {
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: onGetStarted,
-                child: const Text("Get started — it's free"),
+                child: const Text("Get started free"),
               ),
               const SizedBox(height: 10),
               OutlinedButton(
@@ -111,8 +111,8 @@ class LandingScreen extends StatelessWidget {
               _FeatureCard(
                 emoji: '🧠',
                 title: 'A coping technique, instantly',
-                body: 'Every check-in returns a real CBT technique — a '
-                    'breathing exercise, a grounding method, a reframe — '
+                body: 'Every check-in returns a real CBT technique, like a '
+                    'breathing exercise, a grounding method, or a reframe, '
                     'picked for how you feel right now.',
               ),
               const SizedBox(height: 12),
@@ -127,7 +127,7 @@ class LandingScreen extends StatelessWidget {
                 emoji: '🌙',
                 title: 'Built for hard days',
                 body: 'Warm, dark-mode-first design for late-night '
-                    'journaling. Crisis resources are always one tap away — '
+                    'journaling. Crisis resources are always one tap away, '
                     'never a red alarm.',
               ),
               const SizedBox(height: 12),
@@ -135,11 +135,11 @@ class LandingScreen extends StatelessWidget {
                 emoji: '🔒',
                 title: 'Private by design',
                 body: 'Your entries are yours. Row-level security means no '
-                    'one else — not even us — can read your data.',
+                    'one else can read your data. Not even us.',
               ),
               const SizedBox(height: 28),
               Text(
-                'Every mood has a place — no shade means "bad day"',
+                'Every mood has a place. No shade means "bad day."',
                 textAlign: TextAlign.center,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
@@ -156,7 +156,7 @@ class LandingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                "If you're in crisis, you're not alone — call or text 988, "
+                "If you're in crisis, you're not alone. Call or text 988, "
                 'or text HOME to 741741.',
                 textAlign: TextAlign.center,
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),

@@ -12,7 +12,7 @@ function formatWeek(weekStart: string): string {
   const end = new Date(d)
   end.setDate(end.getDate() + 6)
   const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
-  return `${d.toLocaleDateString(undefined, opts)} – ${end.toLocaleDateString(undefined, opts)}`
+  return `${d.toLocaleDateString(undefined, opts)} to ${end.toLocaleDateString(undefined, opts)}`
 }
 
 export function WeeklySummaryCard() {

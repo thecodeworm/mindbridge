@@ -18,7 +18,7 @@ const STEP_COUNT = 5
  *
  * Deviation from the Flutter version, made as a judgment call: Flutter's
  * exit CTAs both fall through to AuthGate's default (sign-in) screen, so
- * "Save this — create my account" actually lands on sign-in there (one
+ * "Save this and create my account" actually lands on sign-in there (one
  * extra tap to reach sign-up). On web, routing directly to the page the
  * button names is just as easy to get right, so `onCreateAccount` routes to
  * /signup and `onHaveAccount`/Skip route to /login.

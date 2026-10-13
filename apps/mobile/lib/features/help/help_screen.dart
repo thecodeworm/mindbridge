@@ -37,7 +37,7 @@ class HelpScreen extends StatelessWidget {
                 border: Border.all(color: terra),
               ),
               child: Text(
-                "You're not alone. Confidential support is available 24/7 — free and judgment-free.",
+                "You're not alone. Confidential support is available 24/7. It's free and judgment-free.",
                 style: tt.bodyMedium?.copyWith(color: terraDark),
               ),
             ),

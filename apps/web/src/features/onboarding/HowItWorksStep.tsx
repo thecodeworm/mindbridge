@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import type { PersonalizationOption } from './PersonalizationStep'
 
 const FRAMES = [
-  { emoji: '🎚️', title: 'Slide to how you feel', subtitle: 'A quick 1–10 check-in.' },
-  { emoji: '🏷️', title: 'Pick a word', subtitle: 'Anxious, calm, proud — whatever fits.' },
+  { emoji: '🎚️', title: 'Slide to how you feel', subtitle: 'A quick 1 to 10 check-in.' },
+  { emoji: '🏷️', title: 'Pick a word', subtitle: 'Anxious, calm, proud, whatever fits.' },
   {
     emoji: '💡',
     title: 'Get an AI coping technique',

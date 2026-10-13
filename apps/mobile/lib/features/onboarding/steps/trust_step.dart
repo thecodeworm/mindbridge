@@ -37,7 +37,7 @@ class TrustStep extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: AppElevation.decoration(context),
             child: Text(
-              'Nobody else — not friends, not family, not even MindBridge staff — can read '
+              'Not friends, not family, not even MindBridge staff can read '
               'your mood logs or journal entries. What you write here stays yours.',
               textAlign: TextAlign.center,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),

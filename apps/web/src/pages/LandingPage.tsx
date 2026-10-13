@@ -42,7 +42,7 @@ export function LandingPage() {
 
           <p className="mt-5 max-w-xl text-lg text-muted">
             MindBridge is a private mood tracker for teens. Rate how you feel, jot a quick note if
-            you want, and get an evidence-based coping technique picked for you — instantly, every time.
+            you want, and get an evidence-based coping technique picked for you, instantly, every time.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -50,7 +50,7 @@ export function LandingPage() {
               to="/onboarding"
               className="rounded-full bg-blue-dark px-8 py-3.5 font-medium text-on-accent transition-opacity hover:opacity-90"
             >
-              Get started — it's free
+              Get started free
             </Link>
             <Link
               to="/login"
@@ -71,7 +71,7 @@ export function LandingPage() {
             <FeatureCard
               emoji="🧠"
               title="A coping technique, instantly"
-              body="Every check-in returns a real CBT technique — a breathing exercise, a grounding method, a reframe — picked for how you feel right now."
+              body="Every check-in returns a real CBT technique, like a breathing exercise, a grounding method, or a reframe, picked for how you feel right now."
             />
             <FeatureCard
               emoji="📈"
@@ -81,12 +81,12 @@ export function LandingPage() {
             <FeatureCard
               emoji="🌙"
               title="Built for hard days"
-              body="Warm, dark-mode-first design for late-night journaling. Crisis resources are always one tap away — never a red alarm."
+              body="Warm, dark-mode-first design for late-night journaling. Crisis resources are always one tap away, never a red alarm."
             />
             <FeatureCard
               emoji="🔒"
               title="Private by design"
-              body="Your entries are yours. Row-level security means no one else — not even us — can read your data."
+              body="Your entries are yours. Row-level security means no one else can read your data. Not even us."
             />
           </div>
         </section>
@@ -94,7 +94,7 @@ export function LandingPage() {
         {/* Mood ramp strip */}
         <section className="mx-auto w-full max-w-3xl px-4 pb-24 text-center sm:px-6">
           <p className="mb-4 text-sm font-medium text-muted">
-            Every mood has a place — no shade means "bad day"
+            Every mood has a place. No shade means "bad day."
           </p>
           <div className="flex h-3 overflow-hidden rounded-full">
             {moodRamp.map((c, i) => (
@@ -110,7 +110,7 @@ export function LandingPage() {
 
       <footer className="mx-auto w-full max-w-5xl px-4 pb-10 pt-6 text-center sm:px-6">
         <p className="text-xs text-faint">
-          If you're in crisis, you're not alone — call or text 988, or text HOME to 741741.
+          If you're in crisis, you're not alone. Call or text 988, or text HOME to 741741.
         </p>
       </footer>
 

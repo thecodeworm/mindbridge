@@ -16,7 +16,7 @@ const _kSampleTechniques = {
     name: 'Savoring the moment',
     steps: [
       'Pause and name one specific thing that felt good just now.',
-      "Notice where you feel it in your body — that's the savoring.",
+      "Notice where you feel it in your body. That's the savoring.",
       'Write one sentence about it so future-you can look back on it.',
     ],
   ),

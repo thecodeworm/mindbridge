@@ -310,7 +310,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   "Permanently deletes every mood log, journal entry, and coping suggestion. "
-                  "Your login stays active — this clears your data, it doesn't close your account.",
+                  "Your login stays active. This clears your data but doesn't close your account.",
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 12),

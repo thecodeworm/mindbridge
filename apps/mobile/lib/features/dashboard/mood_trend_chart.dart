@@ -82,7 +82,7 @@ class _MoodTrendChartState extends State<MoodTrendChart>
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
                 child: Text(
-                  'No entries in this range yet — log a mood to start your trend.',
+                  'No check-ins in this range yet. Log one to start your trend.',
                   textAlign: TextAlign.center,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),

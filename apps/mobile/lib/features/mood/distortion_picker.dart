@@ -54,7 +54,7 @@ class _DistortionPickerState extends State<DistortionPicker> {
           Text(
             _showReframe
                 ? 'How might you challenge or reframe this?'
-                : 'Optional — helps build self-awareness over time.',
+                : 'Optional. Helps build self-awareness over time.',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
