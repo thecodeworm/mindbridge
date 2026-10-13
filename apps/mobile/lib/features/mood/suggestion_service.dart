@@ -37,8 +37,15 @@ class SuggestionService {
       );
       final data = res.data as Map<String, dynamic>;
       return SuggestionResult.fromJson(data);
-    } on FunctionException catch (_) {
-      throw const AppException('Could not generate a suggestion. Please try again.');
+    } on FunctionException catch (e) {
+      if (e.status == 429) {
+        throw AppException('rate limited');
+      }
+      throw AppException("We couldn't put together a technique this time. Your check-in is saved, so try again in a moment.");
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppException(e.toString());
     }
   }
 }

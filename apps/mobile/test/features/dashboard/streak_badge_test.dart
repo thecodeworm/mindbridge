@@ -47,7 +47,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(StreakBadge), findsOneWidget);
-    expect(find.text('🔥'), findsNothing);
+    expect(find.byIcon(Icons.spa_outlined), findsNothing);
   });
 
   testWidgets('shows the practiced count and personal best', (tester) async {
@@ -57,7 +57,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('🔥'), findsOneWidget);
+    expect(find.byIcon(Icons.spa_outlined), findsOneWidget);
     expect(find.text("You've practiced 3 of 10 days"), findsOneWidget);
     expect(find.text('Personal best: 3 days'), findsOneWidget);
   });

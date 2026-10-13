@@ -57,48 +57,55 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     return Scaffold(
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            PageView(
-              controller: _pageController,
-              onPageChanged: (i) => setState(() => _page = i),
-              children: [
-                WelcomeStep(onNext: () => _goTo(1)),
-                TrustStep(onNext: () => _goTo(2)),
-                PersonalizationStep(
-                  selected: _personalization,
-                  onSelected: (v) => setState(() => _personalization = v),
-                  onNext: () => _goTo(3),
-                ),
-                HowItWorksStep(
-                  personalization: _personalization,
-                  onNext: () => _goTo(4),
-                ),
-                FirstCheckinStep(
-                  onCreateAccount: (score, tag) => _finish(score: score, tag: tag),
-                  onHaveAccount: () => _finish(),
-                ),
-              ],
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: AnimatedOpacity(
-                opacity: _page >= 2 ? 1 : 0,
-                duration: AppMotion.micro,
-                child: IgnorePointer(
-                  ignoring: _page < 2,
-                  child: TextButton(
-                    onPressed: () => _finish(),
-                    child: const Text('Skip'),
+            // Top bar: Skip lives in its own row so it never collides with
+            // a step's headline (it used to float over the content).
+            SizedBox(
+              height: 48,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: AnimatedOpacity(
+                    opacity: _page >= 2 ? 1 : 0,
+                    duration: AppMotion.micro,
+                    child: IgnorePointer(
+                      ignoring: _page < 2,
+                      child: TextButton(
+                        onPressed: () => _finish(),
+                        child: const Text('Skip'),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-            Positioned(
-              bottom: 16,
-              left: 0,
-              right: 0,
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _page = i),
+                children: [
+                  WelcomeStep(onNext: () => _goTo(1)),
+                  TrustStep(onNext: () => _goTo(2)),
+                  PersonalizationStep(
+                    selected: _personalization,
+                    onSelected: (v) => setState(() => _personalization = v),
+                    onNext: () => _goTo(3),
+                  ),
+                  HowItWorksStep(
+                    personalization: _personalization,
+                    onNext: () => _goTo(4),
+                  ),
+                  FirstCheckinStep(
+                    onCreateAccount: (score, tag) => _finish(score: score, tag: tag),
+                    onHaveAccount: () => _finish(),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(_kStepCount, (i) {

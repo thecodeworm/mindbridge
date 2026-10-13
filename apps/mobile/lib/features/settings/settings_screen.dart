@@ -146,6 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        actions: const [HelpAction()],
         title: const Text('Settings'),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
@@ -379,7 +380,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
-      floatingActionButton: const CrisisFab(),
     );
   }
 

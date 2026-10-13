@@ -59,34 +59,40 @@ class _YearInPixelsState extends State<YearInPixels> {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
       decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text('Year in pixels', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
           Text(
-            'Year in pixels',
-            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            _dayScores.isEmpty && !_loading
+                ? 'One square per day. They fill with color as you check in.'
+                : '${_dayScores.length} day${_dayScores.length == 1 ? '' : 's'} logged in the past year. Swipe back to see more.',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           if (_loading)
-            const SizedBox(
-              height: 80,
-              child: Center(child: CircularProgressIndicator()),
-            )
+            const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()))
           else ...[
-            if (_dayScores.isEmpty) ...[
-              Text(
-                'Your mood history, visualized',
-                style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              Text(
-                'Each square is a day — colors fill in as you log moods.',
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-              const SizedBox(height: 8),
-            ],
             _PixelGrid(dayScores: _dayScores, cs: cs),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text('Heavy', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+                const SizedBox(width: 6),
+                for (final s in const [1.5, 3.5, 5.5, 7.5, 9.5])
+                  Container(
+                    width: 12,
+                    height: 12,
+                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                    decoration: BoxDecoration(color: moodColor(s), borderRadius: BorderRadius.circular(3)),
+                  ),
+                const SizedBox(width: 6),
+                Text('Great', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+              ],
+            ),
           ],
         ],
       ),
@@ -100,6 +106,10 @@ class _PixelGrid extends StatelessWidget {
   final Map<String, int> dayScores;
   final ColorScheme cs;
 
+  static const _cell = 14.0;
+  static const _gap = 3.0;
+  static const _months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
   String _dateStr(DateTime dt) {
     final local = dt.toLocal();
     return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
@@ -107,63 +117,74 @@ class _PixelGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now().toLocal();
+    final tt = Theme.of(context).textTheme;
+    final now = DateTime.now().toLocal();
+    final today = DateTime(now.year, now.month, now.day);
     final todayStr = _dateStr(today);
 
-    // Start from 364 days ago (Monday of that week for alignment)
+    // Start from 364 days ago, aligned back to that week's Monday.
     final startRaw = today.subtract(const Duration(days: 364));
-    final weekdayOffset = startRaw.weekday - 1; // 0=Mon
-    final start = startRaw.subtract(Duration(days: weekdayOffset));
+    final start = startRaw.subtract(Duration(days: startRaw.weekday - 1));
 
     final weeks = <List<DateTime>>[];
     var day = start;
     while (!day.isAfter(today)) {
-      final week = <DateTime>[];
-      for (var d = 0; d < 7; d++) {
-        week.add(day.add(Duration(days: d)));
-      }
-      weeks.add(week);
+      weeks.add([for (var d = 0; d < 7; d++) day.add(Duration(days: d))]);
       day = day.add(const Duration(days: 7));
     }
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      reverse: true, // open on the most recent weeks
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: weeks.map((week) {
-          return Column(
-            children: week.map((d) {
-              final dStr = _dateStr(d);
-              final isFuture = d.isAfter(today);
-              final score = dayScores[dStr];
-              Color color;
-              if (isFuture) {
-                color = Colors.transparent;
-              } else if (score == null) {
-                color = cs.outline.withValues(alpha: 0.4);
-              } else {
-                color = moodColor(score.toDouble());
-              }
-
-              return Tooltip(
-                message: score != null
-                    ? '$dStr · mood $score'
-                    : dStr == todayStr
-                    ? 'Today'
-                    : dStr,
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  margin: const EdgeInsets.all(1),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(2),
+        children: [
+          for (int w = 0; w < weeks.length; w++)
+            Padding(
+              padding: const EdgeInsets.only(right: _gap),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 16,
+                    width: _cell,
+                    child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      maxWidth: 40,
+                      child: (w == 0 || weeks[w].first.month != weeks[w - 1].first.month)
+                          ? Text(_months[weeks[w].first.month - 1],
+                              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant))
+                          : const SizedBox.shrink(),
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
-          );
-        }).toList(),
+                  for (final d in weeks[w])
+                    Builder(builder: (context) {
+                      final dStr = _dateStr(d);
+                      final score = dayScores[dStr];
+                      final isFuture = d.isAfter(today);
+                      final isToday = dStr == todayStr;
+                      return Tooltip(
+                        message: score != null ? '$dStr · mood $score' : (isToday ? 'Today' : dStr),
+                        child: Container(
+                          width: _cell,
+                          height: _cell,
+                          margin: const EdgeInsets.only(bottom: _gap),
+                          decoration: BoxDecoration(
+                            color: isFuture
+                                ? Colors.transparent
+                                : score == null
+                                    ? cs.surfaceContainerHigh
+                                    : moodColor(score.toDouble()),
+                            borderRadius: BorderRadius.circular(3.5),
+                            border: isToday ? Border.all(color: cs.primary, width: 1.5) : null,
+                          ),
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

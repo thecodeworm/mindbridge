@@ -58,7 +58,7 @@ class _MoodTrendChartState extends State<MoodTrendChart>
     final data = _data;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
       decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -66,7 +66,7 @@ class _MoodTrendChartState extends State<MoodTrendChart>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Mood trend', style: tt.titleMedium),
+              Text('Mood trend', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
               _RangeToggle(
                 value: _rangeDays,
                 onChanged: (v) {
@@ -84,7 +84,7 @@ class _MoodTrendChartState extends State<MoodTrendChart>
                 child: Text(
                   'No entries in this range yet — log a mood to start your trend.',
                   textAlign: TextAlign.center,
-                  style: tt.bodySmall,
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ),
             )
@@ -105,7 +105,10 @@ class _MoodTrendChartState extends State<MoodTrendChart>
                         ),
                         child: SizedBox(
                           width: constraints.maxWidth,
-                          child: chart,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 10, right: 14),
+                            child: chart,
+                          ),
                         ),
                       ),
                     ),
@@ -129,11 +132,17 @@ class _MoodTrendChartState extends State<MoodTrendChart>
       LineChartData(
         minY: 1,
         maxY: 10,
+        minX: -0.25,
+        maxX: data.length - 0.75,
         gridData: FlGridData(
-          horizontalInterval: 2,
+          horizontalInterval: 1,
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) =>
-              FlLine(color: cs.outline, strokeWidth: 1),
+          checkToShowHorizontalLine: (v) => _kAxisMarks.contains(v.round()) && (v - v.round()).abs() < 0.01,
+          getDrawingHorizontalLine: (v) => FlLine(
+            color: cs.outline,
+            strokeWidth: 1,
+            dashArray: v.round() == 1 ? null : [4, 4],
+          ),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
@@ -146,10 +155,18 @@ class _MoodTrendChartState extends State<MoodTrendChart>
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: 3,
+              interval: 1,
               reservedSize: 28,
-              getTitlesWidget: (value, meta) =>
-                  Text(value.round().toString(), style: tt.bodySmall),
+              getTitlesWidget: (value, meta) {
+                final v = value.round();
+                if (!_kAxisMarks.contains(v) || (value - v).abs() > 0.01) {
+                  return const SizedBox.shrink();
+                }
+                return Text(
+                  '$v',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                );
+              },
             ),
           ),
           bottomTitles: AxisTitles(
@@ -159,12 +176,14 @@ class _MoodTrendChartState extends State<MoodTrendChart>
               interval: data.length > 8 ? (data.length / 4).ceilToDouble() : 1,
               getTitlesWidget: (value, meta) {
                 final i = value.round();
-                if (i < 0 || i >= data.length) return const SizedBox.shrink();
+                if (i < 0 || i >= data.length || (value - i).abs() > 0.01) {
+                  return const SizedBox.shrink();
+                }
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     _tickLabel(data[i].loggedAt),
-                    style: tt.bodySmall,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 );
               },
@@ -212,7 +231,8 @@ class _MoodTrendChartState extends State<MoodTrendChart>
                   ? [for (int i = 0; i < data.length; i++) i / (data.length - 1)]
                   : [0.0, 1.0],
             ),
-            barWidth: 2,
+            barWidth: 3,
+            isStrokeCapRound: true,
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
@@ -226,10 +246,10 @@ class _MoodTrendChartState extends State<MoodTrendChart>
             ),
             dotData: FlDotData(
               getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
-                radius: 4,
+                radius: 4.5,
                 color: moodColor(spot.y),
                 strokeColor: cs.surface,
-                strokeWidth: 1,
+                strokeWidth: 2,
               ),
             ),
           ),
@@ -238,6 +258,9 @@ class _MoodTrendChartState extends State<MoodTrendChart>
     );
   }
 }
+
+/// Y-axis marks: bottom, middle and top of the 1–10 scale only.
+const _kAxisMarks = {1, 5, 10};
 
 class _RangeToggle extends StatelessWidget {
   const _RangeToggle({required this.value, required this.onChanged});
@@ -254,15 +277,18 @@ class _RangeToggle extends StatelessWidget {
       return GestureDetector(
         onTap: () => onChanged(days),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: selected ? cs.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
+            color: selected ? cs.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: selected
+                ? const [BoxShadow(color: Color(0x14000000), offset: Offset(0, 1), blurRadius: 3)]
+                : null,
           ),
           child: Text(
             '${days}d',
             style: TextStyle(
-              color: selected ? cs.onPrimary : cs.onSurfaceVariant,
+              color: selected ? cs.onSurface : cs.onSurfaceVariant,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
@@ -272,10 +298,10 @@ class _RangeToggle extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        border: Border.all(color: cs.outline),
-        borderRadius: BorderRadius.circular(10),
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

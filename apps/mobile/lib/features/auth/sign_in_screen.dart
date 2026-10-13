@@ -65,6 +65,10 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: const [HelpAction()],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -214,7 +218,6 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         ),
       ),
-      floatingActionButton: const CrisisFab(),
     );
   }
 }

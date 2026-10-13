@@ -36,7 +36,10 @@ class MoodTagPicker extends StatelessWidget {
               onPressed: () => onQuadrantChanged(q['value']),
               style: OutlinedButton.styleFrom(
                 alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               child: Text('${q['emoji']}  ${q['label']}'),
             ),
@@ -57,7 +60,9 @@ class MoodTagPicker extends StatelessWidget {
               },
               icon: const Icon(Icons.arrow_back, size: 16),
               label: Text(
-                kMoodQuadrants.firstWhere((q) => q['value'] == quadrant)['label']!,
+                kMoodQuadrants.firstWhere(
+                  (q) => q['value'] == quadrant,
+                )['label']!,
                 style: tt.bodySmall,
               ),
               style: TextButton.styleFrom(
@@ -80,7 +85,9 @@ class MoodTagPicker extends StatelessWidget {
               onSelected: (_) => onTagChanged(t['value']),
               selectedColor: cs.primaryContainer,
               checkmarkColor: cs.primary,
-              labelStyle: TextStyle(color: selected ? cs.primary : cs.onSurface),
+              labelStyle: TextStyle(
+                color: selected ? cs.primary : cs.onSurface,
+              ),
             );
           }).toList(),
         ),

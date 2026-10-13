@@ -10,6 +10,13 @@ String _prevWeekStart() {
   return '${lastMonday.year}-${lastMonday.month.toString().padLeft(2, '0')}-${lastMonday.day.toString().padLeft(2, '0')}';
 }
 
+String _weekLabel() {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  final start = DateTime.parse(_prevWeekStart());
+  final end = start.add(const Duration(days: 6));
+  return '${months[start.month - 1]} ${start.day} – ${months[end.month - 1]} ${end.day}';
+}
+
 class WeeklySummaryCard extends StatefulWidget {
   const WeeklySummaryCard({super.key, required this.userId});
 
@@ -101,28 +108,47 @@ class _WeeklySummaryCardState extends State<WeeklySummaryCard> {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
       decoration: AppElevation.decoration(context),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Last week\'s summary', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.auto_awesome_outlined, size: 20, color: cs.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Your week in review', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              ),
+              Text(_weekLabel(), style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+            ],
+          ),
+          const SizedBox(height: 12),
           if (_loading)
-            const Center(child: CircularProgressIndicator())
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(child: CircularProgressIndicator()),
+            )
           else if (_summary != null) ...[
-            Text(_summary!.summary, style: tt.bodySmall),
+            Text(_summary!.summary, style: tt.bodyLarge?.copyWith(height: 1.45)),
             if (_summary!.highlights.isNotEmpty) ...[
               const SizedBox(height: 8),
               ..._summary!.highlights.map(
                 (h) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: 6),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('• ', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 10),
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
+                        ),
+                      ),
                       Expanded(
-                        child: Text(h, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                        child: Text(h, style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
                       ),
                     ],
                   ),
@@ -131,18 +157,20 @@ class _WeeklySummaryCardState extends State<WeeklySummaryCard> {
             ],
           ] else ...[
             Text(
-              'Get a gentle reflection on last week\'s mood patterns.',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              'A short, kind reflection on last week: what stood out and what seemed to help.',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 14),
             if (_error != null) ...[
-              Text(_error!, style: tt.bodySmall?.copyWith(color: cs.error)),
-              const SizedBox(height: 8),
+              Text(_error!, style: tt.bodyMedium?.copyWith(color: cs.error)),
+              const SizedBox(height: 10),
             ],
-            FilledButton(
+            OutlinedButton.icon(
               onPressed: _generating ? null : _generate,
-              style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
-              child: Text(_generating ? 'Generating…' : 'Generate summary'),
+              icon: _generating
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.auto_awesome_outlined, size: 18),
+              label: Text(_generating ? 'Writing your review…' : 'Write my week in review'),
             ),
           ],
         ],

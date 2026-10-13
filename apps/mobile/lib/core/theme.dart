@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// MindBridge design tokens + light/dark [ThemeData].
 ///
@@ -17,6 +16,11 @@ class AppColors {
   static const surface = Color(0xFFF4EFE6);
   static const border = Color(0xFFE5DDD0);
   static const field = Color(0xFFFFFFFF);
+
+  /// Card fill. Slightly lifted off the cream page (rather than the darker
+  /// `surface` beige, which made every card read as a muddy inset). The
+  /// beige `surface` is still used for inset wells, chips and toggles.
+  static const card = Color(0xFFFFFCF7);
 
   static const blue = Color(0xFF4A80B5);
   static const blueDark = Color(0xFF3A6A9A);
@@ -42,6 +46,7 @@ class AppColors {
   static const dSurface = Color(0xFF2A2420);
   static const dBorder = Color(0xFF3D3530);
   static const dField = Color(0xFF322B26);
+  static const dCard = Color(0xFF26201C);
 
   static const dBlue = Color(0xFF6B9DCE);
   static const dBlueDark = Color(0xFF8BB5E0);
@@ -69,7 +74,8 @@ class AppTheme {
   static ThemeData get light => _build(
     brightness: Brightness.light,
     scaffold: AppColors.cream,
-    surface: AppColors.surface,
+    surface: AppColors.card,
+    inset: AppColors.surface,
     field: AppColors.field,
     border: AppColors.border,
     accent: AppColors.blueDark,
@@ -85,7 +91,8 @@ class AppTheme {
   static ThemeData get dark => _build(
     brightness: Brightness.dark,
     scaffold: AppColors.dCream,
-    surface: AppColors.dSurface,
+    surface: AppColors.dCard,
+    inset: AppColors.dSurface,
     field: AppColors.dField,
     border: AppColors.dBorder,
     accent: AppColors.dBlueDark,
@@ -104,8 +111,9 @@ class AppTheme {
   /// and everything below stay Figtree for UI-chrome legibility.
   static TextTheme _textTheme(Color ink) {
     final base = Typography.material2021(platform: TargetPlatform.iOS).black;
-    final body = GoogleFonts.figtreeTextTheme(base);
-    final display = GoogleFonts.frauncesTextTheme(base);
+    // Both families are bundled in assets/fonts (see pubspec.yaml).
+    final body = base.apply(fontFamily: 'Figtree');
+    final display = base.apply(fontFamily: 'Fraunces');
     return body
         .copyWith(
           displayLarge: display.displayLarge,
@@ -123,6 +131,7 @@ class AppTheme {
     required Brightness brightness,
     required Color scaffold,
     required Color surface,
+    required Color inset,
     required Color field,
     required Color border,
     required Color accent,
@@ -148,7 +157,25 @@ class AppTheme {
       errorContainer: errorContainer,
       onErrorContainer: onErrorContainer,
       outline: border,
+      outlineVariant: border,
+      surfaceContainerLowest: surface,
+      surfaceContainerLow: inset,
+      surfaceContainer: inset,
+      surfaceContainerHigh: inset,
+      surfaceContainerHighest: inset,
+      primaryContainer: brightness == Brightness.dark
+          ? AppColors.dBlueTint
+          : AppColors.blueTint,
+      onPrimaryContainer: accent,
+      tertiary: brightness == Brightness.dark
+          ? AppColors.dTerraDark
+          : AppColors.terraDark,
+      tertiaryContainer: brightness == Brightness.dark
+          ? AppColors.dTerraTint
+          : AppColors.terraTint,
+      surfaceTint: Colors.transparent,
     );
+    final textTheme = _textTheme(ink);
 
     OutlineInputBorder inputBorder(Color color, [double width = 1]) =>
         OutlineInputBorder(
@@ -161,7 +188,57 @@ class AppTheme {
       brightness: brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: scaffold,
-      textTheme: _textTheme(ink),
+      textTheme: textTheme,
+      splashFactory: InkSparkle.splashFactory,
+      appBarTheme: AppBarTheme(
+        backgroundColor: scaffold,
+        foregroundColor: ink,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleTextStyle: textTheme.titleLarge?.copyWith(fontSize: 22),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: brightness == Brightness.dark
+            ? AppColors.dBlueTint
+            : AppColors.blueTint,
+        elevation: 0,
+        height: 68,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => textTheme.labelMedium?.copyWith(
+            color: states.contains(WidgetState.selected) ? accent : muted,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+          ),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected) ? accent : muted,
+          ),
+        ),
+      ),
+      dividerTheme: DividerThemeData(color: border, thickness: 1, space: 1),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: ink,
+        contentTextStyle: textTheme.bodyMedium?.copyWith(color: scaffold),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: accent),
+      chipTheme: ChipThemeData(
+        backgroundColor: field,
+        selectedColor: brightness == Brightness.dark
+            ? AppColors.dBlueTint
+            : AppColors.blueTint,
+        side: BorderSide(color: border),
+        shape: const StadiumBorder(),
+        labelStyle: textTheme.bodyMedium?.copyWith(color: ink),
+        checkmarkColor: accent,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: field,

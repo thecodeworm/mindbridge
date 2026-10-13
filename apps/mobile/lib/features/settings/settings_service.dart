@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 
 class SettingsService {
   SettingsService(this._client);
@@ -15,14 +16,14 @@ class SettingsService {
     try {
       await _client.auth.updateUser(UserAttributes(data: {'display_name': trimmed}));
     } on AuthException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
 
     try {
       await _client.from('users').update({'display_name': trimmed}).eq('id', userId);
       return null;
     } on PostgrestException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
@@ -35,7 +36,7 @@ class SettingsService {
       await _client.from('mood_logs').delete().eq('user_id', userId);
       return null;
     } on PostgrestException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 }

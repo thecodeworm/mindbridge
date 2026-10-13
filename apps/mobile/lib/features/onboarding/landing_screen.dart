@@ -25,6 +25,10 @@ class LandingScreen extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: const [HelpAction()],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
@@ -161,7 +165,6 @@ class LandingScreen extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButton: const CrisisFab(),
     );
   }
 }

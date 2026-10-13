@@ -109,6 +109,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Widget _centeredCard(BuildContext context, {required Widget child}) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: const [HelpAction()],
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -128,7 +132,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
         ),
       ),
-      floatingActionButton: const CrisisFab(),
     );
   }
 
@@ -207,6 +210,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     }
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: const [HelpAction()],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -293,7 +300,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ),
         ),
       ),
-      floatingActionButton: const CrisisFab(),
     );
   }
 }

@@ -60,6 +60,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: const [HelpAction()],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -225,7 +229,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         ),
       ),
-      floatingActionButton: const CrisisFab(),
     );
   }
 }

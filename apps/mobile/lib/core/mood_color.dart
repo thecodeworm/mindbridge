@@ -24,3 +24,14 @@ Color moodColor(num score) {
   }
   return _kMoodStops[0].$2;
 }
+
+/// One plain word for a 1–10 score. Deliberately gentle at the low end
+/// ("Heavy", not "Bad") per CLAUDE.md: no shade of the scale means failure.
+String moodWord(num score) {
+  final s = score.round();
+  if (s <= 2) return 'Heavy';
+  if (s <= 4) return 'Low';
+  if (s <= 6) return 'Okay';
+  if (s <= 8) return 'Good';
+  return 'Great';
+}

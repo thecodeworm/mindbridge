@@ -42,7 +42,6 @@ dependencies:
   share_plus: ^10.0.0
   flutter_local_notifications: ^18.0.0
   local_auth: ^2.3.0
-  google_fonts: ^6.2.1
   # Imported from lib/main.dart (gated behind ENABLE_FLUTTER_DRIVER) to
   # support the verify-mobile QA driver — must be a real dependency, not
   # dev_dependencies, since flutter analyze's depend_on_referenced_packages
@@ -76,6 +75,28 @@ flutter:
 
   assets:
     - assets/google_logo.svg
+
+  # Fraunces (display) + Figtree (body), bundled so text renders in the right
+  # face on first launch and offline, instead of fetching from Google Fonts.
+  fonts:
+    - family: Figtree
+      fonts:
+        - asset: assets/fonts/Figtree-Regular.ttf
+        - asset: assets/fonts/Figtree-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Figtree-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Figtree-Bold.ttf
+          weight: 700
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces-Regular.ttf
+        - asset: assets/fonts/Fraunces-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Fraunces-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Fraunces-Bold.ttf
+          weight: 700
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

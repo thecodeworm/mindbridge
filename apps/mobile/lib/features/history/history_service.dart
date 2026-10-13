@@ -10,7 +10,7 @@ const _kNotFound = "We couldn't find that entry. It may have already been delete
 // A freshly-minted session JWT can occasionally be checked a moment before the
 // server clock agrees it's valid ("token used before issued") right after
 // login. It's transient — one retry after a short delay clears it.
-const _kTransientAuthError = "Still getting things ready — pull to refresh in a moment.";
+const _kTransientAuthError = "Still getting things ready. Pull down to refresh in a moment.";
 
 bool _isClockSkewError(String message) {
   final m = message.toLowerCase();
@@ -35,7 +35,7 @@ class HistoryService {
           await Future.delayed(const Duration(milliseconds: 500));
           return await _fetchHistory(userId: userId, limit: limit, offset: offset);
         } on PostgrestException {
-          throw const AppException(_kTransientAuthError);
+          throw AppException(_kTransientAuthError);
         }
       }
       throw AppException(e.message);
@@ -134,7 +134,7 @@ class HistoryService {
       if ((deleted as List<dynamic>).isEmpty) return _kNotFound;
       return null;
     } on PostgrestException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
@@ -191,7 +191,7 @@ class HistoryService {
 
       return null;
     } on PostgrestException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
@@ -214,7 +214,7 @@ class HistoryService {
           .eq('user_id', userId);
       return null;
     } on PostgrestException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
