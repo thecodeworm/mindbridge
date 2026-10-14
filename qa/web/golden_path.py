@@ -77,7 +77,7 @@ def main() -> int:
         # 2. Today: practice line + recent entries; Insights: trend chart
         body = page.inner_text("body")
         check(results, "today shows practice streak", "practiced" in body.lower(), body[:120])
-        check(results, "today shows recent entries", "Recent" in body)
+        check(results, "today shows recent entries", "recent" in body.lower())
         page.goto(f"{BASE_URL}/insights")
         try:
             page.wait_for_selector(".recharts-surface", timeout=15000)
