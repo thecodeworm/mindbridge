@@ -127,8 +127,6 @@
 
     /* In dark mode the accent fills are light, so button text is dark. */
     --on-accent: #0b1030;
-  --hl-top: 8%;
-  --hl-ink: #14161b;
     --hl-top: 8%;
     --hl-ink: #14161b;
 
@@ -170,6 +168,8 @@
   --error-tint: #341622;
 
   --on-accent: #0b1030;
+  --hl-top: 8%;
+  --hl-ink: #14161b;
 
   --shadow-resting: none;
   --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.45);
