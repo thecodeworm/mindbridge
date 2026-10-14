@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/recovery_state.dart';
 import '../../core/validators.dart';
 import '../../widgets/crisis_fab.dart';
+import '../../widgets/notebook.dart';
+import '../../core/mood_color.dart';
 import 'auth_service.dart';
 
 /// Shown in place of [HomeScreen]/[SignInScreen] by `AuthGate` when the
@@ -49,7 +51,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     if (error != null) {
       // A session/JWT error means the recovery link expired before submission.
       final lc = error.toLowerCase();
-      final isSessionError = lc.contains('session') ||
+      final isSessionError =
+          lc.contains('session') ||
           lc.contains('jwt') ||
           lc.contains('expired') ||
           lc.contains('missing');
@@ -79,54 +82,32 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   bool get _isGoogleOnly {
-    final identities = Supabase.instance.client.auth.currentUser?.identities ?? [];
-    return identities.isNotEmpty && identities.every((i) => i.provider != 'email');
+    final identities =
+        Supabase.instance.client.auth.currentUser?.identities ?? [];
+    return identities.isNotEmpty &&
+        identities.every((i) => i.provider != 'email');
   }
 
-  Widget _brandHeader(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        Text(
-          'MindBridge',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            color: cs.primary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Track your mood, grow your mind.',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: cs.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _centeredCard(BuildContext context, {required Widget child}) {
+  Widget _authPage(BuildContext context, {required Widget child}) {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        title: const Text('MindBridge'),
+        titleTextStyle: Theme.of(context).textTheme.titleLarge,
         actions: const [HelpAction()],
       ),
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _brandHeader(context),
-                  const SizedBox(height: 32),
-                  child,
-                ],
+        child: SingleChildScrollView(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [const SizedBox(height: 32), child],
+                ),
               ),
             ),
           ),
@@ -140,78 +121,95 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final cs = Theme.of(context).colorScheme;
 
     if (_done) {
-      return _centeredCard(context, child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('✅', textAlign: TextAlign.center, style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 16),
-          Text(
-            'Password updated',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'You can sign in with your new password now.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _cancel,
-            child: const Text('Back to sign in'),
-          ),
-        ],
-      ));
+      return _authPage(
+        context,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Icon(Icons.check_outlined, size: 32, color: cs.primary),
+            const SizedBox(height: 16),
+            Text(
+              'Password updated',
+              textAlign: TextAlign.left,
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You can sign in with your new password now.',
+              textAlign: TextAlign.left,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _cancel,
+              child: const Text('Back to sign in'),
+            ),
+          ],
+        ),
+      );
     }
 
     if (_expired) {
-      return _centeredCard(context, child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'This link has expired',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Reset links only work once and expire after a while. Request a new one from the sign in page.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton(
-            onPressed: _cancel,
-            child: const Text('Request a new link'),
-          ),
-        ],
-      ));
+      return _authPage(
+        context,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'This link has expired',
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Reset links only work once and expire after a while. Request a new one from the sign in page.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton(
+              onPressed: _cancel,
+              child: const Text('Request a new link'),
+            ),
+          ],
+        ),
+      );
     }
 
     if (_isGoogleOnly) {
-      return _centeredCard(context, child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'You signed up with Google',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "There's no password to reset. Just use the Google button to sign in.",
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _cancel,
-            child: const Text('Back to sign in'),
-          ),
-        ],
-      ));
+      return _authPage(
+        context,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'You signed up with Google',
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "There's no password to reset. Just use the Google button to sign in.",
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: _cancel,
+              child: const Text('Back to sign in'),
+            ),
+          ],
+        ),
+      );
     }
 
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        title: const Text('MindBridge'),
+        titleTextStyle: Theme.of(context).textTheme.titleLarge,
         actions: const [HelpAction()],
       ),
       body: SafeArea(
@@ -219,29 +217,34 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           padding: const EdgeInsets.all(24),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
+              constraints: const BoxConstraints(maxWidth: 440),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 32),
-                  _brandHeader(context),
-                  const SizedBox(height: 32),
-                  Text(
-                    'Set a new password',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  Highlight(
+                    'Set a new password.',
+                    color: moodColor(5),
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
                   const SizedBox(height: 16),
                   if (_error != null) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: cs.errorContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         _error!,
-                        style: TextStyle(color: cs.onErrorContainer, fontSize: 13),
+                        style: TextStyle(
+                          color: cs.onErrorContainer,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -263,8 +266,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
                               ),
-                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                              tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                              tooltip: _obscurePassword
+                                  ? 'Show password'
+                                  : 'Hide password',
                             ),
                           ),
                           obscureText: _obscurePassword,
@@ -274,20 +281,30 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _confirmController,
-                          decoration: const InputDecoration(labelText: 'Confirm new password'),
+                          decoration: const InputDecoration(
+                            labelText: 'Confirm new password',
+                          ),
                           obscureText: _obscurePassword,
                           autofillHints: const [AutofillHints.newPassword],
-                          validator: (v) =>
-                              validatePasswordConfirmation(v, _passwordController.text),
+                          validator: (v) => validatePasswordConfirmation(
+                            v,
+                            _passwordController.text,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         FilledButton(
-                          onPressed: (_submitting || _cancelling) ? null : _submit,
-                          child: Text(_submitting ? 'Saving…' : 'Save new password'),
+                          onPressed: (_submitting || _cancelling)
+                              ? null
+                              : _submit,
+                          child: Text(
+                            _submitting ? 'Saving…' : 'Save new password',
+                          ),
                         ),
                         const SizedBox(height: 8),
                         TextButton(
-                          onPressed: (_submitting || _cancelling) ? null : _cancel,
+                          onPressed: (_submitting || _cancelling)
+                              ? null
+                              : _cancel,
                           child: Text(_cancelling ? 'Cancelling…' : 'Cancel'),
                         ),
                       ],

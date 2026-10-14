@@ -6,6 +6,7 @@ import 'steps/how_it_works_step.dart';
 import 'steps/personalization_step.dart';
 import 'steps/trust_step.dart';
 import 'steps/welcome_step.dart';
+import '../../widgets/crisis_fab.dart';
 
 const _kStepCount = 5;
 
@@ -61,24 +62,23 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
           children: [
             // Top bar: Skip lives in its own row so it never collides with
             // a step's headline (it used to float over the content).
-            SizedBox(
-              height: 48,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: AnimatedOpacity(
-                    opacity: _page >= 2 ? 1 : 0,
-                    duration: AppMotion.micro,
-                    child: IgnorePointer(
-                      ignoring: _page < 2,
-                      child: TextButton(
-                        onPressed: () => _finish(),
-                        child: const Text('Skip'),
-                      ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'MindBridge',
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
-                ),
+                  if (_page >= 2)
+                    TextButton(
+                      onPressed: () => _finish(),
+                      child: const Text('Skip'),
+                    ),
+                  const HelpChip(),
+                ],
               ),
             ),
             Expanded(
@@ -98,7 +98,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                     onNext: () => _goTo(4),
                   ),
                   FirstCheckinStep(
-                    onCreateAccount: (score, tag) => _finish(score: score, tag: tag),
+                    onCreateAccount: (score, tag) =>
+                        _finish(score: score, tag: tag),
                     onHaveAccount: () => _finish(),
                   ),
                 ],
@@ -113,11 +114,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   return AnimatedContainer(
                     duration: AppMotion.micro,
                     margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: active ? 20 : 6,
+                    width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(3),
-                      color: active ? cs.primary : cs.outline,
+                      borderRadius: BorderRadius.circular(2),
+                      color: active ? cs.onSurface : cs.outline,
                     ),
                   );
                 }),

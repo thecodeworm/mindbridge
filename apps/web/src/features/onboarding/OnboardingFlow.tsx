@@ -1,3 +1,4 @@
+import { CrisisChip } from '../../components/CrisisChip'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { MoodTag } from '../../../../../shared/types'
@@ -52,33 +53,17 @@ export function OnboardingFlow() {
   ]
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-cream py-16">
-      {page >= 2 && (
-        <button
-          type="button"
-          onClick={() => finish('/login')}
-          className="absolute right-4 top-4 rounded-[10px] px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:text-ink"
-        >
-          Skip
-        </button>
-      )}
-
-      <div key={page} className="animate-step-enter w-full">
+    <div className="flex h-dvh flex-col overflow-hidden bg-cream px-6 pb-4 pt-5">
+      <header className="mx-auto flex w-full max-w-md items-center gap-2">
+        <span className="flex-1 font-display text-xl font-black tracking-tight text-ink">MindBridge</span>
+        {page >= 2 && <button type="button" onClick={() => finish('/login')} className="rounded-[10px] px-3 py-2 font-semibold text-muted hover:text-ink">Skip</button>}
+        <CrisisChip inline />
+      </header>
+      <main key={page} className="animate-step-enter mx-auto grid w-full max-w-md min-h-0 flex-1 pt-10">
         {steps[page]}
-      </div>
-
-      <div className="absolute bottom-4 flex justify-center gap-1.5">
-        {Array.from({ length: STEP_COUNT }).map((_, i) => (
-          <span
-            key={i}
-            className="rounded-full transition-all"
-            style={{
-              width: i === page ? 20 : 6,
-              height: 6,
-              backgroundColor: i === page ? 'var(--blue-dark)' : 'var(--border)',
-            }}
-          />
-        ))}
+      </main>
+      <div className="mt-5 flex justify-center gap-1.5" aria-label={`Step ${page + 1} of ${STEP_COUNT}`}>
+        {Array.from({ length: STEP_COUNT }).map((_, i) => <span key={i} className={`h-1.5 w-1.5 rounded-[2px] ${i === page ? 'bg-ink' : 'bg-border'}`} />)}
       </div>
     </div>
   )

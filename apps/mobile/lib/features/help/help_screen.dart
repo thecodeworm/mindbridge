@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/elevation.dart';
 import '../../core/theme.dart';
-import '../../widgets/breathing_circle.dart';
+import '../../widgets/crisis_fab.dart';
+import '../../widgets/notebook.dart';
+import '../../core/mood_color.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -19,6 +21,7 @@ class HelpScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Crisis resources'),
+        actions: const [HelpAction()],
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         foregroundColor: cs.onSurface,
@@ -27,20 +30,18 @@ class HelpScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Center(child: BreathingCircle(color: terra, size: 80)),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: terraTint,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: terra),
-              ),
-              child: Text(
-                "You're not alone. Confidential support is available 24/7. It's free and judgment-free.",
-                style: tt.bodyMedium?.copyWith(color: terraDark),
+            Text("You're not", style: tt.displaySmall),
+            Highlight('alone.', color: moodColor(9), style: tt.displaySmall),
+            const SizedBox(height: 16),
+            Text(
+              "Confidential support is available 24/7. It's free and judgment-free.",
+              style: tt.bodyLarge?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.45,
               ),
             ),
+            const SizedBox(height: 28),
+            const SectionLabel('Reach out'),
             const SizedBox(height: 20),
             _ResourceCard(
               name: '988 Suicide & Crisis Lifeline',
@@ -88,7 +89,7 @@ class HelpScreen extends StatelessWidget {
               'MindBridge is a mood-tracking tool, not a crisis service. '
               'If you or someone you know is in immediate danger, call 911.',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
+              textAlign: TextAlign.left,
             ),
           ],
         ),
@@ -125,14 +126,33 @@ class _ResourceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            name,
-            style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            description,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                chips.first.url.startsWith('tel:')
+                    ? Icons.phone_outlined
+                    : Icons.chat_bubble_outline,
+                color: terraDark,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: tt.titleMedium),
+                    const SizedBox(height: 6),
+                    Text(
+                      description,
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Wrap(

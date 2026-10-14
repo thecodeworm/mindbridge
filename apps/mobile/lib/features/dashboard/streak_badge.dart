@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/motion.dart';
 import '../../core/streaks.dart';
-import '../../core/theme.dart';
 import '../mood/mood_log_service.dart';
 
 /// Persists the highest [StreakResult.longest] value already celebrated with
@@ -41,7 +40,8 @@ class SecureMilestoneStore implements MilestoneStore {
   }
 }
 
-String? _defaultCurrentUserId() => Supabase.instance.client.auth.currentUser?.id;
+String? _defaultCurrentUserId() =>
+    Supabase.instance.client.auth.currentUser?.id;
 
 class StreakBadge extends StatefulWidget {
   const StreakBadge({
@@ -126,9 +126,6 @@ class _StreakBadgeState extends State<StreakBadge>
 
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final success = dark ? AppColors.dSuccess : AppColors.success;
-    final successTint = dark ? AppColors.dSuccessTint : AppColors.successTint;
 
     return AnimatedBuilder(
       animation: _popController,
@@ -143,10 +140,10 @@ class _StreakBadgeState extends State<StreakBadge>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: successTint,
-              borderRadius: BorderRadius.circular(9),
+              color: cs.surfaceContainer,
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.spa_outlined, size: 20, color: success),
+            child: Icon(Icons.spa_outlined, size: 20, color: cs.primary),
           ),
           const SizedBox(width: 12),
           Expanded(

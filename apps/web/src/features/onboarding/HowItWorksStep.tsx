@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
+import { moodColor } from '../../lib/moodColor'
+import { NotebookIcon } from '../../components/NotebookIcon'
 import type { PersonalizationOption } from './PersonalizationStep'
 
 const FRAMES = [
@@ -40,45 +42,28 @@ export function HowItWorksStep({ personalization, onNext }: Props) {
 
   const current = FRAMES[frame]
   const intro = personalization ? INTRO_COPY[personalization] : "Here's a quick look at how it works:"
-
+  const icons = ['slider', 'tag', 'bulb'] as const
   return (
-    <div className="flex flex-col items-center justify-center px-8 text-center">
-      <h1 className="font-display text-2xl font-bold text-ink">{intro}</h1>
-      <div className="mt-10 flex h-40 flex-col items-center justify-center">
-        <div
-          key={frame}
-          className="flex flex-col items-center"
-          style={{
-            animation: `fade-in var(--duration-medium) var(--ease-standard-decelerate)`,
-          }}
-        >
-          <span className="text-5xl">{current.emoji}</span>
-          <p className="mt-4 text-lg font-semibold text-ink">{current.title}</p>
-          <p className="mt-1 text-sm text-muted">{current.subtitle}</p>
+    <div className="flex min-h-0 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto pb-8">
+        <h1 className="text-4xl text-ink sm:text-5xl">Small steps.<br /><span className="hl" style={{ '--mark': moodColor(9) } as CSSProperties}>Every day.</span></h1>
+        <p className="mt-4 text-lg leading-relaxed text-muted">{intro}</p>
+        <p className="label mt-8">How it works</p>
+        <div className="card mt-2.5 p-5" aria-live="polite">
+          <div key={frame}>
+            <div className="flex items-center justify-between text-blue-dark">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-dark font-bold text-on-accent">{frame + 1}</span>
+              <NotebookIcon name={icons[frame]} />
+            </div>
+            <h2 className="mt-6 text-2xl text-ink">{current.title}</h2>
+            <p className="mt-2 text-muted">{current.subtitle}</p>
+          </div>
+        </div>
+        <div className="mt-4 flex gap-1.5" aria-hidden>
+          {FRAMES.map((_, i) => <span key={i} className={`h-1.5 w-1.5 rounded-[2px] ${i === frame ? 'bg-ink' : 'bg-border'}`} />)}
         </div>
       </div>
-      <div className="mt-6 flex justify-center gap-1.5">
-        {FRAMES.map((_, i) => (
-          <span
-            key={i}
-            className="h-1.5 w-1.5 rounded-full transition-colors"
-            style={{ backgroundColor: i === frame ? 'var(--blue-dark)' : 'var(--border)' }}
-          />
-        ))}
-      </div>
-      <button
-        type="button"
-        onClick={onNext}
-        className="mt-10 w-full max-w-xs rounded-[10px] bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
-      >
-        Next
-      </button>
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+      <button type="button" onClick={onNext} className="w-full rounded-[10px] bg-blue-dark px-6 py-3.5 font-display font-extrabold text-on-accent hover:opacity-90">Next</button>
     </div>
   )
 }

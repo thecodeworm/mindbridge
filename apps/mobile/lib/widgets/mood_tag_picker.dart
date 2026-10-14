@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../features/mood/mood_log_service.dart';
+import 'notebook.dart';
 
 /// Two-step quadrant → word mood-tag picker. Extracted from
 /// `mood_log_screen.dart` so the onboarding first-check-in step can reuse the
@@ -29,22 +30,31 @@ class MoodTagPicker extends StatelessWidget {
 
     if (quadrant == null) {
       return Column(
-        children: kMoodQuadrants.map((q) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: OutlinedButton(
-              onPressed: () => onQuadrantChanged(q['value']),
-              style: OutlinedButton.styleFrom(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SectionLabel('Pick a feeling'),
+          const SizedBox(height: 10),
+          ...kMoodQuadrants.map((q) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: OutlinedButton(
+                onPressed: () => onQuadrantChanged(q['value']),
+                style: OutlinedButton.styleFrom(
+                  alignment: Alignment.centerLeft,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  side: BorderSide(color: cs.outline, width: 1.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
+                child: Text(q['label']!),
               ),
-              child: Text('${q['emoji']}  ${q['label']}'),
-            ),
-          );
-        }).toList(),
+            );
+          }),
+        ],
       );
     }
 
@@ -83,10 +93,14 @@ class MoodTagPicker extends StatelessWidget {
               label: Text('${t['emoji']} ${t['label']}'),
               selected: selected,
               onSelected: (_) => onTagChanged(t['value']),
-              selectedColor: cs.primaryContainer,
-              checkmarkColor: cs.primary,
+              selectedColor: cs.onSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              side: BorderSide(color: cs.outline, width: 1.5),
+              checkmarkColor: cs.surface,
               labelStyle: TextStyle(
-                color: selected ? cs.primary : cs.onSurface,
+                color: selected ? cs.surface : cs.onSurface,
               ),
             );
           }).toList(),

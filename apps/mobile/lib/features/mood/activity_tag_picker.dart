@@ -36,11 +36,11 @@ class ActivityTagPicker extends StatelessWidget {
             }
             onChanged(next);
           },
-          selectedColor: cs.primaryContainer,
-          checkmarkColor: cs.primary,
-          labelStyle: TextStyle(
-            color: isSelected ? cs.primary : cs.onSurface,
-          ),
+          selectedColor: cs.onSurface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          side: BorderSide(color: cs.outline, width: 1.5),
+          checkmarkColor: cs.surface,
+          labelStyle: TextStyle(color: isSelected ? cs.surface : cs.onSurface),
         );
       }).toList(),
     );

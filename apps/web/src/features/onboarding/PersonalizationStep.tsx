@@ -1,3 +1,7 @@
+import type { CSSProperties } from 'react'
+import { moodColor } from '../../lib/moodColor'
+import { NotebookIcon } from '../../components/NotebookIcon'
+
 export type PersonalizationOption = 'track' | 'stress' | 'habits' | 'curious'
 
 export const PERSONALIZATION_OPTIONS: { value: PersonalizationOption; emoji: string; label: string }[] = [
@@ -20,40 +24,26 @@ interface Props {
  * apps/mobile/lib/features/onboarding/steps/personalization_step.dart.
  */
 export function PersonalizationStep({ selected, onSelect, onNext }: Props) {
+  const icons = ['chart', 'waves', 'sprout', 'explore'] as const
   return (
-    <div className="flex flex-col items-center justify-center px-8 text-center">
-      <h1 className="font-display text-2xl font-bold text-ink">What brings you here?</h1>
-      <p className="mt-1 text-sm text-muted">
-        Totally optional. It just helps us tailor a few things.
-      </p>
-      <div className="mt-6 flex flex-wrap justify-center gap-2">
-        {PERSONALIZATION_OPTIONS.map((o) => {
-          const isSelected = selected === o.value
-          return (
-            <button
-              key={o.value}
-              type="button"
-              onClick={() => onSelect(isSelected ? null : o.value)}
-              className={[
-                'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
-                isSelected
-                  ? 'border-blue-dark bg-blue-tint text-blue-dark'
-                  : 'border-border bg-field text-ink hover:bg-blue-tint',
-              ].join(' ')}
-            >
-              <span>{o.emoji}</span>
-              <span>{o.label}</span>
-            </button>
-          )
-        })}
+    <div className="flex min-h-0 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto pb-8">
+        <h1 className="text-4xl text-ink sm:text-5xl">What brings<br /><span className="hl" style={{ '--mark': moodColor(7) } as CSSProperties}>you here?</span></h1>
+        <p className="mt-4 text-lg leading-relaxed text-muted">Totally optional. It just helps us tailor a few things.</p>
+        <p className="label mt-8">Pick what fits</p>
+        <div className="mt-2.5 space-y-2.5">
+          {PERSONALIZATION_OPTIONS.map((o, i) => {
+            const isSelected = selected === o.value
+            return (
+              <button key={o.value} type="button" aria-pressed={isSelected} onClick={() => onSelect(isSelected ? null : o.value)} className={`flex w-full items-center gap-3 rounded-lg border-[1.5px] px-4 py-3.5 text-left font-semibold transition-colors ${isSelected ? 'border-ink bg-ink text-cream' : 'border-border bg-field text-ink hover:bg-surface'}`}>
+                <NotebookIcon name={icons[i]} />
+                {o.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
-      <button
-        type="button"
-        onClick={onNext}
-        className="mt-12 w-full max-w-xs rounded-[10px] bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
-      >
-        Next
-      </button>
+      <button type="button" onClick={onNext} className="w-full rounded-[10px] bg-blue-dark px-6 py-3.5 font-display font-extrabold text-on-accent hover:opacity-90">Next</button>
     </div>
   )
 }

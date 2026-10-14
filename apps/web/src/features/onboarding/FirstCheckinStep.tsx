@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import type { MoodTag, MoodQuadrant } from '../../../../../shared/types'
-import { moodColor } from '../../lib/moodColor'
+import { moodColor, moodWord } from '../../lib/moodColor'
 import { BreathingCircle } from '../../components/BreathingCircle'
 import { FeltMoodSlider } from '../../components/FeltMoodSlider'
 import { MoodTagPicker } from '../../components/MoodTagPicker'
@@ -78,70 +78,32 @@ export function FirstCheckinStep({ onCreateAccount, onHaveAccount }: Props) {
   if (showPreview) {
     const sample = (quadrant && SAMPLE_TECHNIQUES[quadrant]) || SAMPLE_TECHNIQUES['low-pleasant']
     return (
-      <div className="mx-auto w-full max-w-md px-8 text-center">
-        <p className="text-sm text-muted">Here's what you'll get after every real check-in:</p>
-        <div className="card mt-4 p-4 text-left">
-          <p className="font-display text-lg font-semibold text-ink">{sample.name}</p>
-          <ol className="mt-3 space-y-2 text-sm text-ink">
-            {sample.steps.map((s, i) => (
-              <li key={i}>
-                {i + 1}. {s}
-              </li>
-            ))}
+      <div className="flex min-h-0 flex-col">
+        <div className="min-h-0 flex-1 overflow-y-auto pb-8">
+          <h1 className="text-3xl text-ink sm:text-4xl"><span className="hl" style={{ '--mark': color } as CSSProperties}>{sample.name}</span></h1>
+          <p className="mt-4 leading-relaxed text-muted">A sample of what you get after every real check-in: one technique, three small steps.</p>
+          <ol className="card mt-5 space-y-5 p-5">
+            {sample.steps.map((s, i) => <li key={i} className="flex items-start gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-dark font-bold text-on-accent">{i + 1}</span><span className="leading-relaxed text-ink">{s}</span></li>)}
           </ol>
         </div>
-        <button
-          type="button"
-          onClick={() => tag && onCreateAccount(score, tag)}
-          className="mt-8 w-full rounded-[10px] bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90"
-        >
-          Save this and create my account
-        </button>
-        <button
-          type="button"
-          onClick={onHaveAccount}
-          className="mt-2 w-full rounded-[10px] px-6 py-3 text-sm font-medium text-blue-dark transition-colors hover:underline"
-        >
-          I already have an account
-        </button>
+        <button type="button" onClick={() => tag && onCreateAccount(score, tag)} className="w-full rounded-[10px] bg-blue-dark px-6 py-3.5 font-display font-extrabold text-on-accent hover:opacity-90">Save this and create my account</button>
+        <button type="button" onClick={onHaveAccount} className="mt-2 w-full rounded-[10px] px-6 py-3 text-sm font-semibold text-blue-dark hover:underline">I already have an account</button>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto w-full max-w-md px-8 text-center">
-      <h1 className="font-display text-xl font-bold text-ink">
-        Let's try it. How are you feeling right now?
-      </h1>
-      <div className="mt-6 flex items-center justify-between text-left">
-        <span className="text-sm text-muted">Mood score</span>
-        <span className="text-2xl font-bold tabular-nums" style={{ color }}>
-          {Math.round(score)}
-        </span>
+    <div className="flex min-h-0 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto pb-8">
+        <h1 className="text-3xl text-ink sm:text-4xl">Let's try it. How are you feeling right now?</h1>
+        <div className="mt-7 flex items-baseline gap-3">
+          <span className="tabular font-display text-4xl font-black text-ink">{Math.round(score)}</span>
+          <span className="hl font-display text-2xl font-black" style={{ '--mark': color } as CSSProperties}>{moodWord(score)}</span>
+        </div>
+        <FeltMoodSlider value={score} onChange={setScore} />
+        <div className="mt-4"><MoodTagPicker quadrant={quadrant} tag={tag} onQuadrantChange={setQuadrant} onTagChange={setTag} /></div>
       </div>
-      <FeltMoodSlider value={score} onChange={setScore} />
-      <div className="mt-4 text-left">
-        <MoodTagPicker
-          quadrant={quadrant}
-          tag={tag}
-          onQuadrantChange={setQuadrant}
-          onTagChange={setTag}
-        />
-      </div>
-      <div className="mt-8 flex justify-center">
-        {generating ? (
-          <BreathingCircle color={color} size={72} />
-        ) : (
-          <button
-            type="button"
-            disabled={!tag}
-            onClick={reveal}
-            className="w-full rounded-[10px] bg-blue-dark px-6 py-3 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            See what you'd get
-          </button>
-        )}
-      </div>
+      {generating ? <div className="flex h-20 items-center justify-center" role="status" aria-label="Preparing your sample"><BreathingCircle color={color} size={72} /></div> : <button type="button" disabled={!tag} onClick={reveal} className="w-full rounded-[10px] bg-blue-dark px-6 py-3.5 font-display font-extrabold text-on-accent hover:opacity-90 disabled:opacity-50">See what you'd get</button>}
     </div>
   )
 }

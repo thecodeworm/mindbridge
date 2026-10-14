@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/crisis_fab.dart';
+import '../../widgets/notebook.dart';
+import '../../core/mood_color.dart';
 import 'auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -32,25 +34,38 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _submitting = true; _error = null; });
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
     final error = await _authService.signIn(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
     if (!mounted) return;
-    setState(() { _submitting = false; _error = error; });
+    setState(() {
+      _submitting = false;
+      _error = error;
+    });
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() { _googleSubmitting = true; _error = null; });
+    setState(() {
+      _googleSubmitting = true;
+      _error = null;
+    });
     final error = await _authService.signInWithGoogle();
     if (!mounted) return;
-    setState(() { _googleSubmitting = false; });
+    setState(() {
+      _googleSubmitting = false;
+    });
     if (error != null) setState(() => _error = error);
   }
 
   Future<void> _showForgotPasswordDialog() async {
-    final emailController = TextEditingController(text: _emailController.text.trim());
+    final emailController = TextEditingController(
+      text: _emailController.text.trim(),
+    );
     await showDialog<void>(
       context: context,
       builder: (ctx) => _ForgotPasswordDialog(
@@ -67,6 +82,8 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        title: const Text('MindBridge'),
+        titleTextStyle: Theme.of(context).textTheme.titleLarge,
         actions: const [HelpAction()],
       ),
       body: SafeArea(
@@ -74,45 +91,38 @@ class _SignInScreenState extends State<SignInScreen> {
           padding: const EdgeInsets.all(24),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
+              constraints: const BoxConstraints(maxWidth: 440),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 32),
-                  // Brand header
                   Text(
-                    'MindBridge',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    'Welcome back.',
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Track your mood, grow your mind.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
+                  Highlight(
+                    'Log in.',
+                    color: moodColor(5),
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'Welcome back',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   if (_error != null) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: cs.errorContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         _error!,
-                        style: TextStyle(color: cs.onErrorContainer, fontSize: 13),
+                        style: TextStyle(
+                          color: cs.onErrorContainer,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -126,7 +136,11 @@ class _SignInScreenState extends State<SignInScreen> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : SvgPicture.asset('assets/google_logo.svg', width: 18, height: 18),
+                        : SvgPicture.asset(
+                            'assets/google_logo.svg',
+                            width: 18,
+                            height: 18,
+                          ),
                     label: const Text('Continue with Google'),
                   ),
                   const SizedBox(height: 16),
@@ -137,9 +151,8 @@ class _SignInScreenState extends State<SignInScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
                           'or',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
                         ),
                       ),
                       const Expanded(child: Divider()),
@@ -155,12 +168,18 @@ class _SignInScreenState extends State<SignInScreen> {
                         children: [
                           TextFormField(
                             controller: _emailController,
-                            decoration: const InputDecoration(labelText: 'Email'),
+                            decoration: const InputDecoration(
+                              labelText: 'Email',
+                            ),
                             keyboardType: TextInputType.emailAddress,
                             autofillHints: const [AutofillHints.email],
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty) return 'Email is required';
-                              if (!v.contains('@')) return "That email doesn't look right";
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Email is required';
+                              }
+                              if (!v.contains('@')) {
+                                return "That email doesn't look right";
+                              }
                               return null;
                             },
                           ),
@@ -175,14 +194,19 @@ class _SignInScreenState extends State<SignInScreen> {
                                       ? Icons.visibility_off_outlined
                                       : Icons.visibility_outlined,
                                 ),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                                tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                                tooltip: _obscurePassword
+                                    ? 'Show password'
+                                    : 'Hide password',
                               ),
                             ),
                             obscureText: _obscurePassword,
                             autofillHints: const [AutofillHints.password],
-                            validator: (v) =>
-                                (v == null || v.isEmpty) ? 'Password is required' : null,
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? 'Password is required'
+                                : null,
                           ),
                           const SizedBox(height: 4),
                           Align(
@@ -190,7 +214,9 @@ class _SignInScreenState extends State<SignInScreen> {
                             child: TextButton(
                               onPressed: _showForgotPasswordDialog,
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
                                 minimumSize: Size.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
@@ -241,13 +267,24 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
   bool _sent = false;
 
   Future<void> _send() async {
-    setState(() { _sending = true; _error = null; });
-    final error = await widget.authService.resetPassword(widget.emailController.text.trim());
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    final error = await widget.authService.resetPassword(
+      widget.emailController.text.trim(),
+    );
     if (!mounted) return;
     if (error != null) {
-      setState(() { _sending = false; _error = error; });
+      setState(() {
+        _sending = false;
+        _error = error;
+      });
     } else {
-      setState(() { _sending = false; _sent = true; });
+      setState(() {
+        _sending = false;
+        _sent = true;
+      });
     }
   }
 
@@ -257,7 +294,9 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
     if (_sent) {
       return AlertDialog(
         title: const Text('Check your inbox'),
-        content: Text('We sent a reset link to ${widget.emailController.text}.'),
+        content: Text(
+          'We sent a reset link to ${widget.emailController.text}.',
+        ),
         actions: [
           FilledButton(
             onPressed: () => Navigator.pop(context),
@@ -276,7 +315,10 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
           const SizedBox(height: 4),
           Text(
             'Signed up with Google? Use the Google button instead.',
-            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 12),
           if (_error != null) ...[

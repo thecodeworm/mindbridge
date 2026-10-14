@@ -5,6 +5,7 @@ import '../../../widgets/breathing_circle.dart';
 import '../../../widgets/felt_mood_slider.dart';
 import '../../../widgets/mood_tag_picker.dart';
 import '../../../widgets/notebook.dart';
+import '../notebook_step.dart';
 
 /// A small, honest sample bank keyed by quadrant — NOT a real Claude Haiku
 /// call. There's no session/user_id yet at this point in onboarding, so a
@@ -88,7 +89,8 @@ class _FirstCheckinStepState extends State<FirstCheckinStep> {
     final color = moodColor(_score);
 
     if (_showPreview) {
-      final sample = _kSampleTechniques[_quadrant] ?? _kSampleTechniques['low-pleasant']!;
+      final sample =
+          _kSampleTechniques[_quadrant] ?? _kSampleTechniques['low-pleasant']!;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28),
         child: Column(
@@ -98,11 +100,18 @@ class _FirstCheckinStepState extends State<FirstCheckinStep> {
               child: ListView(
                 children: [
                   const SizedBox(height: 8),
-                  Highlight(sample.name, color: color, style: tt.displaySmall?.copyWith(fontSize: 32)),
+                  Highlight(
+                    sample.name,
+                    color: color,
+                    style: tt.displaySmall?.copyWith(fontSize: 32),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'A sample of what you get after every real check-in: one technique, three small steps.',
-                    style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.45),
+                    style: tt.bodyLarge?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      height: 1.45,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Container(
@@ -125,13 +134,24 @@ class _FirstCheckinStepState extends State<FirstCheckinStep> {
                                     color: cs.primary,
                                     borderRadius: BorderRadius.circular(7),
                                   ),
-                                  child: Text('${i + 1}', style: tt.labelLarge?.copyWith(fontWeight: FontWeight.w800, color: cs.onPrimary)),
+                                  child: Text(
+                                    '${i + 1}',
+                                    style: tt.labelLarge?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: cs.onPrimary,
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Padding(
                                     padding: const EdgeInsets.only(top: 3),
-                                    child: Text(step, style: tt.bodyLarge?.copyWith(height: 1.4)),
+                                    child: Text(
+                                      step,
+                                      style: tt.bodyLarge?.copyWith(
+                                        height: 1.4,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -158,48 +178,44 @@ class _FirstCheckinStepState extends State<FirstCheckinStep> {
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 8),
-          Text(
-            "Let's try it. How are you feeling right now?",
-            style: tt.headlineMedium?.copyWith(height: 1.15),
-          ),
-          const SizedBox(height: 28),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                '${_score.round()}',
-                style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(width: 10),
-              Highlight(moodWord(_score), color: color, style: tt.headlineSmall),
-            ],
-          ),
-          FeltMoodSlider(value: _score, onChanged: (v) => setState(() => _score = v)),
-          const SizedBox(height: 16),
-          MoodTagPicker(
-            quadrant: _quadrant,
-            tag: _tag,
-            onQuadrantChanged: (v) => setState(() => _quadrant = v),
-            onTagChanged: (v) => setState(() => _tag = v),
-          ),
-          const SizedBox(height: 32),
-          if (_generating)
-            Center(child: BreathingCircle(color: color, size: 72))
-          else
-            FilledButton(
+    return NotebookStep(
+      action: _generating
+          ? Center(child: BreathingCircle(color: color, size: 72))
+          : FilledButton(
               onPressed: _tag == null ? null : _reveal,
-              child: const Text('See what you\'d get'),
+              child: const Text("See what you'd get"),
             ),
-          const SizedBox(height: 24),
-        ],
-      ),
+      children: [
+        const SizedBox(height: 8),
+        Text(
+          "Let's try it. How are you feeling right now?",
+          style: tt.headlineMedium?.copyWith(height: 1.15),
+        ),
+        const SizedBox(height: 28),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              '${_score.round()}',
+              style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 10),
+            Highlight(moodWord(_score), color: color, style: tt.headlineSmall),
+          ],
+        ),
+        FeltMoodSlider(
+          value: _score,
+          onChanged: (v) => setState(() => _score = v),
+        ),
+        const SizedBox(height: 16),
+        MoodTagPicker(
+          quadrant: _quadrant,
+          tag: _tag,
+          onQuadrantChanged: (v) => setState(() => _quadrant = v),
+          onTagChanged: (v) => setState(() => _tag = v),
+        ),
+      ],
     );
   }
 }
