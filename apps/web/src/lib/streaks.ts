@@ -62,3 +62,27 @@ export function computeStreaks(logs: { logged_at: string }[]): StreakResult {
 
   return { current, longest: Math.max(longest, current) }
 }
+
+export interface PracticeWindow {
+  practiced: number
+  windowDays: number
+}
+
+/**
+ * Non-punitive practice metric: how many of the last `windowDays` calendar
+ * days had a log, with no reset-to-zero on a missed day. Mirrors
+ * apps/mobile/lib/core/streaks.dart's computePracticeWindow.
+ */
+export function computePracticeWindow(
+  logs: { logged_at: string }[],
+  windowDays = 10,
+): PracticeWindow {
+  const logged = new Set(logs.map((l) => toLocalDateStr(l.logged_at)))
+  let practiced = 0
+  for (let i = 0; i < windowDays; i++) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    if (logged.has(toLocalDateStr(d.toISOString()))) practiced++
+  }
+  return { practiced, windowDays }
+}

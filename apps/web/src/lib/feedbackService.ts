@@ -1,3 +1,4 @@
+import { friendlyError } from './friendlyError'
 import { supabase } from './supabaseClient'
 
 export async function updateSuggestionFeedback(
@@ -11,7 +12,7 @@ export async function updateSuggestionFeedback(
     .eq('mood_log_id', moodLogId)
     .eq('user_id', userId)
 
-  return { error: error?.message ?? null }
+  return { error: (error ? friendlyError(error.message) : null) }
 }
 
 export async function getSavedToolkit(
@@ -36,6 +37,6 @@ export async function getSavedToolkit(
     .eq('saved', true)
     .order('generated_at', { ascending: false })
 
-  if (error) return { techniques: [], error: error.message }
+  if (error) return { techniques: [], error: friendlyError(error.message) }
   return { techniques: data ?? [], error: null }
 }

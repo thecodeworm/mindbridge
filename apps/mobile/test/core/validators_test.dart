@@ -42,7 +42,7 @@ void main() {
     test('mismatched confirmation returns mismatch error', () {
       expect(
         validatePasswordConfirmation('different', 'password1'),
-        "Passwords don't match — give that another try",
+        "Passwords don't match. Give that another try",
       );
     });
 

@@ -6,6 +6,8 @@ import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
 import '../../core/theme.dart';
 import '../../widgets/crisis_fab.dart';
+import '../../widgets/feedback_chip.dart';
+import '../../widgets/notebook.dart';
 import '../help/help_screen.dart';
 import '../mood/mood_log_screen.dart';
 import '../mood/mood_log_service.dart';
@@ -150,7 +152,7 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Entry detail'),
+        title: const Text('Entry'),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         foregroundColor: cs.onSurface,
@@ -170,10 +172,11 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                 ),
               ],
             ),
+          const HelpAction(),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -184,7 +187,6 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
           ],
         ),
       ),
-      floatingActionButton: const CrisisFab(),
     );
   }
 
@@ -241,12 +243,12 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
                   alignment: Alignment.center,
                   child: Text(
                     '${moodLog.moodScore}',
                     style: const TextStyle(
-                      color: Color(0xFF1C1917),
+                      color: AppColors.onMood,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -307,11 +309,19 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
             decoration: BoxDecoration(
               color: terraTint,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: terra),
+              border: Border.all(color: terra.withValues(alpha: 0.5)),
             ),
-            child: Text(
-              "If you're in crisis, you're not alone — tap for crisis resources.",
-              style: TextStyle(fontSize: 13, color: terraDark),
+            child: Row(
+              children: [
+                Icon(Icons.favorite_outline, size: 20, color: terraDark),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "You don't have to carry this alone. Tap for people you can reach right now.",
+                    style: tt.bodyMedium?.copyWith(color: terraDark),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -324,51 +334,68 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(detail.copingSuggestion!.techniqueName, style: tt.titleLarge),
+                  Highlight(
+                    detail.copingSuggestion!.techniqueName,
+                    color: moodColor(detail.moodLog.moodScore),
+                    style: tt.headlineMedium,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     detail.copingSuggestion!.description,
                     style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: 16),
-                  ...detail.copingSuggestion!.steps.take(3).toList().asMap().entries.map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('${entry.key + 1}. ', style: tt.bodyMedium),
-                              Expanded(child: Text(entry.value, style: tt.bodyMedium)),
-                            ],
+                  for (final (i, step) in detail.copingSuggestion!.steps.take(3).indexed)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 26,
+                            height: 26,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: cs.primary,
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: Text('${i + 1}', style: tt.labelMedium?.copyWith(fontWeight: FontWeight.w800, color: cs.onPrimary)),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 3),
+                              child: Text(step, style: tt.bodyLarge?.copyWith(height: 1.4)),
+                            ),
+                          ),
+                        ],
                       ),
-                  const SizedBox(height: 16),
-                  // Feedback row
-                  Row(
+                    ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      Text(
-                        'Helpful?',
-                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                      ),
-                      const SizedBox(width: 8),
-                      _FeedbackButton(
-                        icon: '👍',
+                      FeedbackChip(
+                        icon: Icons.thumb_up_outlined,
+                        activeIcon: Icons.thumb_up,
+                        label: 'Helpful',
                         active: _helpful == true,
                         onTap: () => _setHelpful(_helpful == true ? null : true),
                       ),
-                      const SizedBox(width: 4),
-                      _FeedbackButton(
-                        icon: '👎',
+                      FeedbackChip(
+                        icon: Icons.thumb_down_outlined,
+                        activeIcon: Icons.thumb_down,
+                        label: 'Not for me',
                         active: _helpful == false,
                         onTap: () => _setHelpful(_helpful == false ? null : false),
                       ),
-                      const Spacer(),
-                      _FeedbackButton(
-                        icon: _saved ? '🔖' : '🏷️',
+                      FeedbackChip(
+                        icon: Icons.bookmark_outline,
+                        activeIcon: Icons.bookmark,
+                        label: _saved ? 'In your toolkit' : 'Save to toolkit',
                         active: _saved,
                         onTap: _toggleSaved,
-                        tooltip: _saved ? 'Remove from toolkit' : 'Save to toolkit',
                       ),
                     ],
                   ),
@@ -380,42 +407,5 @@ class _EntryDetailScreenState extends State<EntryDetailScreen> {
               ),
       ),
     ];
-  }
-}
-
-class _FeedbackButton extends StatelessWidget {
-  const _FeedbackButton({
-    required this.icon,
-    required this.active,
-    required this.onTap,
-    this.tooltip,
-  });
-
-  final String icon;
-  final bool active;
-  final VoidCallback onTap;
-  final String? tooltip;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: tooltip ?? '',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: active ? cs.primaryContainer : Colors.transparent,
-            border: Border.all(color: active ? cs.primary : cs.outline),
-          ),
-          alignment: Alignment.center,
-          child: Text(icon, style: const TextStyle(fontSize: 16)),
-        ),
-      ),
-    );
   }
 }

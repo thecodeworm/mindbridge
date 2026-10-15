@@ -1,6 +1,6 @@
 # MindBridge
 
-**This is not the main MindBridge repo. That's a private repo that I will contiunue building on. This is the Hackathon Checkpoint.**
+**This is not the main MindBridge repo. That's a private repo that I will continue building on. This is the Hackathon Checkpoint.**
 
 MindBridge is a mood tracker built for teenagers. You log how you're feeling in under two minutes, and an AI assistant gives you back one simple coping technique based on what you wrote, right away. Over time it also shows you patterns: how your mood moves through the week, what activities seem to help or hurt, and how long you've kept up the habit.
 
@@ -50,9 +50,11 @@ The primary user is a teenager, roughly 13 to 19, who wants a private space to t
 
 **AI coping suggestion.** The moment you submit a mood log, the app calls a Supabase Edge Function, which in turn calls Claude Haiku with your mood score, emotion word, and journal entry (if you wrote one). It comes back with a named CBT technique, a plain-language description, and three concrete steps you can do right now. This usually takes around two seconds. If your mood score is very low, or if the model detects signs of crisis in what you wrote, crisis resources are surfaced automatically, and that flag can only ever be turned on by a deterministic server-side check, never suppressed by anything a user (or an injected prompt) writes into the journal field.
 
-**Dashboard.** Your home screen shows a 7 or 30 day mood trend chart with a gradient line that draws itself in on load, a streak tracker (both your current streak and your all-time best, plus a rolling 10-day "practice window" that never resets all the way to zero the way a normal streak does, since the goal is encouragement, not guilt), a year-in-pixels grid showing one colored square per day you logged over the past year, and an insights card that surfaces which activities actually correlate with better or worse moods for you specifically, once you have enough data for it to mean anything.
+**Today.** The app is organized into four tabs: Today, Journal, Insights, and Toolkit. Today has one job, which is getting you to check in: a card asking how you are (tap one of five mood-colored dots to jump straight in), or, once you've checked in, today's mood and the technique you got. Under it is the last seven days as a strip of mood-colored dots, plus a rolling 10-day "practice window" that never resets all the way to zero the way a normal streak does, since the goal is encouragement, not guilt.
 
-**History and Toolkit.** Every past entry is browsable with full detail (the mood, the tag, the journal text, the activities, and the coping suggestion you got). You can mark a suggestion as helpful or not, and save any suggestion to a personal Toolkit so you can find your favorite coping techniques again later without digging through history.
+**Insights.** A 7 or 30 day mood trend chart with a line that shifts color along the mood scale and draws itself in on load, the AI weekly review, a "what lifts you" card that surfaces which activities actually correlate with better or worse moods for you specifically (once there's enough data for it to mean anything), and a year-in-pixels grid with one colored square per day you logged.
+
+**Journal and Toolkit.** Every past entry is browsable with full detail (the mood, the tag, the journal text, the activities, and the coping suggestion you got). You can mark a suggestion as helpful or not, and save any suggestion to a personal Toolkit so you can find your favorite coping techniques again later without digging through history.
 
 **Weekly summary.** On demand, the app can generate a short AI-written weekly reflection: a couple of sentences summarizing the week plus two or three concrete highlights, again from Claude Haiku, cached so it's only generated once per week.
 
@@ -123,7 +125,7 @@ mindbridge/
 
 1. Create a new project on Supabase and open its SQL editor.
 2. Run every file in `supabase/migrations/` in order, starting from `0001_init_schema.sql` through the highest numbered file. Each one is a plain `.sql` file you can paste in and run.
-3. Deploy both functions in `supabase/functions/` (`generate-suggestion` and `generate-weekly-summary`) through the Supabase dashboard's Edge Functions page. Each one is a single `index.ts` file with no build step.
+3. Deploy both functions in `supabase/functions/` (`generate-suggestion` and `generate-weekly-summary`) with the Supabase CLI: `supabase link --project-ref <your-ref>`, then `supabase functions deploy generate-suggestion` and `supabase functions deploy generate-weekly-summary`. Both import shared helpers from `supabase/functions/_shared/`, which the CLI bundles automatically (the dashboard's single-file editor can't), and `supabase/config.toml` pins each function's JWT setting.
 4. Under the project's Edge Function settings, set two secrets:
    - `ANTHROPIC_API_KEY`, your Claude API key
    - `ALLOWED_ORIGINS`, a comma separated list of the URLs your web app will be served from
@@ -158,7 +160,7 @@ Create a file at `apps/mobile/.env` (again, see the configuration section), then
 flutter run --dart-define-from-file=.env
 ```
 
-The `--dart-define-from-file` flag has to be passed every time you run or build the app, since that's how it picks up the Supabase URL and key without hardcoding them into the source. A few other useful commands:
+The `--dart-define-from-file` flag has to be passed every time you run or build the app, since that's how it picks up the Supabase URL and key without hardcoding them into the source. For recording a demo, add `--dart-define=DEMO_MODE=true` to replay the landing page and onboarding on every launch; without it, returning users go straight to sign-in or Today. A few other useful commands:
 
 ```bash
 flutter analyze                                    # static analysis
@@ -248,7 +250,6 @@ Being upfront about where this stands right now:
 
 - AI response time runs around 2.3 seconds at the 95th percentile, a bit over the original 2 second target, though still fast enough not to feel broken.
 - There's no offline mode. Every screen needs a network connection to load data.
-- Two of the cognitive distortion feature's internal identifiers are spelled slightly differently between the web and mobile codebases (one uses hyphens, the other uses underscores). The database accepts both spellings so it isn't a functional bug, but it's on the list to clean up.
 - Branded transactional email (password resets, etc.) is gated on buying a domain and setting up a real email provider. Right now it uses Supabase's default sender, which works but looks generic.
 - Focus indicators for keyboard navigation are fully implemented on text inputs but not yet on every button and chip in the mobile app.
 

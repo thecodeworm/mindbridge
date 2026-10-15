@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 
 class AuthService {
   AuthService(this._client);
@@ -18,7 +19,7 @@ class AuthService {
       );
       return null;
     } on AuthException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
@@ -30,7 +31,7 @@ class AuthService {
       await _client.auth.signInWithPassword(email: email, password: password);
       return null;
     } on AuthException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
@@ -43,7 +44,7 @@ class AuthService {
       );
       return null;
     } on AuthException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
@@ -55,7 +56,7 @@ class AuthService {
       );
       return null;
     } on AuthException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
@@ -64,7 +65,7 @@ class AuthService {
       await _client.auth.updateUser(UserAttributes(password: newPassword));
       return null;
     } on AuthException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 

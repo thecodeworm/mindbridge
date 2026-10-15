@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/correlations.dart';
 import '../../core/elevation.dart';
 import '../../core/models.dart';
+import '../../core/theme.dart';
 import '../mood/mood_log_service.dart';
 
 class InsightsCard extends StatefulWidget {
@@ -61,34 +62,52 @@ class _InsightsCardState extends State<InsightsCard> {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
       decoration: AppElevation.decoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Activity insights', style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text('What lifts you', style: tt.titleLarge),
           const SizedBox(height: 4),
           Text(
-            'Based on the last 90 days (5+ entries per activity).',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            'Activities tagged on 5+ check-ins in the last 90 days, compared with your average. Patterns, not causes.',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           if (_loading)
-            const Center(child: CircularProgressIndicator())
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(child: CircularProgressIndicator()),
+            )
           else if (_correlations!.positive.isEmpty && _correlations!.negative.isEmpty)
-            Text(
-              'Log more check-ins with activity tags to see patterns here.',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.local_offer_outlined, size: 20, color: cs.onSurfaceVariant),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Tag what you were doing when you check in. After about a week, patterns show up here.',
+                      style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
             )
           else ...[
             if (_correlations!.positive.isNotEmpty) ...[
-              Text('Mood boosters', style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+              Text('Tends to lift your mood', style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant)),
               const SizedBox(height: 6),
               ..._correlations!.positive.map((r) => _CorrelationRow(result: r, positive: true)),
             ],
             if (_correlations!.negative.isNotEmpty) ...[
               const SizedBox(height: 10),
-              Text('Mood dampeners', style: tt.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+              Text('Tends to weigh on you', style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant)),
               const SizedBox(height: 6),
               ..._correlations!.negative.map((r) => _CorrelationRow(result: r, positive: false)),
             ],
@@ -109,24 +128,35 @@ class _CorrelationRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    // Sage for lifts, slate (the low end of the mood ramp) for dips: never
+    // red/green judgement, per CLAUDE.md.
+    final tone = positive
+        ? (dark ? AppColors.dSuccess : AppColors.success)
+        : const Color(0xFF7C8BA8);
     final deltaStr = (result.delta > 0 ? '+' : '') + result.delta.toStringAsFixed(1);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Text('${result.tag.emoji} ', style: const TextStyle(fontSize: 16)),
+          Text('${result.tag.emoji}  ', style: const TextStyle(fontSize: 16)),
           Expanded(
-            child: Text(
-              result.tag.label,
-              style: tt.bodySmall,
-            ),
+            child: Text(result.tag.label, style: tt.bodyMedium),
           ),
-          Text(
-            deltaStr,
-            style: tt.bodySmall?.copyWith(
-              color: positive ? Colors.green.shade700 : cs.error,
-              fontWeight: FontWeight.w600,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: tone.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              deltaStr,
+              style: tt.labelLarge?.copyWith(
+                color: cs.onSurface,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
         ],

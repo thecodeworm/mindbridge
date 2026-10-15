@@ -9,17 +9,16 @@ enum ElevationLevel { none, resting, elevated, modal, pressed }
 /// Radius scale — pairs with [ElevationLevel] (higher elevation -> bigger radius).
 class AppRadius {
   AppRadius._();
-  static const chip = 12.0;
-  static const card = 16.0;
-  static const sheet = 24.0;
+  static const chip = 8.0;
+  static const card = 12.0;
+  static const sheet = 16.0;
   static const pill = 999.0;
 }
 
 /// Brightness-aware elevation -> BoxShadow/border/decoration mapping.
 ///
-/// Light mode: warm terracotta-tinted 3-layer shadow, no border. Dark mode:
-/// black-based shadow + a 1px hairline border, because shadows alone don't
-/// read against a dark background.
+/// Notebook look: cards read as outlined paper (1px hairline) with at most
+/// a faint neutral shadow. Higher levels add a soft neutral lift.
 class AppElevation {
   AppElevation._();
 
@@ -39,10 +38,13 @@ class AppElevation {
     }
   }
 
-  /// Dark mode only; null in light mode and for [ElevationLevel.none].
+  /// Notebook cards are outlined like paper: a 1px hairline in both themes,
+  /// with only a whisper of shadow underneath.
   static Border? border(ElevationLevel level, Brightness brightness) {
-    if (brightness != Brightness.dark || level == ElevationLevel.none) return null;
-    return Border.all(color: const Color.fromRGBO(244, 239, 230, 0.06));
+    if (level == ElevationLevel.none) return null;
+    return Border.all(
+      color: brightness == Brightness.dark ? const Color(0xFF262A33) : const Color(0xFFE1E4EB),
+    );
   }
 
   /// Migration entry point: replaces an ad-hoc
@@ -65,19 +67,13 @@ class AppElevation {
   // Shadow layers, transcribed from spec rgba() values via Color.fromRGBO —
   // no manual hex/alpha arithmetic, directly diffable against the spec.
   static const _restingLight = [
-    BoxShadow(color: Color.fromRGBO(28, 25, 23, 0.04), offset: Offset(0, 1), blurRadius: 2),
-    BoxShadow(color: Color.fromRGBO(184, 132, 96, 0.08), offset: Offset(0, 4), blurRadius: 12),
-    BoxShadow(color: Color.fromRGBO(184, 132, 96, 0.06), offset: Offset(0, 12), blurRadius: 24),
+    BoxShadow(color: Color.fromRGBO(20, 22, 27, 0.04), offset: Offset(0, 1), blurRadius: 2),
   ];
-  static const _restingDark = [
-    BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.30), offset: Offset(0, 1), blurRadius: 2),
-    BoxShadow(color: Color.fromRGBO(0, 0, 0, 0.35), offset: Offset(0, 4), blurRadius: 16),
-  ];
+  static const _restingDark = <BoxShadow>[];
 
   static const _elevatedLight = [
-    BoxShadow(color: Color.fromRGBO(28, 25, 23, 0.05), offset: Offset(0, 2), blurRadius: 4),
-    BoxShadow(color: Color.fromRGBO(184, 132, 96, 0.12), offset: Offset(0, 8), blurRadius: 20),
-    BoxShadow(color: Color.fromRGBO(184, 132, 96, 0.10), offset: Offset(0, 20), blurRadius: 40),
+    BoxShadow(color: Color.fromRGBO(20, 22, 27, 0.06), offset: Offset(0, 2), blurRadius: 6),
+    BoxShadow(color: Color.fromRGBO(20, 22, 27, 0.06), offset: Offset(0, 8), blurRadius: 20),
   ];
   // DERIVED — spec says "scaled proportionally from level 1", no exact
   // numbers given. Verify visually (see §5) and adjust before treating as final.
@@ -87,8 +83,8 @@ class AppElevation {
   ];
 
   static const _modalLight = [
-    BoxShadow(color: Color.fromRGBO(184, 132, 96, 0.18), offset: Offset(0, 8), blurRadius: 16),
-    BoxShadow(color: Color.fromRGBO(184, 132, 96, 0.15), offset: Offset(0, 24), blurRadius: 48),
+    BoxShadow(color: Color.fromRGBO(20, 22, 27, 0.10), offset: Offset(0, 8), blurRadius: 16),
+    BoxShadow(color: Color.fromRGBO(20, 22, 27, 0.10), offset: Offset(0, 24), blurRadius: 48),
   ];
   // DERIVED — no explicit dark-modal spec line. Verify visually (see §5).
   static const _modalDark = [

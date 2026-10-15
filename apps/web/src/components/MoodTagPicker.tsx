@@ -10,9 +10,9 @@ interface Props {
 
 const chipClass = (selected: boolean) =>
   [
-    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+    'flex items-center gap-1.5 rounded-lg border-[1.5px] px-3 py-1.5 text-sm font-medium transition-colors',
     selected
-      ? 'border-blue-dark bg-blue-tint text-blue-dark'
+      ? 'border-blue-dark bg-blue-dark text-on-accent'
       : 'border-border bg-field text-ink hover:bg-blue-tint',
   ].join(' ')
 
@@ -27,18 +27,20 @@ export function MoodTagPicker({ quadrant, tag, onQuadrantChange, onTagChange }: 
 
   if (quadrant === null) {
     return (
-      <div className="grid grid-cols-2 gap-2">
-        {MOOD_QUADRANTS.map((q) => (
-          <button
-            key={q.value}
-            type="button"
-            onClick={() => onQuadrantChange(q.value)}
-            className="flex flex-col items-start gap-1 rounded-xl border border-border bg-field p-3 text-left transition-colors hover:bg-blue-tint"
-          >
-            <span className="text-lg">{q.emoji}</span>
-            <span className="text-xs font-medium text-ink">{q.label}</span>
-          </button>
-        ))}
+      <div className="space-y-2">
+        <p className="label">Pick a feeling</p>
+        <div className="grid grid-cols-2 gap-2">
+          {MOOD_QUADRANTS.map((q) => (
+            <button
+              key={q.value}
+              type="button"
+              onClick={() => onQuadrantChange(q.value)}
+              className="flex flex-col items-start gap-1 rounded-lg border-[1.5px] border-border bg-field p-3 text-left transition-colors hover:bg-blue-tint"
+            >
+              <span className="text-xs font-medium text-ink">{q.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
     )
   }
@@ -60,6 +62,7 @@ export function MoodTagPicker({ quadrant, tag, onQuadrantChange, onTagChange }: 
           <button
             key={t.value}
             type="button"
+            aria-pressed={tag === t.value}
             onClick={() => onTagChange(t.value)}
             className={chipClass(tag === t.value)}
           >

@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LandingPage } from '../pages/LandingPage'
 import { HomePage } from '../pages/HomePage'
+import { AppShell } from '../components/shell/AppShell'
 
 /**
  * `/` itself — the one route whose content depends on auth state rather
@@ -29,5 +30,9 @@ export function RootRoute() {
     return <LandingPage />
   }
 
-  return <HomePage />
+  return (
+    <AppShell>
+      <HomePage />
+    </AppShell>
+  )
 }

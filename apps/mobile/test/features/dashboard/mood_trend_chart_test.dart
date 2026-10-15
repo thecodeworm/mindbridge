@@ -24,7 +24,7 @@ void main() {
 
     expect(find.text('Mood trend'), findsOneWidget);
     expect(
-      find.text('No entries in this range yet — log a mood to start your trend.'),
+      find.text('No check-ins in this range yet. Log one to start your trend.'),
       findsOneWidget,
     );
     expect(find.byType(LineChart), findsNothing);
@@ -36,7 +36,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(LineChart), findsOneWidget);
-    expect(find.text('No entries in this range yet — log a mood to start your trend.'), findsNothing);
+    expect(find.text('No check-ins in this range yet. Log one to start your trend.'), findsNothing);
   });
 
   testWidgets('defaults to the 7d range toggle', (tester) async {
@@ -64,7 +64,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(LineChart), findsOneWidget);
-    expect(find.text('No entries in this range yet — log a mood to start your trend.'), findsNothing);
+    expect(find.text('No check-ins in this range yet. Log one to start your trend.'), findsNothing);
   });
 
   testWidgets('switching to 30d can reveal the empty state going the other way', (tester) async {
@@ -75,7 +75,7 @@ void main() {
 
     // 7d default: nothing in range.
     expect(
-      find.text('No entries in this range yet — log a mood to start your trend.'),
+      find.text('No check-ins in this range yet. Log one to start your trend.'),
       findsOneWidget,
     );
 

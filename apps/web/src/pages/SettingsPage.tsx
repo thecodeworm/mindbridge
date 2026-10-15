@@ -15,19 +15,19 @@ const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
 
 function chipClass(selected: boolean) {
   return [
-    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+    'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
     selected
-      ? 'border-blue-dark bg-blue-tint text-blue-dark'
-      : 'border-border bg-field text-ink hover:bg-blue-tint',
+      ? 'bg-ink text-cream'
+      : 'text-ink hover:bg-field',
   ].join(' ')
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="card space-y-4 p-6">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-muted">{title}</h2>
-      {children}
-    </div>
+    <section>
+      <h2 className="label mb-2.5">{title}</h2>
+      <div className="card space-y-4 p-5">{children}</div>
+    </section>
   )
 }
 
@@ -99,20 +99,30 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream p-4 pb-24 sm:p-6">
-      <div className="mx-auto w-full max-w-2xl space-y-6">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => navigate('/')} className="text-sm font-medium text-muted transition-colors hover:text-ink">← Back</button>
-          <h1 className="text-2xl font-bold text-ink">Settings</h1>
+    <div className="min-h-screen bg-cream">
+      <div className="mx-auto w-full max-w-xl space-y-4 px-4 pb-16 pt-4 sm:px-6">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            aria-label="Back"
+            className="flex h-10 w-10 items-center justify-center rounded-[10px] text-ink hover:bg-surface"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+          <h1 className="flex-1 text-3xl text-ink">Settings</h1>
+          <CrisisChip inline />
         </div>
 
         <Section title="Profile">
           <form onSubmit={handleSaveName} className="space-y-3">
             <label className="block text-sm font-medium text-muted" htmlFor="displayName">Display name</label>
-            <input id="displayName" type="text" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setNameSaved(false) }} maxLength={60} className="w-full rounded-full border border-border bg-field px-4 py-2.5 text-ink placeholder:text-faint" />
-            {nameError && <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{nameError}</p>}
-            {nameSaved && !nameError && <p className="text-sm text-success">Saved.</p>}
-            <button type="submit" disabled={nameSaving} className="rounded-lg bg-blue-dark px-4 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50">
+            <input id="displayName" type="text" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setNameSaved(false) }} maxLength={60} className="w-full rounded-[10px] border border-border bg-field px-4 py-2.5 text-ink placeholder:text-faint" />
+            {nameError && <p className="rounded-[10px] bg-error-tint px-3 py-2 text-sm text-error">{nameError}</p>}
+            {nameSaved && !nameError && <p className="text-sm text-blue-dark">Saved.</p>}
+            <button type="submit" disabled={nameSaving} className="rounded-[10px] bg-blue-dark px-4 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50">
               {nameSaving ? 'Saving…' : 'Save name'}
             </button>
           </form>
@@ -121,9 +131,9 @@ export function SettingsPage() {
         <Section title="Appearance">
           <div>
             <p className="mb-2 text-sm font-medium text-muted">Theme</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-1 rounded-lg border border-border bg-surface p-1" role="group" aria-label="Theme">
               {THEME_OPTIONS.map((opt) => (
-                <button key={opt.value} type="button" onClick={() => handleThemeChange(opt.value)} className={chipClass(themeMode === opt.value)}>{opt.label}</button>
+                <button key={opt.value} type="button" aria-pressed={themeMode === opt.value} onClick={() => handleThemeChange(opt.value)} className={chipClass(themeMode === opt.value)}>{opt.label}</button>
               ))}
             </div>
           </div>
@@ -139,21 +149,21 @@ export function SettingsPage() {
           {notifPermission === 'default' && (
             <div className="space-y-2">
               <p className="text-sm text-muted">Get a daily reminder to check in with your mood.</p>
-              <button type="button" onClick={requestNotifications} className="rounded-lg border border-border bg-field px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-blue-tint">
+              <button type="button" onClick={requestNotifications} className="rounded-[10px] border border-border bg-field px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-blue-tint">
                 Enable reminders
               </button>
             </div>
           )}
           {notifPermission === 'granted' && (
-            <p className="text-sm text-success">✓ Notifications enabled. Set your reminder time in the mobile app.</p>
+            <p className="text-sm text-blue-dark">✓ Notifications enabled. Set your reminder time in the mobile app.</p>
           )}
         </Section>
 
         <Section title="Data">
           <div className="space-y-3">
             <p className="text-sm text-muted">Export all your mood logs, journal entries, and coping suggestions as JSON.</p>
-            {exportError && <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{exportError}</p>}
-            <button type="button" onClick={handleExport} disabled={exporting} className="rounded-lg border border-border bg-field px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-blue-tint disabled:opacity-50">
+            {exportError && <p className="rounded-[10px] bg-error-tint px-3 py-2 text-sm text-error">{exportError}</p>}
+            <button type="button" onClick={handleExport} disabled={exporting} className="rounded-[10px] border border-border bg-field px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-blue-tint disabled:opacity-50">
               {exporting ? 'Exporting…' : 'Export my data'}
             </button>
           </div>
@@ -162,24 +172,24 @@ export function SettingsPage() {
         <Section title="Help">
           <div className="space-y-2">
             <p className="text-sm text-muted">If you're struggling, confidential support is available 24/7.</p>
-            <a href="/help" className="inline-block rounded-lg border border-terra bg-terra-tint px-4 py-2 text-sm font-medium text-terra-dark transition-colors hover:bg-terra">
+            <a href="/help" className="inline-block rounded-[10px] border border-terra bg-terra-tint px-4 py-2 text-sm font-medium text-terra-dark transition-colors hover:bg-terra">
               Crisis resources →
             </a>
           </div>
         </Section>
 
         <Section title="Account">
-          <button type="button" onClick={() => signOut()} className="w-full rounded-lg border border-border bg-field px-4 py-2.5 text-left font-medium text-ink transition-colors hover:bg-blue-tint sm:w-auto">
+          <button type="button" onClick={() => signOut()} className="w-full rounded-[10px] border border-border bg-field px-4 py-2.5 text-left font-medium text-ink transition-colors hover:bg-blue-tint sm:w-auto">
             Sign out
           </button>
 
           <div className="space-y-3 border-t border-border pt-4">
             <div>
-              <p className="font-medium text-ink">Delete my data</p>
-              <p className="text-sm text-muted">Permanently deletes every mood log, journal entry, and coping suggestion. Your login stays active — this clears your data, it doesn't close your account.</p>
+              <p className="font-medium text-error">Delete my data</p>
+              <p className="text-sm text-muted">Permanently deletes every mood log, journal entry, and coping suggestion. Your login stays active. This clears your data but doesn't close your account.</p>
             </div>
             {!confirmingDelete ? (
-              <button type="button" onClick={() => setConfirmingDelete(true)} className="rounded-lg border border-error px-4 py-2 text-sm font-medium text-error transition-colors hover:bg-error-tint">Delete my data</button>
+              <button type="button" onClick={() => setConfirmingDelete(true)} className="rounded-[10px] border border-error px-4 py-2 text-sm font-medium text-error transition-colors hover:bg-error-tint">Delete my data</button>
             ) : (
               <div className="space-y-3 rounded-lg border border-error bg-error-tint p-4">
                 <p className="text-sm font-medium text-error">This can't be undone. Delete all mood data?</p>
@@ -193,7 +203,6 @@ export function SettingsPage() {
           </div>
         </Section>
       </div>
-      <CrisisChip />
     </div>
   )
 }

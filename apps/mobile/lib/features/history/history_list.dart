@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_events.dart';
 import '../../core/app_exception.dart';
 import '../../core/elevation.dart';
 import '../../core/mood_color.dart';
 import '../../widgets/empty_state.dart';
+import '../../core/theme.dart';
+import '../../widgets/inline_notice.dart';
+import '../../widgets/notebook.dart';
 import '../mood/mood_log_service.dart';
 import 'entry_detail_screen.dart';
 import 'history_service.dart';
@@ -45,11 +49,21 @@ class _HistoryListState extends State<HistoryList> {
   @override
   void initState() {
     super.initState();
+    moodDataVersion.addListener(_load);
     _load();
   }
 
+  @override
+  void dispose() {
+    moodDataVersion.removeListener(_load);
+    super.dispose();
+  }
+
   Future<void> _load() async {
-    setState(() => _loading = true);
+    if (!mounted) return;
+    // Keep showing current entries during a background refresh; only the
+    // very first load gets the skeleton.
+    if (_entries.isEmpty) setState(() => _loading = true);
     try {
       final entries = await _service.getHistory(
         userId: widget.userId,
@@ -100,79 +114,75 @@ class _HistoryListState extends State<HistoryList> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: AppElevation.decoration(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('History', style: tt.titleMedium),
-          const SizedBox(height: 12),
-          if (_loading)
-            ...List.generate(
-              3,
-              (_) => Container(
-                height: 64,
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+    final children = <Widget>[];
+    String? lastMonth;
+    for (final entry in _entries) {
+      final local = entry.loggedAt.toLocal();
+      final month = '${_kMonthNames[local.month - 1]} ${local.year}';
+      if (month != lastMonth) {
+        children.add(Padding(
+          padding: EdgeInsets.only(top: lastMonth == null ? 0 : 20, bottom: 10, left: 4),
+          child: SectionLabel(month),
+        ));
+        lastMonth = month;
+      }
+      children.add(MoodLogCard(
+        entry: entry,
+        onTap: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EntryDetailScreen(moodLogId: entry.id),
             ),
-          if (!_loading && _error != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: cs.errorContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _error!,
-                style: TextStyle(color: cs.error, fontSize: 14),
-              ),
+          );
+          if (!mounted) return;
+          await _load();
+          widget.onEntryChanged?.call();
+        },
+      ));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_loading)
+          ...List.generate(
+            4,
+            (_) => Container(
+              height: 72,
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: AppElevation.decoration(context),
             ),
-          if (!_loading && _error == null && _entries.isEmpty)
-            EmptyState(
-              icon: Icons.edit_note_outlined,
-              headline: 'No entries yet',
-              copy: 'Log your first mood to start tracking.',
-              ctaLabel: widget.onLogMood != null ? 'Log a mood' : null,
-              onCta: widget.onLogMood,
+          ),
+        if (!_loading && _error != null)
+          InlineNotice(message: _error!, onRetry: _load),
+        if (!_loading && _error == null && _entries.isEmpty)
+          EmptyState(
+            icon: Icons.menu_book_outlined,
+            headline: 'Your journal starts here',
+            copy: 'Every check-in lands here, with the technique you got.',
+            ctaLabel: widget.onLogMood != null ? 'Check in' : null,
+            onCta: widget.onLogMood,
+          ),
+        if (!_loading) ...children,
+        if (!_loading && _hasMore && _entries.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: OutlinedButton(
+              onPressed: _loadingMore ? null : _loadMore,
+              child: Text(_loadingMore ? 'Loading…' : 'Show older entries'),
             ),
-          if (!_loading)
-            ..._entries.map(
-              (entry) => MoodLogCard(
-                entry: entry,
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => EntryDetailScreen(moodLogId: entry.id),
-                    ),
-                  );
-                  if (!mounted) return;
-                  await _load();
-                  widget.onEntryChanged?.call();
-                },
-              ),
-            ),
-          if (!_loading && _hasMore && _entries.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: OutlinedButton(
-                onPressed: _loadingMore ? null : _loadMore,
-                child: Text(_loadingMore ? 'Loading…' : 'Load more'),
-              ),
-            ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
+
+const _kMonthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+  'September', 'October', 'November', 'December',
+];
 
 class MoodLogCard extends StatelessWidget {
   const MoodLogCard({super.key, required this.entry, required this.onTap});
@@ -180,23 +190,12 @@ class MoodLogCard extends StatelessWidget {
   final HistoryEntry entry;
   final VoidCallback onTap;
 
-  String _formatDate(DateTime d) {
+  String _formatDate(BuildContext context, DateTime d) {
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${weekdays[d.weekday - 1]}, ${months[d.month - 1]} ${d.day}';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final local = d.toLocal();
+    final time = TimeOfDay.fromDateTime(local).format(context);
+    return '${weekdays[local.weekday - 1]}, ${months[local.month - 1]} ${local.day} · $time';
   }
 
   @override
@@ -204,64 +203,64 @@ class MoodLogCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final color = moodColor(entry.moodScore);
+    final tag = moodTagInfo(entry.moodTag);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '${entry.moodScore}',
-                    style: const TextStyle(
-                      color: Color(0xFF1C1917),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DecoratedBox(
+        decoration: AppElevation.decoration(context),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${entry.moodScore}',
+                      style: tt.titleMedium?.copyWith(
+                        color: AppColors.onMood,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            _formatDate(entry.loggedAt),
-                            style: tt.bodyMedium,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(moodTagInfo(entry.moodTag)?['emoji'] ?? ''),
-                        ],
-                      ),
-                      Text(
-                        entry.techniqueName ?? 'No suggestion saved',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tag != null ? '${tag['label']} ${tag['emoji']}' : moodWord(entry.moodScore),
+                          style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          entry.techniqueName ?? _formatDate(context, entry.loggedAt),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                        if (entry.techniqueName != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            _formatDate(context, entry.loggedAt),
+                            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                ),
-                Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-              ],
+                  Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                ],
+              ),
             ),
           ),
         ),

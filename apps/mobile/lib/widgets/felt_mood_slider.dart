@@ -66,7 +66,11 @@ class _FeltMoodSliderState extends State<FeltMoodSlider>
   void _onDragStart() {
     setState(() => _dragging = true);
     _lastHapticStep = widget.value.round();
-    _scaleController.animateTo(1, duration: AppMotion.short, curve: AppMotion.standard);
+    _scaleController.animateTo(
+      1,
+      duration: AppMotion.short,
+      curve: AppMotion.standard,
+    );
   }
 
   void _onDragEnd() {
@@ -171,7 +175,10 @@ class _FeltMoodSliderState extends State<FeltMoodSlider>
                     child: Container(
                       width: 40,
                       alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: color,
                         borderRadius: BorderRadius.circular(AppRadius.chip),

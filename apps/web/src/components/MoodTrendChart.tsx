@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
   Dot,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -45,7 +45,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Tooltip
   })
 
   return (
-    <div className="rounded-lg border border-border bg-surface px-3 py-2 text-sm shadow-sm">
+    <div className="card-elevated px-3 py-2 text-sm">
       <p className="font-medium text-ink">{date}</p>
       <p className="text-muted">
         Score {log.mood_score} · {tagLabel(log.mood_tag)}
@@ -57,7 +57,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Tooltip
 function MoodDot(props: DotProps & { payload?: MoodLog }) {
   const { cx, cy, payload } = props
   if (cx == null || cy == null || !payload) return null
-  return <Dot cx={cx} cy={cy} r={4} fill={moodColor(payload.mood_score)} stroke="var(--surface)" strokeWidth={1} />
+  return <Dot cx={cx} cy={cy} r={4.5} fill={moodColor(payload.mood_score)} stroke="var(--card)" strokeWidth={2} />
 }
 
 export function MoodTrendChart({ logs }: MoodTrendChartProps) {
@@ -72,18 +72,18 @@ export function MoodTrendChart({ logs }: MoodTrendChartProps) {
   }, [logs, range])
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-4 shadow-sm sm:p-6">
+    <div className="card p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-ink">Mood trend</h2>
-        <div className="flex gap-1 rounded-lg border border-border bg-field p-1">
+        <h2 className="text-xl text-ink">Mood trend</h2>
+        <div className="flex gap-1 rounded-lg bg-surface p-1" role="group" aria-label="Range">
           {([7, 30] as const).map((d) => (
             <button
               key={d}
               type="button"
               onClick={() => setRange(d)}
               className={[
-                'rounded-md px-3 py-1 text-sm font-medium transition-colors',
-                range === d ? 'bg-blue-dark text-on-accent' : 'text-muted hover:text-ink',
+                'rounded-lg px-3.5 py-1 text-sm font-semibold transition-colors',
+                range === d ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink',
               ].join(' ')}
               aria-pressed={range === d}
             >
@@ -94,45 +94,53 @@ export function MoodTrendChart({ logs }: MoodTrendChartProps) {
       </div>
 
       {data.length === 0 ? (
-        <p className="py-12 text-center text-sm text-muted">
-          No entries in this range yet — log a mood to start your trend.
+        <p className="py-12 text-center text-muted">
+          No check-ins in this range yet. Log one to start your trend.
         </p>
       ) : (
         <div className="h-56 w-full sm:h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+            <AreaChart data={data} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="moodFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--blue-dark)" stopOpacity={0.12} />
+                  <stop offset="100%" stopColor="var(--blue-dark)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" vertical={false} />
               <XAxis
                 dataKey="logged_at"
                 tickFormatter={(v: string) => formatTick(v, range)}
-                stroke="var(--faint)"
                 tick={{ fill: 'var(--muted)', fontSize: 12 }}
                 tickLine={false}
                 axisLine={{ stroke: 'var(--border)' }}
                 interval="preserveStartEnd"
                 minTickGap={24}
+                padding={{ left: 8, right: 8 }}
               />
               <YAxis
                 domain={[1, 10]}
-                ticks={[1, 3, 5, 7, 10]}
-                stroke="var(--faint)"
+                ticks={[1, 5, 10]}
                 tick={{ fill: 'var(--muted)', fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
-                width={28}
+                width={32}
               />
               <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border)' }} />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="mood_score"
-                stroke="var(--blue-dark)"
-                strokeWidth={2}
+                stroke="var(--ink)"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                fill="url(#moodFill)"
                 dot={<MoodDot />}
                 activeDot={{ r: 6 }}
                 connectNulls
-                isAnimationActive={false}
+                isAnimationActive
+                animationDuration={850}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       )}

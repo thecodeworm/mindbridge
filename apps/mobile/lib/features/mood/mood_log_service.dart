@@ -83,7 +83,7 @@ class MoodLogService {
           .insert({'mood_log_id': moodLogId, 'user_id': userId, 'body': body});
       return null;
     } on PostgrestException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
@@ -163,7 +163,7 @@ class MoodLogService {
       }
       return null;
     } on PostgrestException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 

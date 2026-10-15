@@ -1,3 +1,4 @@
+import { friendlyError } from './friendlyError'
 import { supabase } from './supabaseClient'
 
 export async function updateDisplayName(
@@ -13,13 +14,13 @@ export async function updateDisplayName(
   const { error: metaError } = await supabase.auth.updateUser({
     data: { display_name: trimmed },
   })
-  if (metaError) return { error: metaError.message }
+  if (metaError) return { error: friendlyError(metaError.message) }
 
   const { error: dbError } = await supabase
     .from('users')
     .update({ display_name: trimmed })
     .eq('id', userId)
-  if (dbError) return { error: dbError.message }
+  if (dbError) return { error: friendlyError(dbError.message) }
 
   return { error: null }
 }
@@ -30,5 +31,5 @@ export async function deleteAllUserData(userId: string): Promise<{ error: string
   // but does not close the login itself (that needs the admin API, which
   // requires a service-role Edge Function — not built yet).
   const { error } = await supabase.from('mood_logs').delete().eq('user_id', userId)
-  return { error: error?.message ?? null }
+  return { error: (error ? friendlyError(error.message) : null) }
 }
