@@ -6,6 +6,7 @@ import 'steps/how_it_works_step.dart';
 import 'steps/personalization_step.dart';
 import 'steps/trust_step.dart';
 import 'steps/welcome_step.dart';
+import '../../widgets/crisis_fab.dart';
 
 const _kStepCount = 5;
 
@@ -57,48 +58,55 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
 
     return Scaffold(
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            PageView(
-              controller: _pageController,
-              onPageChanged: (i) => setState(() => _page = i),
-              children: [
-                WelcomeStep(onNext: () => _goTo(1)),
-                TrustStep(onNext: () => _goTo(2)),
-                PersonalizationStep(
-                  selected: _personalization,
-                  onSelected: (v) => setState(() => _personalization = v),
-                  onNext: () => _goTo(3),
-                ),
-                HowItWorksStep(
-                  personalization: _personalization,
-                  onNext: () => _goTo(4),
-                ),
-                FirstCheckinStep(
-                  onCreateAccount: (score, tag) => _finish(score: score, tag: tag),
-                  onHaveAccount: () => _finish(),
-                ),
-              ],
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: AnimatedOpacity(
-                opacity: _page >= 2 ? 1 : 0,
-                duration: AppMotion.micro,
-                child: IgnorePointer(
-                  ignoring: _page < 2,
-                  child: TextButton(
-                    onPressed: () => _finish(),
-                    child: const Text('Skip'),
+            // Top bar: Skip lives in its own row so it never collides with
+            // a step's headline (it used to float over the content).
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'MindBridge',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                   ),
-                ),
+                  if (_page >= 2)
+                    TextButton(
+                      onPressed: () => _finish(),
+                      child: const Text('Skip'),
+                    ),
+                  const HelpChip(),
+                ],
               ),
             ),
-            Positioned(
-              bottom: 16,
-              left: 0,
-              right: 0,
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _page = i),
+                children: [
+                  WelcomeStep(onNext: () => _goTo(1)),
+                  TrustStep(onNext: () => _goTo(2)),
+                  PersonalizationStep(
+                    selected: _personalization,
+                    onSelected: (v) => setState(() => _personalization = v),
+                    onNext: () => _goTo(3),
+                  ),
+                  HowItWorksStep(
+                    personalization: _personalization,
+                    onNext: () => _goTo(4),
+                  ),
+                  FirstCheckinStep(
+                    onCreateAccount: (score, tag) =>
+                        _finish(score: score, tag: tag),
+                    onHaveAccount: () => _finish(),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(_kStepCount, (i) {
@@ -106,11 +114,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
                   return AnimatedContainer(
                     duration: AppMotion.micro,
                     margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: active ? 20 : 6,
+                    width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(3),
-                      color: active ? cs.primary : cs.outline,
+                      borderRadius: BorderRadius.circular(2),
+                      color: active ? cs.onSurface : cs.outline,
                     ),
                   );
                 }),

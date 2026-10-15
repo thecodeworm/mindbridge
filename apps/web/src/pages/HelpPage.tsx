@@ -1,3 +1,7 @@
+import type { CSSProperties } from 'react'
+import { moodColor } from '../lib/moodColor'
+import { CrisisChip } from '../components/CrisisChip'
+import { NotebookIcon } from '../components/NotebookIcon'
 import { useNavigate } from 'react-router-dom'
 
 interface Resource {
@@ -32,24 +36,27 @@ const RESOURCES: Resource[] = [
 
 function ResourceCard({ r }: { r: Resource }) {
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-surface p-5 shadow-sm">
-      <h2 className="font-semibold text-ink">{r.name}</h2>
-      <p className="text-sm text-muted">{r.description}</p>
+    <div className="card space-y-4 p-5">
+      <div className="flex items-start gap-3">
+        <span className="text-terra-dark"><NotebookIcon name={r.call ? 'phone' : 'message'} /></span>
+        <div><h2 className="font-body text-lg font-bold tracking-normal text-ink">{r.name}</h2>
+          <p className="mt-1 text-sm leading-relaxed text-muted">{r.description}</p></div>
+      </div>
       <div className="flex flex-wrap gap-2">
         {r.call && (
           <a
             href={`tel:${r.call.replace(/-/g, '')}`}
-            className="rounded-lg border border-terra bg-terra-tint px-4 py-2 text-sm font-medium text-terra-dark transition-colors hover:bg-terra"
+            className="inline-flex items-center gap-2 rounded-[10px] border border-terra bg-terra-tint px-4 py-2 text-sm font-medium text-terra-dark transition-colors hover:opacity-80"
           >
-            📞 Call {r.call}
+            <NotebookIcon name="phone" /> Call {r.call}
           </a>
         )}
         {r.text && (
           <a
             href={`sms:${r.text}${r.textCode ? `?body=${r.textCode}` : ''}`}
-            className="rounded-lg border border-border bg-field px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-blue-tint"
+            className="inline-flex items-center gap-2 rounded-[10px] border border-terra bg-terra-tint px-4 py-2 text-sm font-medium text-terra-dark transition-colors hover:opacity-80"
           >
-            💬 Text {r.textCode ? `"${r.textCode}" to ` : ''}{r.text}
+            <NotebookIcon name="message" /> Text {r.textCode ? `"${r.textCode}" to ` : ''}{r.text}
           </a>
         )}
       </div>
@@ -71,20 +78,23 @@ export function HelpPage() {
           >
             ← Back
           </button>
-          <h1 className="text-2xl font-bold text-ink">Crisis resources</h1>
+          <span className="flex-1 font-display text-xl font-black text-ink">Crisis resources</span>
+          <CrisisChip inline />
         </div>
 
-        <div className="rounded-xl border border-terra bg-terra-tint p-4">
+        <h1 className="text-4xl text-ink sm:text-5xl">You're not<br /><span className="hl" style={{ '--mark': moodColor(9) } as CSSProperties}>alone.</span></h1>
+        <div className="rounded-[10px] bg-terra-tint p-4">
           <p className="text-sm text-terra-dark">
             If you're in immediate danger, call <strong>911</strong>. These resources are available 24/7 and are free and confidential.
           </p>
         </div>
 
         <div className="space-y-4">
+          <p className="label">Reach out</p>
           {RESOURCES.map((r) => <ResourceCard key={r.name} r={r} />)}
         </div>
 
-        <div className="rounded-xl border border-border bg-surface p-4 text-sm text-muted">
+        <div className="text-sm leading-relaxed text-muted">
           MindBridge is a self-help mood-tracking tool, not a clinical service or substitute for therapy. If you're struggling, please reach out to a trusted adult or one of the services above.
         </div>
       </div>

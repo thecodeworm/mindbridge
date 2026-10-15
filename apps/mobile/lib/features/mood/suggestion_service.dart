@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 
 class SuggestionResult {
   SuggestionResult({
@@ -25,7 +26,7 @@ class SuggestionService {
   SuggestionService(this._client);
   final SupabaseClient _client;
 
-  Future<({SuggestionResult? suggestion, String? error})> generateSuggestion({
+  Future<SuggestionResult> generateSuggestion({
     required String moodLogId,
     required String userId,
   }) async {
@@ -35,12 +36,16 @@ class SuggestionService {
         body: {'mood_log_id': moodLogId, 'user_id': userId},
       );
       final data = res.data as Map<String, dynamic>;
-      return (suggestion: SuggestionResult.fromJson(data), error: null);
-    } on FunctionException catch (_) {
-      return (
-        suggestion: null,
-        error: 'Could not generate a suggestion. Please try again.',
-      );
+      return SuggestionResult.fromJson(data);
+    } on FunctionException catch (e) {
+      if (e.status == 429) {
+        throw AppException('rate limited');
+      }
+      throw AppException("We couldn't put together a technique this time. Your check-in is saved, so try again in a moment.");
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw AppException(e.toString());
     }
   }
 }

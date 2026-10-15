@@ -16,10 +16,7 @@ export function ActivityTagPicker({ tags, selected, onChange }: Props) {
   }
 
   return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium text-muted">
-        What was going on? <span className="font-normal text-faint">(optional)</span>
-      </p>
+    <div>
       <div className="flex flex-wrap gap-2">
         {tags.map((tag) => {
           const isSelected = selected.includes(tag.id)
@@ -27,11 +24,12 @@ export function ActivityTagPicker({ tags, selected, onChange }: Props) {
             <button
               key={tag.id}
               type="button"
+              aria-pressed={isSelected}
               onClick={() => toggle(tag.id)}
               className={[
-                'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                'flex items-center gap-1.5 rounded-lg border-[1.5px] px-3 py-1.5 text-sm font-medium transition-colors',
                 isSelected
-                  ? 'border-blue-dark bg-blue-tint text-blue-dark'
+                  ? 'border-blue-dark bg-blue-dark text-on-accent'
                   : 'border-border bg-field text-ink hover:bg-blue-tint',
               ].join(' ')}
             >

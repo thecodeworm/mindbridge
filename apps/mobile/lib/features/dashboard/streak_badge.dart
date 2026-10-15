@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/elevation.dart';
 import '../../core/motion.dart';
 import '../../core/streaks.dart';
 import '../mood/mood_log_service.dart';
@@ -41,7 +40,8 @@ class SecureMilestoneStore implements MilestoneStore {
   }
 }
 
-String? _defaultCurrentUserId() => Supabase.instance.client.auth.currentUser?.id;
+String? _defaultCurrentUserId() =>
+    Supabase.instance.client.auth.currentUser?.id;
 
 class StreakBadge extends StatefulWidget {
   const StreakBadge({
@@ -130,43 +130,44 @@ class _StreakBadgeState extends State<StreakBadge>
     return AnimatedBuilder(
       animation: _popController,
       builder: (context, child) => Transform.scale(
-        scale: 1.0 + _popController.value * 0.12,
+        scale: 1.0 + _popController.value * 0.06,
+        alignment: Alignment.centerLeft,
         child: child,
       ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: AppElevation.decoration(
-          context,
-          radius: AppRadius.chip,
-          color: cs.surfaceContainerHighest,
-        ),
-        child: Row(
-          children: [
-            const Text('🔥', style: TextStyle(fontSize: 22)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "You've practiced ${window.practiced} of ${window.windowDays} days",
-                    style: tt.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  Text(
-                    'Personal best: ${streaks.longest} day${streaks.longest == 1 ? '' : 's'}',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer,
+              borderRadius: BorderRadius.circular(8),
             ),
-          ],
-        ),
+            child: Icon(Icons.spa_outlined, size: 20, color: cs.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "You've practiced ${window.practiced} of ${window.windowDays} days",
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                Text(
+                  'Personal best: ${streaks.longest} day${streaks.longest == 1 ? '' : 's'}',
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

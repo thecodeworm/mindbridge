@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/validators.dart';
 import '../../widgets/crisis_fab.dart';
+import '../../widgets/notebook.dart';
+import '../../core/mood_color.dart';
 import 'auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -38,21 +40,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _submitting = true; _error = null; });
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
     final error = await _authService.signUp(
       email: _emailController.text.trim(),
       password: _passwordController.text,
       displayName: _displayNameController.text.trim(),
     );
     if (!mounted) return;
-    setState(() { _submitting = false; _error = error; });
+    setState(() {
+      _submitting = false;
+      _error = error;
+    });
   }
 
   Future<void> _signInWithGoogle() async {
-    setState(() { _googleSubmitting = true; _error = null; });
+    setState(() {
+      _googleSubmitting = true;
+      _error = null;
+    });
     final error = await _authService.signInWithGoogle();
     if (!mounted) return;
-    setState(() { _googleSubmitting = false; });
+    setState(() {
+      _googleSubmitting = false;
+    });
     if (error != null) setState(() => _error = error);
   }
 
@@ -60,50 +73,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text('MindBridge'),
+        titleTextStyle: Theme.of(context).textTheme.titleLarge,
+        actions: const [HelpAction()],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
+              constraints: const BoxConstraints(maxWidth: 440),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 32),
-                  // Brand header
                   Text(
-                    'MindBridge',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    'Your space.',
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Track your mood, grow your mind.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
+                  Highlight(
+                    'Create your account.',
+                    color: moodColor(5),
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'Create your account',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                   if (_error != null) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: cs.errorContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         _error!,
-                        style: TextStyle(color: cs.onErrorContainer, fontSize: 13),
+                        style: TextStyle(
+                          color: cs.onErrorContainer,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -117,7 +129,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : SvgPicture.asset('assets/google_logo.svg', width: 18, height: 18),
+                        : SvgPicture.asset(
+                            'assets/google_logo.svg',
+                            width: 18,
+                            height: 18,
+                          ),
                     label: const Text('Continue with Google'),
                   ),
                   const SizedBox(height: 16),
@@ -128,9 +144,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
                           'or',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
                         ),
                       ),
                       const Expanded(child: Divider()),
@@ -146,21 +161,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         children: [
                           TextFormField(
                             controller: _displayNameController,
-                            decoration: const InputDecoration(labelText: 'Display name'),
+                            decoration: const InputDecoration(
+                              labelText: 'Display name',
+                            ),
                             textCapitalization: TextCapitalization.words,
                             autofillHints: const [AutofillHints.name],
-                            validator: (v) =>
-                                (v == null || v.trim().isEmpty) ? 'Display name is required' : null,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Display name is required'
+                                : null,
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _emailController,
-                            decoration: const InputDecoration(labelText: 'Email'),
+                            decoration: const InputDecoration(
+                              labelText: 'Email',
+                            ),
                             keyboardType: TextInputType.emailAddress,
                             autofillHints: const [AutofillHints.newUsername],
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty) return 'Email is required';
-                              if (!v.contains('@')) return "That email doesn't look right";
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Email is required';
+                              }
+                              if (!v.contains('@')) {
+                                return "That email doesn't look right";
+                              }
                               return null;
                             },
                           ),
@@ -176,8 +200,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       ? Icons.visibility_off_outlined
                                       : Icons.visibility_outlined,
                                 ),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                                tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                                tooltip: _obscurePassword
+                                    ? 'Show password'
+                                    : 'Hide password',
                               ),
                             ),
                             obscureText: _obscurePassword,
@@ -195,19 +223,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       ? Icons.visibility_off_outlined
                                       : Icons.visibility_outlined,
                                 ),
-                                onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                                tooltip: _obscureConfirm ? 'Show password' : 'Hide password',
+                                onPressed: () => setState(
+                                  () => _obscureConfirm = !_obscureConfirm,
+                                ),
+                                tooltip: _obscureConfirm
+                                    ? 'Show password'
+                                    : 'Hide password',
                               ),
                             ),
                             obscureText: _obscureConfirm,
                             autofillHints: const [AutofillHints.newPassword],
-                            validator: (v) =>
-                                validatePasswordConfirmation(v, _passwordController.text),
+                            validator: (v) => validatePasswordConfirmation(
+                              v,
+                              _passwordController.text,
+                            ),
                           ),
                           const SizedBox(height: 24),
                           FilledButton(
                             onPressed: _submitting ? null : _submit,
-                            child: Text(_submitting ? 'Creating account…' : 'Create account'),
+                            child: Text(
+                              _submitting
+                                  ? 'Creating account…'
+                                  : 'Create account',
+                            ),
                           ),
                         ],
                       ),
@@ -225,7 +263,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         ),
       ),
-      floatingActionButton: const CrisisFab(),
     );
   }
 }

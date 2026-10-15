@@ -38,3 +38,12 @@ apps/mobile/.packages
 .vscode/
 .idea/
 *.iml
+
+# Agent / skills tooling caches
+.agents/
+skills-lock.json
+.claude/worktrees/
+.claude/skills/
+
+# Local scratch reference doc
+info.md

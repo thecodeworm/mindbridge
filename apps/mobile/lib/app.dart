@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/app_lock_state.dart';
+import 'core/onboarding_state.dart';
 import 'core/recovery_state.dart';
 import 'core/theme.dart';
 import 'core/theme_controller.dart';
@@ -10,7 +11,7 @@ import 'features/auth/app_lock_service.dart';
 import 'features/auth/reset_password_screen.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/auth/sign_up_screen.dart';
-import 'features/home/home_screen.dart';
+import 'features/shell/main_shell.dart';
 import 'features/onboarding/landing_screen.dart';
 import 'features/onboarding/onboarding_flow.dart';
 
@@ -78,12 +79,14 @@ class _AppLockWrapperState extends State<_AppLockWrapper> with WidgetsBindingObs
 
 enum _Stage { landing, onboarding, auth }
 
-// DEMO MODE: always opens on LandingScreen, regardless of any persisted
-// "onboarding completed" state or an existing session — deliberately not
-// reading OnboardingState.completed here, so every cold launch replays the
-// same landing -> onboarding -> auth sequence for recording. Revert to
-// checking OnboardingState.completed (see git history) once demo recording
-// is done and this should go back to skipping onboarding for return users.
+/// Records the demo video: `--dart-define=DEMO_MODE=true` replays the
+/// landing -> onboarding -> auth sequence on every cold launch, ignoring the
+/// persisted "onboarding completed" flag. Off by default.
+const bool _kDemoMode = bool.fromEnvironment('DEMO_MODE');
+
+/// First-run front door. Returning users (onboarding already completed or
+/// skipped, or an existing session, see main.dart) go straight to
+/// [AuthGate]; first-time installs see the landing screen, then onboarding.
 class _OnboardingGate extends StatefulWidget {
   const _OnboardingGate();
 
@@ -92,7 +95,8 @@ class _OnboardingGate extends StatefulWidget {
 }
 
 class _OnboardingGateState extends State<_OnboardingGate> {
-  _Stage _stage = _Stage.landing;
+  late _Stage _stage =
+      !_kDemoMode && OnboardingState.completed.value ? _Stage.auth : _Stage.landing;
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +104,10 @@ class _OnboardingGateState extends State<_OnboardingGate> {
       case _Stage.landing:
         return LandingScreen(
           onGetStarted: () => setState(() => _stage = _Stage.onboarding),
-          onLogIn: () => setState(() => _stage = _Stage.auth),
+          onLogIn: () {
+            OnboardingState.set(true);
+            setState(() => _stage = _Stage.auth);
+          },
         );
       case _Stage.onboarding:
         return OnboardingFlow(
@@ -159,7 +166,7 @@ class _LockScreenState extends State<_LockScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('🔒', style: TextStyle(fontSize: 48)),
+              Icon(Icons.lock_outline, size: 48, color: cs.primary),
               const SizedBox(height: 16),
               Text('MindBridge is locked', style: tt.titleMedium),
               const SizedBox(height: 8),
@@ -221,7 +228,7 @@ class _AuthGateState extends State<AuthGate> {
                 snapshot.data?.session ?? Supabase.instance.client.auth.currentSession;
 
             if (session != null) {
-              return const HomeScreen();
+              return const MainShell();
             }
 
             return _showSignUp

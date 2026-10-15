@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { moodTagInfo } from '../../../../shared/types'
@@ -6,7 +7,7 @@ import type { MoodTag, MoodQuadrant, ActivityTag } from '../../../../shared/type
 import { logMood, addJournalEntry } from '../lib/moodService'
 import { updateEntry } from '../lib/historyService'
 import type { EntryDetail } from '../lib/historyService'
-import { moodColor } from '../lib/moodColor'
+import { moodColor, moodWord } from '../lib/moodColor'
 import { getActivityTags, setEntryActivities } from '../lib/activityService'
 import { ActivityTagPicker } from '../components/ActivityTagPicker'
 import { DistortionPicker } from '../components/DistortionPicker'
@@ -64,7 +65,7 @@ export function MoodLogPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!tag) { setError('Pick a mood tag before submitting.'); return }
+    if (!tag) { setError("Pick the word that fits best, then you're set."); return }
     if (!user) return
 
     setError(null)
@@ -138,65 +139,81 @@ export function MoodLogPage() {
       await setEntryActivities(moodLogId, user.id, selectedActivities)
     }
 
-    navigate('/suggestion', { state: { moodLogId, userId: user.id }, replace: true })
+    navigate('/suggestion', { state: { moodLogId, userId: user.id, moodScore: Math.round(score) }, replace: true })
   }
 
+  const cancelTo = editing ? `/entry/${editing.moodLog.id}` : '/'
+
   return (
-    <div className="flex min-h-screen items-start justify-center bg-cream p-4 pt-12">
-      <form
-        onSubmit={handleSubmit}
-        className="card-lg w-full max-w-md space-y-6 p-8"
-      >
-        <h1 className="text-2xl font-bold text-ink">
-          {editing ? 'Edit entry' : 'How are you feeling?'}
-        </h1>
-
-        {error && (
-          <p className="rounded-lg bg-error-tint px-3 py-2 text-sm text-error">{error}</p>
-        )}
-
-        {/* Score */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-muted">Mood score</label>
-            <span className="text-2xl font-bold tabular-nums" style={{ color }}>{roundedScore}</span>
-          </div>
-          <FeltMoodSlider value={score} onChange={setScore} />
-          <div className="flex justify-between text-xs text-faint">
-            <span>1</span>
-            <span>10</span>
-          </div>
+    <div className="min-h-screen bg-cream">
+      <form onSubmit={handleSubmit} className="mx-auto w-full max-w-xl px-4 pb-32 sm:px-6">
+        <div className="flex items-center gap-2 pt-4">
+          <button
+            type="button"
+            onClick={() => navigate(cancelTo)}
+            aria-label="Cancel"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-ink hover:bg-surface"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+          <h1 className="flex-1 text-2xl font-semibold text-ink">{editing ? 'Edit entry' : 'Check in'}</h1>
+          <CrisisChip inline />
         </div>
 
+        {error && <p className="mt-4 rounded-2xl bg-error-tint px-4 py-3 text-ink">{error}</p>}
+
+        {/* Score */}
+        <section className="mt-6">
+          <p className="label">How are you feeling?</p>
+          <p className="mt-1 flex items-baseline gap-3">
+            <span className="tabular font-display text-[96px] font-black leading-none tracking-[-0.05em] text-ink">{roundedScore}</span>
+            <span className="font-display text-4xl font-black tracking-tight">
+              <span className="hl" style={{ '--mark': color } as CSSProperties}>{moodWord(score)}</span>
+            </span>
+          </p>
+          <div className="mt-3">
+            <FeltMoodSlider value={score} onChange={setScore} />
+          </div>
+          <div className="flex justify-between text-sm text-muted">
+            <span>Heavy</span>
+            <span>Great</span>
+          </div>
+        </section>
+
         {/* Two-step mood tag picker */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-muted">How would you describe it?</p>
+        <section className="mt-8 space-y-3">
+          <h2 className="label">Which word fits?</h2>
           <MoodTagPicker
             quadrant={quadrant}
             tag={tag}
             onQuadrantChange={(q) => { setQuadrant(q); setTag(null) }}
-            onTagChange={setTag}
+            onTagChange={(t) => { setTag(t); setError(null) }}
           />
-        </div>
+        </section>
 
         {/* Activity tags */}
-        <ActivityTagPicker
-          tags={activityTags}
-          selected={selectedActivities}
-          onChange={setSelectedActivities}
-        />
+        <section className="mt-8 space-y-3">
+          <h2 className="label">What were you up to? (optional)</h2>
+          <ActivityTagPicker
+            tags={activityTags}
+            selected={selectedActivities}
+            onChange={setSelectedActivities}
+          />
+        </section>
 
         {tag && score <= 3 && (
-          <div className="flex flex-col items-center gap-2 py-2 text-center">
+          <div className="mt-8 flex flex-col items-center gap-2 text-center">
             <BreathingCircle color={color} size={72} />
-            <p className="text-sm text-muted">Take a breath before you write, if that helps.</p>
+            <p className="text-muted">Take a breath before you write, if that helps.</p>
           </div>
         )}
 
         {/* Journal */}
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-muted" htmlFor="journal">
-            Journal <span className="font-normal text-faint">(optional)</span>
+        <section className="mt-8 space-y-3">
+          <label className="label block" htmlFor="journal">
+            What's on your mind? (optional)
           </label>
           <textarea
             id="journal"
@@ -204,59 +221,53 @@ export function MoodLogPage() {
             onChange={(e) => { setJournal(e.target.value); setDistortionsDone(false) }}
             maxLength={500}
             rows={4}
-            placeholder="How are you feeling? (optional)"
-            className="w-full resize-none rounded-lg border border-border bg-field px-3 py-2 text-ink placeholder:text-faint"
+            placeholder="A sentence or two is plenty. Only you can see this."
+            className="ruled w-full resize-none rounded-xl border border-border px-4 pb-1 pt-0 text-ink placeholder:text-faint focus:border-blue-dark"
           />
-          <p className="text-right text-xs text-faint">{journal.length} / 500</p>
-        </div>
+          <p className="tabular text-right text-sm text-faint">{journal.length} / 500</p>
 
-        {/* Cognitive distortion picker — shown when journal has text and not yet done */}
-        {journal.trim().length > 0 && !distortionsDone && !showDistortions && (
-          <button
-            type="button"
-            onClick={() => setShowDistortions(true)}
-            className="text-sm text-muted transition-colors hover:text-ink"
-          >
-            ✦ Notice any thinking traps? (optional)
-          </button>
-        )}
+          {/* Cognitive distortion picker — shown when journal has text and not yet done */}
+          {journal.trim().length > 0 && !distortionsDone && !showDistortions && (
+            <button
+              type="button"
+              onClick={() => setShowDistortions(true)}
+              className="rounded-[10px] border border-border bg-card px-4 py-2 font-semibold text-ink hover:bg-blue-tint"
+            >
+              Notice any thinking traps? (optional)
+            </button>
+          )}
 
-        {showDistortions && !distortionsDone && (
-          <DistortionPicker
-            onDone={(d, r) => {
-              setDistortions(d)
-              setReframe(r)
-              setDistortionsDone(true)
-              setShowDistortions(false)
-            }}
-            onSkip={() => setShowDistortions(false)}
-          />
-        )}
+          {showDistortions && !distortionsDone && (
+            <DistortionPicker
+              onDone={(d, r) => {
+                setDistortions(d)
+                setReframe(r)
+                setDistortionsDone(true)
+                setShowDistortions(false)
+              }}
+              onSkip={() => setShowDistortions(false)}
+            />
+          )}
 
-        {distortionsDone && distortions.length > 0 && (
-          <p className="text-xs text-success">
-            ✓ Reframe saved ({distortions.length} thinking trap{distortions.length > 1 ? 's' : ''} noted)
-          </p>
-        )}
+          {distortionsDone && distortions.length > 0 && (
+            <p className="text-sm text-success">
+              ✓ Reframe saved ({distortions.length} thinking trap{distortions.length > 1 ? 's' : ''} noted)
+            </p>
+          )}
+        </section>
 
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => navigate(editing ? `/entry/${editing.moodLog.id}` : '/')}
-            className="flex-1 rounded-lg border border-border bg-field px-3 py-2 font-medium text-ink transition-colors hover:bg-blue-tint"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="flex-1 rounded-lg bg-blue-dark px-3 py-2 font-medium text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            {submitting ? 'Saving…' : editing ? 'Save changes' : 'Save'}
-          </button>
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-cream/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+          <div className="mx-auto max-w-xl px-4 py-3 sm:px-6">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-[10px] bg-blue-dark px-6 py-3.5 font-display text-lg font-extrabold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {submitting ? 'Saving…' : editing ? 'Save changes' : 'Get my technique'}
+            </button>
+          </div>
         </div>
       </form>
-      <CrisisChip />
     </div>
   )
 }

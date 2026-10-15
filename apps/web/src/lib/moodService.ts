@@ -1,3 +1,4 @@
+import { friendlyError } from './friendlyError'
 import type { MoodLog, MoodTag } from '../../../../shared/types'
 import { supabase } from './supabaseClient'
 
@@ -16,7 +17,7 @@ export async function logMood({
     .select('id')
     .single()
 
-  if (error) return { moodLogId: null, error: error.message }
+  if (error) return { moodLogId: null, error: friendlyError(error.message) }
   return { moodLogId: data.id, error: null }
 }
 
@@ -33,7 +34,7 @@ export async function addJournalEntry({
     .from('journal_entries')
     .insert({ mood_log_id: moodLogId, user_id: userId, body })
 
-  return { error: error?.message ?? null }
+  return { error: (error ? friendlyError(error.message) : null) }
 }
 
 export async function getMoodLogsInRange(
@@ -50,6 +51,6 @@ export async function getMoodLogsInRange(
     .gte('logged_at', since.toISOString())
     .order('logged_at', { ascending: true })
 
-  if (error) return { logs: [], error: error.message }
+  if (error) return { logs: [], error: friendlyError(error.message) }
   return { logs: (data ?? []) as MoodLog[], error: null }
 }

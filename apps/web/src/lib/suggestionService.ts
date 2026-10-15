@@ -14,7 +14,7 @@ export async function generateSuggestion({
   if (error) {
     // FunctionsHttpError carries the server body in error.context (a Response).
     // Keep the user-facing message generic + retryable; log details for debugging.
-    return { suggestion: null, error: 'Could not generate a suggestion. Please try again.' }
+    return { suggestion: null, error: "We couldn't put together a technique this time. Your check-in is saved, so try again in a moment." }
   }
   return { suggestion: data as SuggestionResponse, error: null }
 }

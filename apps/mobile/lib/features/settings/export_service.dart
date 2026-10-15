@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 
 Future<String?> exportUserData(String userId, {Rect? sharePositionOrigin}) async {
   final client = Supabase.instance.client;
@@ -41,7 +42,7 @@ Future<String?> exportUserData(String userId, {Rect? sharePositionOrigin}) async
     );
     return null;
   } on PostgrestException catch (e) {
-    return e.message;
+    return friendlyErrorMessage(e.message);
   } catch (e) {
     return e.toString();
   }

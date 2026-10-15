@@ -24,6 +24,6 @@ export function validatePasswordConfirmation(
   confirmPassword: string,
 ): string | null {
   if (!confirmPassword) return 'Please confirm your password.'
-  if (password !== confirmPassword) return "Passwords don't match — give that another try."
+  if (password !== confirmPassword) return "Passwords don't match. Give that another try."
   return null
 }

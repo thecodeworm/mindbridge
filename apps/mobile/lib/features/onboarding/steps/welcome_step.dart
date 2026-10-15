@@ -1,55 +1,68 @@
 import 'package:flutter/material.dart';
 import '../../../core/mood_color.dart';
-import '../../../widgets/breathing_circle.dart';
+import '../../../widgets/notebook.dart';
+import '../notebook_step.dart';
 
-/// Onboarding screen 1 — wordmark over the breathing mood-ramp, one-line
-/// value prop, single CTA. docs/research/00-design-direction.md §6.1.
 class WelcomeStep extends StatelessWidget {
   const WelcomeStep({super.key, required this.onNext});
-
   final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              BreathingCircle(
-                colors: [moodColor(1), moodColor(5.5), moodColor(10)],
-                size: 220,
-                cycleDuration: const Duration(seconds: 5),
-              ),
-              Text(
-                'MindBridge',
-                textAlign: TextAlign.center,
-                style: tt.displaySmall?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.bold,
+    return NotebookStep(
+      action: FilledButton(onPressed: onNext, child: const Text('Get started')),
+      children: [
+        Text('A little space.', style: tt.displaySmall),
+        Highlight('Just for you.', color: moodColor(5), style: tt.displaySmall),
+        const SizedBox(height: 16),
+        Text(
+          'A private space to check in with yourself, every day.',
+          style: tt.bodyLarge?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 40),
+        const SectionLabel('Every mood has a color'),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            for (final (i, word) in [
+              'Heavy',
+              'Low',
+              'Okay',
+              'Good',
+              'Great',
+            ].indexed) ...[
+              if (i > 0) const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: moodColor(i * 2 + 1.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      word,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 32),
-          Text(
-            'A private space to check in with yourself, every day.',
-            textAlign: TextAlign.center,
-            style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: 48),
-          FilledButton(
-            onPressed: onNext,
-            child: const Text('Get started'),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/app_exception.dart';
 import '../../core/models.dart';
 
 export '../../core/models.dart' show MoodLog;
@@ -54,7 +55,7 @@ class MoodLogService {
 
   final SupabaseClient _client;
 
-  Future<({String? moodLogId, String? error})> logMood({
+  Future<String> logMood({
     required String userId,
     required int moodScore,
     required String moodTag,
@@ -65,9 +66,9 @@ class MoodLogService {
           .insert({'user_id': userId, 'mood_score': moodScore, 'mood_tag': moodTag})
           .select('id')
           .single();
-      return (moodLogId: data['id'] as String, error: null);
+      return data['id'] as String;
     } on PostgrestException catch (e) {
-      return (moodLogId: null, error: e.message);
+      throw AppException(e.message);
     }
   }
 
@@ -82,11 +83,11 @@ class MoodLogService {
           .insert({'mood_log_id': moodLogId, 'user_id': userId, 'body': body});
       return null;
     } on PostgrestException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
-  Future<({List<MoodLog> logs, String? error})> getMoodLogsInRange({
+  Future<List<MoodLog>> getMoodLogsInRange({
     required String userId,
     required int days,
   }) async {
@@ -98,16 +99,15 @@ class MoodLogService {
           .eq('user_id', userId)
           .gte('logged_at', since.toIso8601String())
           .order('logged_at', ascending: true);
-      final logs = (data as List<dynamic>)
+      return (data as List<dynamic>)
           .map((row) => MoodLog.fromJson(row as Map<String, dynamic>))
           .toList();
-      return (logs: logs, error: null);
     } on PostgrestException catch (e) {
-      return (logs: <MoodLog>[], error: e.message);
+      throw AppException(e.message);
     }
   }
 
-  Future<({List<MoodLog> logs, String? error})> getAllLogsForYear({
+  Future<List<MoodLog>> getAllLogsForYear({
     required String userId,
   }) async {
     final since = DateTime.now().subtract(const Duration(days: 366));
@@ -118,27 +118,25 @@ class MoodLogService {
           .eq('user_id', userId)
           .gte('logged_at', since.toIso8601String())
           .order('logged_at', ascending: true);
-      final logs = (data as List<dynamic>)
+      return (data as List<dynamic>)
           .map((row) => MoodLog.fromJson(row as Map<String, dynamic>))
           .toList();
-      return (logs: logs, error: null);
     } on PostgrestException catch (e) {
-      return (logs: <MoodLog>[], error: e.message);
+      throw AppException(e.message);
     }
   }
 
-  Future<({List<ActivityTag> tags, String? error})> getActivityTags() async {
+  Future<List<ActivityTag>> getActivityTags() async {
     try {
       final data = await _client
           .from('activity_tags')
           .select('id, user_id, slug, label, emoji')
           .order('label', ascending: true);
-      final tags = (data as List<dynamic>)
+      return (data as List<dynamic>)
           .map((row) => ActivityTag.fromJson(row as Map<String, dynamic>))
           .toList();
-      return (tags: tags, error: null);
     } on PostgrestException catch (e) {
-      return (tags: <ActivityTag>[], error: e.message);
+      throw AppException(e.message);
     }
   }
 
@@ -165,12 +163,11 @@ class MoodLogService {
       }
       return null;
     } on PostgrestException catch (e) {
-      return e.message;
+      return friendlyErrorMessage(e.message);
     }
   }
 
-  Future<({List<({MoodLog log, List<ActivityTag> activities})> entries, String? error})>
-      getLogsWithActivities({
+  Future<List<({MoodLog log, List<ActivityTag> activities})>> getLogsWithActivities({
     required String userId,
     required int days,
   }) async {
@@ -186,7 +183,7 @@ class MoodLogService {
           .gte('logged_at', since.toIso8601String())
           .order('logged_at', ascending: true);
 
-      final entries = (data as List<dynamic>).map((row) {
+      return (data as List<dynamic>).map((row) {
         final map = row as Map<String, dynamic>;
         final log = MoodLog.fromJson(map);
         final activityRows = (map['mood_log_activities'] as List<dynamic>?) ?? [];
@@ -199,10 +196,8 @@ class MoodLogService {
             .toList();
         return (log: log, activities: activities);
       }).toList();
-
-      return (entries: entries, error: null);
     } on PostgrestException catch (e) {
-      return (entries: <({MoodLog log, List<ActivityTag> activities})>[], error: e.message);
+      throw AppException(e.message);
     }
   }
 }
