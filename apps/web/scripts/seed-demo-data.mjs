@@ -22,6 +22,26 @@ if (!env.SUPABASE_SERVICE_ROLE_KEY) {
   process.exit(1)
 }
 
+
+// Safety rails. These scripts create and DELETE auth users with the service
+// role, and their old hard-coded passwords were committed to git. So:
+//  - the target project must be confirmed explicitly (SEED_TARGET_REF), and
+//  - passwords come from the environment, never from the repo.
+// Point them at a staging project, not production.
+const targetRef = new URL(env.VITE_SUPABASE_URL).hostname.split('.')[0]
+if (process.env.SEED_TARGET_REF !== targetRef) {
+  console.error(`Refusing to run. Set SEED_TARGET_REF=${targetRef} to confirm this is the project you mean to seed.`)
+  process.exit(1)
+}
+function requirePassword(name) {
+  const value = process.env[name] ?? ''
+  if (value.length < 12) {
+    console.error(`Set ${name} (12+ characters) in the environment. Passwords are not stored in the repo.`)
+    process.exit(1)
+  }
+  return value
+}
+
 const opts = { auth: { autoRefreshToken: false, persistSession: false } }
 
 // service_role: creates the demo auth user, and inserts coping_suggestions /
@@ -36,7 +56,7 @@ const supabaseAnon = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_
 // Separate domain from seed-rls-test-users.mjs so the two scripts' --wipe
 // flags can't accidentally delete each other's users.
 const DEMO_DOMAIN = 'mindbridge-demo.dev'
-const DEMO_PASSWORD = 'MindBridgeDemo2026!'
+const DEMO_PASSWORD = requirePassword('DEMO_PASSWORD')
 const DEMO_USER = { email: `demo@${DEMO_DOMAIN}`, display_name: 'Demo Teen' }
 
 const DAYS = 30
@@ -296,7 +316,7 @@ async function seed() {
   console.log(`\n${logCount} mood logs, ${journalCount} journal entries, ${suggestionCount} coping suggestions created.`)
   console.log('\n--- Demo login ---')
   console.log(`Email:    ${DEMO_USER.email}`)
-  console.log(`Password: ${DEMO_PASSWORD}`)
+  console.log('Password: (the DEMO_PASSWORD you supplied)')
   console.log('\nRun with --wipe to tear this down when done.')
 }
 

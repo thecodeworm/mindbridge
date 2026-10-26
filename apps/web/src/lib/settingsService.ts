@@ -25,11 +25,25 @@ export async function updateDisplayName(
   return { error: null }
 }
 
-export async function deleteAllUserData(userId: string): Promise<{ error: string | null }> {
-  // journal_entries and coping_suggestions cascade-delete via their
-  // mood_log_id FK — see 0001_init_schema.sql. This clears all mood data
-  // but does not close the login itself (that needs the admin API, which
-  // requires a service-role Edge Function — not built yet).
-  const { error } = await supabase.from('mood_logs').delete().eq('user_id', userId)
+export async function deleteAllUserData(): Promise<{ error: string | null }> {
+  // One server-side call removes everything derived from the user's content:
+  // mood logs (which cascade to journal entries, suggestions and activity
+  // links), weekly AI summaries, custom activity tags and archived duplicates.
+  // The login itself stays; use deleteAccount() to remove that too.
+  const { error } = await supabase.rpc('delete_my_data')
   return { error: (error ? friendlyError(error.message) : null) }
+}
+
+export async function deleteAccount(userId: string): Promise<{ error: string | null }> {
+  // The delete-account Edge Function removes the auth user with the service
+  // role; every table cascades from it. Afterwards the local session is
+  // cleared without a server round trip, since the server user is gone.
+  const { error } = await supabase.functions.invoke('delete-account', {
+    body: { user_id: userId, confirm: 'DELETE' },
+  })
+  if (error) {
+    return { error: "We couldn't delete your account just now. Nothing was removed. Please try again in a moment." }
+  }
+  await supabase.auth.signOut({ scope: 'local' })
+  return { error: null }
 }

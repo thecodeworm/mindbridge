@@ -1,5 +1,59 @@
 @import "tailwindcss";
 
+/* Self-hosted so no request leaves for Google Fonts (a teen's IP address
+   should not go to a third party just to render type). Same files as the
+   mobile app's assets/fonts. */
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/SchibstedGrotesk-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/SchibstedGrotesk-ExtraBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Schibsted Grotesk';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/SchibstedGrotesk-Black.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HankenGrotesk-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/HankenGrotesk-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/HankenGrotesk-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/HankenGrotesk-Bold.ttf') format('truetype');
+}
+
+
 /* ─────────────────────────────────────────────────────────────
    MindBridge design tokens (see CLAUDE.md § Design System)
 

@@ -221,7 +221,7 @@ export function MoodLogPage() {
             onChange={(e) => { setJournal(e.target.value); setDistortionsDone(false) }}
             maxLength={500}
             rows={4}
-            placeholder="A sentence or two is plenty. Only you can see this."
+            placeholder="A sentence or two is plenty. Other users can't see this."
             className="ruled w-full resize-none rounded-xl border border-border px-4 pb-1 pt-0 text-ink placeholder:text-faint focus:border-blue-dark"
           />
           <p className="tabular text-right text-sm text-faint">{journal.length} / 500</p>

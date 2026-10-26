@@ -17,6 +17,7 @@ interface AuthContextValue {
     email: string,
     password: string,
     displayName: string,
+    consent: Record<string, unknown>,
   ) => Promise<{ error: string | null }>
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signInWithGoogle: () => Promise<{ error: string | null }>
@@ -61,11 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function signUp(email: string, password: string, displayName: string) {
+  async function signUp(
+    email: string,
+    password: string,
+    displayName: string,
+    consent: Record<string, unknown>,
+  ) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName } },
+      options: { data: { display_name: displayName.trim().slice(0, 60), ...consent } },
     })
     return { error: error?.message ?? null }
   }
