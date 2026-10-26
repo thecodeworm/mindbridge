@@ -1,3 +1,7 @@
+// Edge Functions have their own wall-clock limit; fail well before it so the
+// caller can answer the client instead of being killed mid-request.
+const REQUEST_TIMEOUT_MS = 25_000
+
 export interface CallClaudeParams {
   apiKey: string
   model: string
@@ -39,27 +43,41 @@ export async function callClaude(
   } = params
   const startedAt = Date.now()
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
-      ...(responseSchema
-        ? {
-          output_config: {
-            format: { type: 'json_schema', schema: responseSchema },
-          },
-        }
-        : {}),
-    }),
-  })
+  let res: Response
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
+        ...(responseSchema
+          ? {
+            output_config: {
+              format: { type: 'json_schema', schema: responseSchema },
+            },
+          }
+          : {}),
+      }),
+    })
+  } catch (err) {
+    // Timeout or network failure: report it like any other failed request so
+    // the caller still finishes its ai_call_logs reservation.
+    console.error('Anthropic request threw:', err)
+    return {
+      ok: false,
+      reason: 'request_failed',
+      usage: {},
+      latencyMs: Date.now() - startedAt,
+    }
+  }
 
   const latencyMs = Date.now() - startedAt
 

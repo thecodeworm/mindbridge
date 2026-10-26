@@ -1,3 +1,11 @@
+# ======================================================================
+# WARNING: do NOT run `supabase config push` against the production project.
+# The [auth] values below are LOCAL DEV settings (site_url 127.0.0.1,
+# email confirmations off, 6 character passwords, 2 emails/hour). Pushing
+# them would overwrite the live project's auth configuration. Production
+# auth settings are managed in the Supabase dashboard only.
+# ======================================================================
+
 # For detailed configuration reference documentation, visit:
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
@@ -412,6 +420,9 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 verify_jwt = false
 
 [functions.generate-weekly-summary]
+verify_jwt = true
+
+[functions.delete-account]
 verify_jwt = true
 
 # pg-delta is the schema diff engine for db diff / db pull / db remote commit.

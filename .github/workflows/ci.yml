@@ -46,6 +46,7 @@ jobs:
               - '.github/workflows/ci.yml'
             supabase_migrations:
               - 'supabase/migrations/**'
+              - 'supabase/ci/**'
               - '.github/workflows/ci.yml'
       - name: No tracked .env files
         run: |
@@ -72,6 +73,8 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      # Fails the build on a high/critical advisory in the lockfile.
+      - run: npm audit --audit-level=high
 
   mobile:
     needs: detect-changes
@@ -112,10 +115,11 @@ jobs:
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2 (2.0.5)
         with:
           deno-version: 'v2.x'
-      - run: deno check generate-suggestion/index.ts
-      - run: deno check _shared/*.ts
-      - run: deno lint generate-suggestion/ _shared/
-      - run: deno fmt --check generate-suggestion/ _shared/
+      # Every function, not just generate-suggestion: the others were never
+      # type-checked, linted or format-checked before.
+      - run: deno check */index.ts _shared/*.ts
+      - run: deno lint
+      - run: deno fmt --check
       - run: deno test --allow-env _shared/
 
   rls-check:
@@ -169,6 +173,10 @@ jobs:
             end if;
             if not exists (select 1 from pg_roles where rolname = 'service_role') then
               create role service_role;
+            end if;
+            -- 0015_keepalive.sql and 0016 reference anon explicitly.
+            if not exists (select 1 from pg_roles where rolname = 'anon') then
+              create role anon;
             end if;
           end
           $$;
@@ -336,6 +344,9 @@ jobs:
           reset role;
           select set_config('request.jwt.claims', '', false);
           SQL
+
+      - name: Hardening assertions (migration 0016)
+        run: psql -v ON_ERROR_STOP=1 -f supabase/ci/security_hardening_2.sql
 
   ci-success:
     needs: [detect-changes, web, mobile, supabase-function, rls-check]
