@@ -162,8 +162,6 @@ export function MoodLogPage() {
           <CrisisChip inline />
         </div>
 
-        {error && <p className="mt-4 rounded-2xl bg-error-tint px-4 py-3 text-ink">{error}</p>}
-
         {/* Score */}
         <section className="mt-6">
           <p className="label">How are you feeling?</p>
@@ -258,6 +256,8 @@ export function MoodLogPage() {
 
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-cream/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
           <div className="mx-auto max-w-xl px-4 py-3 sm:px-6">
+            {/* Lives in the sticky bar so it's visible wherever the user has scrolled to. */}
+            {error && <p role="alert" className="mb-3 rounded-2xl bg-error-tint px-4 py-3 text-ink">{error}</p>}
             <button
               type="submit"
               disabled={submitting}
