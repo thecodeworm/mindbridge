@@ -2,7 +2,7 @@
 description: Drive the Flutter app via the Dart MCP server through the golden-path flow and verify state
 ---
 
-Run MindBridge's mobile verification pass against the seeded QA demo account (`qa-demo@mindbridge.test` / `MindBridgeQA2026!`) using the Dart/Flutter MCP server — no manual tapping.
+Run MindBridge's mobile verification pass against the seeded QA demo account (`qa-demo@mindbridge.test`, password = the `QA_PASSWORD` you seeded it with; it is no longer stored in the repo) using the Dart/Flutter MCP server — no manual tapping.
 
 ## One-time setup (already done as of 2026-08-18, check before assuming it's stale)
 

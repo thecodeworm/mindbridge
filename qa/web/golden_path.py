@@ -22,13 +22,14 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 import pathlib
 import sys
 
 from playwright.sync_api import sync_playwright
 
 QA_EMAIL = "qa-demo@mindbridge.test"
-QA_PASSWORD = "MindBridgeQA2026!"
+QA_PASSWORD = os.environ.get("QA_PASSWORD", "")
 BASE_URL = "http://localhost:5173"
 
 
@@ -48,6 +49,9 @@ def main() -> int:
         "asked for a live-AI check, never on a routine/automatic run)",
     )
     args = parser.parse_args()
+    if not QA_PASSWORD:
+        print("Set QA_PASSWORD in the environment (the password the QA user was seeded with).", file=sys.stderr)
+        return 1
 
     out_dir = pathlib.Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)

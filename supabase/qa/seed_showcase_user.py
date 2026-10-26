@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import pathlib
 import random
 import ssl
@@ -60,7 +61,7 @@ import certifi
 _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 
 SHOWCASE_EMAIL = "showcase@mindbridge.test"
-SHOWCASE_PASSWORD = "showcase26"
+SHOWCASE_PASSWORD = os.environ.get("SHOWCASE_PASSWORD", "")
 SHOWCASE_DISPLAY_NAME = "Jordan"
 SHOWCASE_REMINDER_TIME = "20:00:00"
 
@@ -330,6 +331,26 @@ def summary_for_week(avg_score: float, count: int, week_index: int, total_weeks:
     }
 
 
+def require_safe_target(supabase_url: str, password: str, password_var: str) -> bool:
+    """Seed scripts create and delete auth users with the service role, and the
+    old hard-coded passwords were committed to git. Require an explicit target
+    confirmation and an environment-supplied password. Use a staging project."""
+    ref = supabase_url.split("//", 1)[-1].split(".", 1)[0]
+    if os.environ.get("SEED_TARGET_REF") != ref:
+        print(
+            f"Refusing to run. Set SEED_TARGET_REF={ref} to confirm this is the project you mean to seed.",
+            file=sys.stderr,
+        )
+        return False
+    if len(password) < 12:
+        print(
+            f"Set {password_var} (12+ characters) in the environment. Passwords are not stored in the repo.",
+            file=sys.stderr,
+        )
+        return False
+    return True
+
+
 def main() -> int:
     if not ENV_FILE.exists():
         print(f"missing {ENV_FILE}", file=sys.stderr)
@@ -337,6 +358,8 @@ def main() -> int:
 
     env = load_env(ENV_FILE)
     supabase_url = env["VITE_SUPABASE_URL"].rstrip("/")
+    if not require_safe_target(supabase_url, SHOWCASE_PASSWORD, "SHOWCASE_PASSWORD"):
+        return 1
     service_key = env["SUPABASE_SERVICE_ROLE_KEY"]
     anon_key = env["VITE_SUPABASE_ANON_KEY"]
 
@@ -670,7 +693,7 @@ def main() -> int:
 
     print("\nShowcase account ready:")
     print(f"  email:            {SHOWCASE_EMAIL}")
-    print(f"  password:         {SHOWCASE_PASSWORD}")
+    print("  password:         (the SHOWCASE_PASSWORD you supplied)")
     print(f"  user_id:          {user_id}")
     print(f"  mood logs:        {len(mood_log_ids)} across {DAYS} days")
     print(f"  current streak:   ~{current_streak_days} days (days_ago 0-11)")
