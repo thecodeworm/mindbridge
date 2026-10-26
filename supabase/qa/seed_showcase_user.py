@@ -133,7 +133,7 @@ TECHNIQUES = [
         "steps": [
             "Jot the worry down on paper instead of chewing on it right now.",
             "Pick a specific 10-minute slot later today to think it through.",
-            "When that time comes, reread it -- most worries shrink once you revisit them.",
+            "When that time comes, reread it; most worries shrink once you revisit them.",
         ],
         "tags": ["anxious", "meh"],
     },
@@ -163,7 +163,7 @@ TECHNIQUES = [
         "steps": [
             "Pick the smallest possible version of the thing you're avoiding.",
             "Set a timer for just 5 minutes and start only that much.",
-            "Notice that starting was the hard part -- decide whether to keep going once the timer ends.",
+            "Notice that starting was the hard part; decide whether to keep going once the timer ends.",
         ],
         "tags": ["tired", "meh"],
     },
@@ -172,7 +172,7 @@ TECHNIQUES = [
         "description": "Uses a small deliberate action to shift out of a reactive, heated moment.",
         "steps": [
             "Notice the urge the anger is pushing you toward.",
-            "Do the opposite on purpose -- soften your posture, lower your voice, step away for a minute.",
+            "Do the opposite on purpose: soften your posture, lower your voice, step away for a minute.",
             "Come back to the situation once your body isn't running the show anymore.",
         ],
         "tags": ["angry", "confused"],
@@ -191,19 +191,19 @@ NARRATIVE_DAYS = {
         "score": 3, "tag": "anxious",
         "body": "Bombed practice questions for tomorrow's exam. I'm going to fail the whole class.",
         "distortions": ["catastrophizing"],
-        "reframe": "One bad practice set doesn't set the whole grade -- I still have time to review the topics I missed.",
+        "reframe": "One bad practice set doesn't set the whole grade; I still have time to review the topics I missed.",
     },
     20: {
         "score": 4, "tag": "sad",
         "body": "My friends got quiet when I sat down at lunch. Pretty sure they're annoyed with me.",
         "distortions": ["mind-reading"],
-        "reframe": "They might've just been tired, or mid-conversation about something unrelated -- I don't actually know what they were thinking.",
+        "reframe": "They might've just been tired, or mid-conversation about something unrelated; I don't actually know what they were thinking.",
     },
     30: {
         "score": 4, "tag": "meh",
         "body": "Got a B- on the project. If it's not an A it basically doesn't count.",
         "distortions": ["all-or-nothing"],
-        "reframe": "A B- is still a solid grade on a hard project -- it doesn't erase the parts I did well.",
+        "reframe": "A B- is still a solid grade on a hard project; it doesn't erase the parts I did well.",
     },
     50: {
         "score": 7, "tag": "calm",
@@ -219,7 +219,7 @@ NARRATIVE_DAYS = {
         "score": 5, "tag": "meh",
         "body": "I should have finished my homework earlier instead of scrolling all night. I should just be better at this by now.",
         "distortions": ["should_statements"],
-        "reframe": "I'm still learning how to manage my time -- one slow night doesn't mean I'm bad at this.",
+        "reframe": "I'm still learning how to manage my time; one slow night doesn't mean I'm bad at this.",
     },
 }
 
@@ -297,16 +297,16 @@ def week_start_str(d: dt.date) -> str:
 def summary_for_week(avg_score: float, count: int, week_index: int, total_weeks: int) -> dict:
     if avg_score >= 7:
         summary = (
-            "This was a genuinely good week -- your mood stayed high across most check-ins, "
+            "This was a genuinely good week; your mood stayed high across most check-ins, "
             "and it looks like the things you've been leaning on (friends, time outdoors) kept showing up."
         )
         highlights = [
             "Mood stayed in the happy/calm range most of the week.",
-            "Consistent check-ins -- you showed up for yourself daily.",
+            "Consistent check-ins: you showed up for yourself daily.",
         ]
     elif avg_score >= 5:
         summary = (
-            "A pretty even week overall -- some ups and downs, but nothing that knocked you off track. "
+            "A pretty even week overall, some ups and downs, but nothing that knocked you off track. "
             "You kept checking in even on the flatter days, which matters more than it feels like."
         )
         highlights = [
@@ -316,14 +316,14 @@ def summary_for_week(avg_score: float, count: int, week_index: int, total_weeks:
     else:
         summary = (
             "This was a harder week. Mood dipped more than usual, and it's worth being gentle with "
-            "yourself about that -- showing up to log it, even on the low days, is still showing up."
+            "yourself about that; showing up to log it, even on the low days, is still showing up."
         )
         highlights = [
-            "A few tougher days this week -- worth noticing what was going on around them.",
+            "A few tougher days this week, worth noticing what was going on around them.",
             "You kept logging even when the mood wasn't great, which is the harder thing to do.",
         ]
     if week_index == total_weeks - 1:
-        highlights.append("Most recent week -- keep an eye on how this trend continues.")
+        highlights.append("Most recent week: keep an eye on how this trend continues.")
     return {
         "summary": f"{summary} ({count} check-in{'s' if count != 1 else ''} this week.)",
         "highlights": highlights,
