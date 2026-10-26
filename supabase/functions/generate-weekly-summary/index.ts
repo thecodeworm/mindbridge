@@ -27,7 +27,7 @@ const GLOBAL_DAILY_CAP = parseCap(
   DEFAULT_GLOBAL_DAILY_CAP,
 )
 
-const MODEL = 'claude-haiku-4-5'
+const MODEL = 'claude-haiku-5-5'
 const MAX_FIELD_LENGTH = 2000
 
 const SYSTEM_PROMPT =
