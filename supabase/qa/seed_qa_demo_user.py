@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import pathlib
 import ssl
 import sys
@@ -27,7 +28,7 @@ import certifi
 _SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 
 QA_EMAIL = "qa-demo@mindbridge.test"
-QA_PASSWORD = "MindBridgeQA2026!"
+QA_PASSWORD = os.environ.get("QA_PASSWORD", "")
 QA_DISPLAY_NAME = "QA Demo"
 
 # Varied fixture techniques so Journal/Toolkit don't read as one repeated row.
@@ -109,6 +110,26 @@ def request(method: str, url: str, headers: dict[str, str], body: dict | None = 
             return e.code, raw.decode(errors="replace")
 
 
+def require_safe_target(supabase_url: str, password: str, password_var: str) -> bool:
+    """Seed scripts create and delete auth users with the service role, and the
+    old hard-coded passwords were committed to git. Require an explicit target
+    confirmation and an environment-supplied password. Use a staging project."""
+    ref = supabase_url.split("//", 1)[-1].split(".", 1)[0]
+    if os.environ.get("SEED_TARGET_REF") != ref:
+        print(
+            f"Refusing to run. Set SEED_TARGET_REF={ref} to confirm this is the project you mean to seed.",
+            file=sys.stderr,
+        )
+        return False
+    if len(password) < 12:
+        print(
+            f"Set {password_var} (12+ characters) in the environment. Passwords are not stored in the repo.",
+            file=sys.stderr,
+        )
+        return False
+    return True
+
+
 def main() -> int:
     if not ENV_FILE.exists():
         print(f"missing {ENV_FILE}", file=sys.stderr)
@@ -116,6 +137,8 @@ def main() -> int:
 
     env = load_env(ENV_FILE)
     supabase_url = env["VITE_SUPABASE_URL"].rstrip("/")
+    if not require_safe_target(supabase_url, QA_PASSWORD, "QA_PASSWORD"):
+        return 1
     service_key = env["SUPABASE_SERVICE_ROLE_KEY"]
     anon_key = env["VITE_SUPABASE_ANON_KEY"]
 
@@ -315,7 +338,7 @@ def main() -> int:
 
     print("\nQA demo account ready:")
     print(f"  email:    {QA_EMAIL}")
-    print(f"  password: {QA_PASSWORD}")
+    print("  password: (the QA_PASSWORD you supplied)")
     print(f"  user_id:  {user_id}")
     return 0
 

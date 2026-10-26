@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   getPreviousWeekStart,
@@ -96,6 +97,12 @@ export function WeeklySummaryCard() {
                 </li>
               ))}
             </ul>
+          )}
+          {summary.crisis_signal && (
+            <p className="rounded-xl bg-surface px-4 py-3 text-ink">
+              Some of what you wrote this week sounded really heavy. You don't have to carry it alone.{' '}
+              <Link to="/help" className="font-medium text-blue-dark underline">See people you can talk to right now</Link>.
+            </p>
           )}
         </div>
       )}

@@ -26,6 +26,9 @@ export interface WeeklySummaryResult {
   summary: string
   highlights: string[]
   generated_at: string
+  // True when the week's journals contained crisis language; the card then
+  // points to the Help page. Absent on summaries cached before this existed.
+  crisis_signal?: boolean
 }
 
 export async function getOrGenerateWeeklySummary(
@@ -36,7 +39,7 @@ export async function getOrGenerateWeeklySummary(
   // Check cache first
   const { data: cached } = await supabase
     .from('weekly_summaries')
-    .select('summary, highlights, generated_at')
+    .select('summary, highlights, generated_at, crisis_signal')
     .eq('user_id', userId)
     .eq('week_start', weekStart)
     .maybeSingle()
@@ -47,6 +50,7 @@ export async function getOrGenerateWeeklySummary(
         summary: cached.summary ?? '',
         highlights: (cached.highlights ?? []) as string[],
         generated_at: cached.generated_at,
+        crisis_signal: cached.crisis_signal === true,
       },
       error: null,
     }

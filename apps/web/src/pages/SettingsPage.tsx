@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { deleteAllUserData, updateDisplayName } from '../lib/settingsService'
+import { deleteAccount, deleteAllUserData, updateDisplayName } from '../lib/settingsService'
+import { PRIVACY_POINTS } from '../lib/privacyCopy'
 import { getStoredTheme, setTheme } from '../lib/theme'
 import type { ThemeMode } from '../lib/theme'
 import { exportUserData } from '../lib/exportService'
@@ -46,6 +47,11 @@ export function SettingsPage() {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  const [confirmingAccountDelete, setConfirmingAccountDelete] = useState(false)
+  const [accountDeleteText, setAccountDeleteText] = useState('')
+  const [deletingAccount, setDeletingAccount] = useState(false)
+  const [accountDeleteError, setAccountDeleteError] = useState<string | null>(null)
+
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
 
@@ -76,10 +82,20 @@ export function SettingsPage() {
     if (!user) return
     setDeleting(true)
     setDeleteError(null)
-    const { error } = await deleteAllUserData(user.id)
+    const { error } = await deleteAllUserData()
     setDeleting(false)
     if (error) { setDeleteError(error); return }
     setConfirmingDelete(false)
+    navigate('/')
+  }
+
+  async function handleConfirmAccountDelete() {
+    if (!user || accountDeleteText.trim() !== 'DELETE') return
+    setDeletingAccount(true)
+    setAccountDeleteError(null)
+    const { error } = await deleteAccount(user.id)
+    setDeletingAccount(false)
+    if (error) { setAccountDeleteError(error); return }
     navigate('/')
   }
 
@@ -186,7 +202,7 @@ export function SettingsPage() {
           <div className="space-y-3 border-t border-border pt-4">
             <div>
               <p className="font-medium text-error">Delete my data</p>
-              <p className="text-sm text-muted">Permanently deletes every mood log, journal entry, and coping suggestion. Your login stays active. This clears your data but doesn't close your account.</p>
+              <p className="text-sm text-muted">Permanently deletes every mood log, journal entry, coping suggestion, weekly summary, and custom tag. Your login stays active. This clears your data but doesn't close your account.</p>
             </div>
             {!confirmingDelete ? (
               <button type="button" onClick={() => setConfirmingDelete(true)} className="rounded-[10px] border border-error px-4 py-2 text-sm font-medium text-error transition-colors hover:bg-error-tint">Delete my data</button>
@@ -201,6 +217,31 @@ export function SettingsPage() {
               </div>
             )}
           </div>
+          <div className="space-y-3 border-t border-border pt-4">
+            <div>
+              <p className="font-medium text-error">Delete my account</p>
+              <p className="text-sm text-muted">Permanently deletes your login and everything above. You will be signed out and can't get any of it back.</p>
+            </div>
+            {!confirmingAccountDelete ? (
+              <button type="button" onClick={() => setConfirmingAccountDelete(true)} className="rounded-[10px] border border-error px-4 py-2 text-sm font-medium text-error transition-colors hover:bg-error-tint">Delete my account</button>
+            ) : (
+              <div className="space-y-3 rounded-lg border border-error bg-error-tint p-4">
+                <label htmlFor="accountDeleteConfirm" className="block text-sm font-medium text-error">Type DELETE to confirm. This can't be undone.</label>
+                <input id="accountDeleteConfirm" type="text" value={accountDeleteText} onChange={(e) => setAccountDeleteText(e.target.value)} autoComplete="off" className="w-full rounded-[10px] border border-border bg-field px-3 py-2 text-ink" />
+                {accountDeleteError && <p className="text-sm text-error">{accountDeleteError}</p>}
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => { setConfirmingAccountDelete(false); setAccountDeleteText(''); setAccountDeleteError(null) }} disabled={deletingAccount} className="flex-1 rounded-lg border border-border bg-field px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-blue-tint disabled:opacity-50">Cancel</button>
+                  <button type="button" onClick={handleConfirmAccountDelete} disabled={deletingAccount || accountDeleteText.trim() !== 'DELETE'} className="flex-1 rounded-lg border border-error bg-field px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-error-tint disabled:opacity-50">{deletingAccount ? 'Deleting…' : 'Delete my account'}</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </Section>
+
+        <Section title="Privacy">
+          <ul className="list-disc space-y-2 pl-5 text-sm text-muted">
+            {PRIVACY_POINTS.map((point) => <li key={point}>{point}</li>)}
+          </ul>
         </Section>
       </div>
     </div>
