@@ -268,11 +268,6 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          if (_error != null) ...[
-            InlineNotice(message: _error!),
-            const SizedBox(height: 16),
-          ],
-
           // ── Score ────────────────────────────────────────────────
           const SectionLabel('How are you feeling?'),
           const SizedBox(height: 4),
@@ -363,13 +358,24 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-        child: FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: Text(
-            _submitting
-                ? 'Saving…'
-                : (_isEditing ? 'Save changes' : 'Get my technique'),
-          ),
+        // The error sits above the button so it's visible wherever the user has scrolled to.
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_error != null) ...[
+              InlineNotice(message: _error!),
+              const SizedBox(height: 12),
+            ],
+            FilledButton(
+              onPressed: _submitting ? null : _submit,
+              child: Text(
+                _submitting
+                    ? 'Saving…'
+                    : (_isEditing ? 'Save changes' : 'Get my technique'),
+              ),
+            ),
+          ],
         ),
       ),
     );
