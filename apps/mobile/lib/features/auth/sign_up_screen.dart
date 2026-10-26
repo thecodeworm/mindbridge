@@ -25,6 +25,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
   String? _error;
   bool _submitting = false;
+  // Errors stay hidden until the first submit, then update live as the user fixes them.
+  AutovalidateMode _autovalidate = AutovalidateMode.disabled;
   bool _googleSubmitting = false;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
@@ -39,6 +41,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _submit() async {
+    setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
     if (!_formKey.currentState!.validate()) return;
     setState(() {
       _submitting = true;
@@ -155,7 +158,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   AutofillGroup(
                     child: Form(
                       key: _formKey,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      autovalidateMode: _autovalidate,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
