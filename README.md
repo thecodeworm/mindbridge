@@ -72,7 +72,7 @@ MindBridge is a monorepo with two client apps sharing one backend.
 | Web | React 19 with Vite, TypeScript, Tailwind CSS v4, React Router v7 |
 | Charts | fl_chart (mobile), Recharts (web) |
 | Backend | Supabase: Postgres, Auth, Row Level Security, Edge Functions on Deno |
-| AI | Anthropic's Claude Haiku (`claude-haiku-4-5`), called only from server-side Edge Functions |
+| AI | Anthropic's Claude Haiku (`claude-haiku-5-5`), called only from server-side Edge Functions |
 | Deployment | Vercel for the web app, TestFlight and the Play Store for mobile |
 | CI | GitHub Actions, five jobs gated behind path filtering so a change to one app doesn't trigger a full rebuild of everything |
 

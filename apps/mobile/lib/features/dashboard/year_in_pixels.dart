@@ -30,11 +30,14 @@ class _YearInPixelsState extends State<YearInPixels> {
   }
 
   Future<void> _load() async {
+    // The timeout keeps a hung request from leaving the spinner up forever.
     // Errors are swallowed here by design — this card degrades to an empty
     // grid rather than showing an error state.
     var logs = <MoodLog>[];
     try {
-      logs = await _service.getAllLogsForYear(userId: widget.userId);
+      logs = await _service
+          .getAllLogsForYear(userId: widget.userId)
+          .timeout(const Duration(seconds: 10));
     } catch (_) {
       // ignored, see above
     }

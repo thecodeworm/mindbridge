@@ -25,6 +25,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _confirmController = TextEditingController();
   String? _error;
   bool _submitting = false;
+  // Errors stay hidden until the first submit, then update live as the user fixes them.
+  AutovalidateMode _autovalidate = AutovalidateMode.disabled;
   bool _cancelling = false;
   bool _obscurePassword = true;
   bool _done = false;
@@ -38,6 +40,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   Future<void> _submit() async {
+    setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -251,7 +254,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ],
                   Form(
                     key: _formKey,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    autovalidateMode: _autovalidate,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
