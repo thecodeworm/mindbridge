@@ -7,6 +7,7 @@ import { updateSuggestionFeedback } from '../lib/feedbackService'
 import { CrisisChip } from '../components/CrisisChip'
 import { BOOKMARK, FeedbackChip, THUMB_DOWN, THUMB_UP } from '../components/FeedbackChip'
 import { BreathingCircle } from '../components/BreathingCircle'
+import { LoadingTip } from '../components/LoadingTip'
 import { moodColor } from '../lib/moodColor'
 
 interface SuggestionLocationState {
@@ -88,6 +89,7 @@ export function SuggestionPage() {
             />
             <h1 className="mt-8 text-2xl font-semibold text-ink">Breathe with the circle</h1>
             <p className="mt-2 text-lg text-muted">Finding one small thing that could help right now.</p>
+            <LoadingTip />
           </div>
         )}
 

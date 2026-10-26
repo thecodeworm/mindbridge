@@ -8,6 +8,7 @@ import '../../core/theme.dart';
 import '../../widgets/breathing_circle.dart';
 import '../../widgets/crisis_fab.dart';
 import '../../widgets/feedback_chip.dart';
+import '../../widgets/loading_tip.dart';
 import '../../widgets/notebook.dart';
 import '../history/history_service.dart';
 import '../help/help_screen.dart';
@@ -143,8 +144,9 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
   Widget _buildLoading(TextTheme tt, ColorScheme cs) {
     return Center(
       key: const ValueKey('loading'),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
+      // Scrolls only when the circle + tip card don't fit (short screens, landscape).
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -162,6 +164,8 @@ class _SuggestionScreenState extends State<SuggestionScreen> {
               textAlign: TextAlign.center,
               style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
             ),
+            const SizedBox(height: 32),
+            const LoadingTip(),
           ],
         ),
       ),

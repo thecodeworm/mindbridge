@@ -419,4 +419,17 @@
   .animate-step-enter {
     animation: step-enter var(--duration-medium) var(--ease-standard-decelerate);
   }
+
+  /* Loading-tip swap — a plain fade-in when the tip changes. Skipped under
+     prefers-reduced-motion so the tip just swaps. */
+  @keyframes tip-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-tip-fade {
+    animation: tip-fade 300ms var(--ease-standard-decelerate);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-tip-fade { animation: none; }
+  }
 }
