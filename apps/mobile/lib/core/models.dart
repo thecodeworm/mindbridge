@@ -145,6 +145,7 @@ class WeeklySummary {
     required this.summary,
     required this.highlights,
     required this.generatedAt,
+    this.crisisSignal = false,
   });
 
   final String id;
@@ -154,6 +155,10 @@ class WeeklySummary {
   final List<String> highlights;
   final DateTime generatedAt;
 
+  /// True when the week's journals contained crisis language; the card then
+  /// points to the Help screen. False for summaries cached before this existed.
+  final bool crisisSignal;
+
   factory WeeklySummary.fromJson(Map<String, dynamic> json) => WeeklySummary(
         id: json['id'] as String,
         userId: json['user_id'] as String,
@@ -161,5 +166,6 @@ class WeeklySummary {
         summary: json['summary'] as String? ?? '',
         highlights: ((json['highlights'] as List<dynamic>?) ?? []).map((e) => e as String).toList(),
         generatedAt: DateTime.parse(json['generated_at'] as String),
+        crisisSignal: json['crisis_signal'] == true,
       );
 }

@@ -10,12 +10,18 @@ class AuthService {
     required String email,
     required String password,
     required String displayName,
+    required Map<String, dynamic> consent,
   }) async {
     try {
       await _client.auth.signUp(
         email: email,
         password: password,
-        data: {'display_name': displayName},
+        data: {
+          'display_name': displayName.length > 60
+              ? displayName.substring(0, 60)
+              : displayName,
+          ...consent,
+        },
       );
       return null;
     } on AuthException catch (e) {

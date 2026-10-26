@@ -21,12 +21,20 @@ void main() {
       );
     });
 
-    test('exactly the minimum length is valid', () {
-      expect(validatePassword('a' * kMinPasswordLength), isNull);
+    test('exactly the minimum length with a letter and a number is valid', () {
+      expect(validatePassword('abcdefg1'), isNull);
     });
 
     test('above the minimum length is valid', () {
-      expect(validatePassword('a-very-long-password'), isNull);
+      expect(validatePassword('a-very-long-password-2'), isNull);
+    });
+
+    test('letters only is rejected', () {
+      expect(validatePassword('abcdefghij'), 'Password needs at least one letter and one number');
+    });
+
+    test('numbers only is rejected', () {
+      expect(validatePassword('1234567890'), 'Password needs at least one letter and one number');
     });
   });
 

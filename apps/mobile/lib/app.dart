@@ -57,22 +57,53 @@ class _AppLockWrapperState extends State<_AppLockWrapper> with WidgetsBindingObs
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      AppLockState.lock();
+    switch (state) {
+      case AppLifecycleState.inactive:
+        // Covers the content before the OS takes its app-switcher snapshot.
+        if (AppLockState.enabled.value && !AppLockState.authenticating) {
+          AppLockState.obscured.value = true;
+        }
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        AppLockState.lock();
+      case AppLifecycleState.resumed:
+        AppLockState.obscured.value = false;
+      case AppLifecycleState.detached:
+        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
-      valueListenable: AppLockState.locked,
-      builder: (context, locked, child) {
-        if (locked) {
-          return _LockScreen(onUnlocked: AppLockState.unlock);
-        }
-        return child!;
-      },
-      child: const _OnboardingGate(),
+      valueListenable: AppLockState.obscured,
+      builder: (context, obscured, content) => Stack(
+        fit: StackFit.expand,
+        children: [
+          content!,
+          if (obscured)
+            ColoredBox(
+              color: Theme.of(context).colorScheme.surface,
+              child: Center(
+                child: Icon(
+                  Icons.lock_outline,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
+        ],
+      ),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: AppLockState.locked,
+        builder: (context, locked, child) {
+          if (locked) {
+            return _LockScreen(onUnlocked: AppLockState.unlock);
+          }
+          return child!;
+        },
+        child: const _OnboardingGate(),
+      ),
     );
   }
 }
@@ -154,6 +185,11 @@ class _LockScreenState extends State<_LockScreen> {
     }
   }
 
+  Future<void> _signOut() async {
+    await Supabase.instance.client.auth.signOut();
+    widget.onUnlocked();
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -176,6 +212,13 @@ class _LockScreenState extends State<_LockScreen> {
               FilledButton(
                 onPressed: _attempting ? null : _attempt,
                 child: Text(_attempting ? 'Authenticating…' : 'Unlock'),
+              ),
+              const SizedBox(height: 8),
+              // Escape hatch: a phone with no screen lock set up (or a failed
+              // biometric) must never leave someone permanently locked out.
+              TextButton(
+                onPressed: _attempting ? null : _signOut,
+                child: const Text('Sign out instead'),
               ),
             ],
           ),

@@ -5,9 +5,14 @@
 //
 // Only new and changed passwords go through these; existing 6-character test
 // accounts keep working because Supabase never re-validates at login.
+//
+// The same rule (8+ characters, a letter and a number) must also be set as the
+// server-side policy in the Supabase dashboard (Auth > Password): a client
+// check alone is bypassed by calling the auth API directly.
 const int kMinPasswordLength = 8;
 
-const String kPasswordHint = 'At least $kMinPasswordLength characters';
+const String kPasswordHint =
+    'At least $kMinPasswordLength characters, with a letter and a number';
 
 /// Returns an error message, or null when the password is acceptable.
 /// Shaped as a Flutter `FormFieldValidator<String>`.
@@ -15,6 +20,9 @@ String? validatePassword(String? password) {
   if (password == null || password.isEmpty) return 'Password is required';
   if (password.length < kMinPasswordLength) {
     return 'Password must be at least $kMinPasswordLength characters';
+  }
+  if (!RegExp(r'[A-Za-z]').hasMatch(password) || !RegExp(r'[0-9]').hasMatch(password)) {
+    return 'Password needs at least one letter and one number';
   }
   return null;
 }
