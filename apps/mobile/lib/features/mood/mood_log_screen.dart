@@ -357,7 +357,7 @@ class _MoodLogScreenState extends State<MoodLogScreen> {
           RuledTextField(
             controller: _journalController,
             maxLength: 500,
-            hintText: 'A sentence or two is plenty. Only you can see this.',
+            hintText: 'A sentence or two is plenty. Other users cannot see this.',
           ),
         ],
       ),

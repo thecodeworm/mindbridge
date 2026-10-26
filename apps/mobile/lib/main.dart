@@ -30,7 +30,9 @@ Future<void> main() async {
   );
   await ThemeController.load();
   await RecoveryState.load();
-  await AppLockState.init();
+  await AppLockState.init(
+    hasSession: Supabase.instance.client.auth.currentSession != null,
+  );
   await OnboardingState.load();
   if (Supabase.instance.client.auth.currentSession != null) {
     // Existing logged-in users updating the app never see onboarding.

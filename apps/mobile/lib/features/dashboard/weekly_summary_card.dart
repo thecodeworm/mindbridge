@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/elevation.dart';
 import '../../core/models.dart';
+import '../help/help_screen.dart';
 
 String _prevWeekStart() {
   final now = DateTime.now().toLocal();
@@ -45,7 +46,7 @@ class _WeeklySummaryCardState extends State<WeeklySummaryCard> {
     try {
       final data = await _client
           .from('weekly_summaries')
-          .select('id, user_id, week_start, summary, highlights, generated_at')
+          .select('id, user_id, week_start, summary, highlights, generated_at, crisis_signal')
           .eq('user_id', widget.userId)
           .eq('week_start', weekStart)
           .maybeSingle();
@@ -91,6 +92,7 @@ class _WeeklySummaryCardState extends State<WeeklySummaryCard> {
             highlights:
                 ((data['highlights'] as List<dynamic>?) ?? []).map((e) => e as String).toList(),
             generatedAt: DateTime.now(),
+            crisisSignal: data['crisis_signal'] == true,
           );
         });
       }
@@ -153,6 +155,19 @@ class _WeeklySummaryCardState extends State<WeeklySummaryCard> {
                     ],
                   ),
                 ),
+              ),
+            ],
+            if (_summary!.crisisSignal) ...[
+              const SizedBox(height: 12),
+              Text(
+                "Some of what you wrote this week sounded really heavy. You don't have to carry it alone.",
+                style: tt.bodyMedium,
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const HelpScreen()),
+                ),
+                child: const Text('See people you can talk to right now'),
               ),
             ],
           ] else ...[

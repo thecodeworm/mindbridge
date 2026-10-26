@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/privacy_copy.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../widgets/crisis_fab.dart';
@@ -145,6 +146,12 @@ class _SignInScreenState extends State<SignInScreen> {
                             height: 18,
                           ),
                     label: const Text('Continue with Google'),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    kGoogleConsentNotice,
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 16),
                   Row(

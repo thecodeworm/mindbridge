@@ -4,6 +4,7 @@ import '../../core/elevation.dart';
 import '../../widgets/notebook.dart';
 import '../../core/theme_controller.dart';
 import '../../core/app_lock_state.dart';
+import '../../core/privacy_copy.dart';
 import '../../widgets/crisis_fab.dart';
 import '../auth/app_lock_service.dart';
 import '../auth/auth_service.dart';
@@ -34,6 +35,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _nameSaved = false;
 
   bool _confirmingDelete = false;
+  bool _confirmingAccountDelete = false;
+  bool _deletingAccount = false;
+  String? _accountDeleteError;
+  final _accountDeleteController = TextEditingController();
   bool _deleting = false;
   String? _deleteError;
 
@@ -58,6 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _accountDeleteController.dispose();
     super.dispose();
   }
 
@@ -94,13 +100,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (userId == null) return;
 
     setState(() => _deleting = true);
-    final error = await _settingsService.deleteAllUserData(userId);
+    final error = await _settingsService.deleteAllUserData();
     if (!mounted) return;
 
     if (error != null) {
       setState(() {
         _deleting = false;
         _deleteError = error;
+      });
+      return;
+    }
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null || _accountDeleteController.text.trim() != 'DELETE') {
+      return;
+    }
+
+    setState(() {
+      _deletingAccount = true;
+      _accountDeleteError = null;
+    });
+    final error = await _settingsService.deleteAccount(userId);
+    if (!mounted) return;
+
+    if (error != null) {
+      setState(() {
+        _deletingAccount = false;
+        _accountDeleteError = error;
       });
       return;
     }
@@ -416,7 +445,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Permanently deletes every mood log, journal entry, and coping suggestion. "
+                    "Permanently deletes every mood log, journal entry, coping suggestion, weekly summary, and custom tag. "
                     "Your login stays active. This clears your data but doesn't close your account.",
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
@@ -491,6 +520,149 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  Divider(color: cs.outline),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Delete my account',
+                    style: tt.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: cs.error,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Permanently deletes your login and everything above. "
+                    "You will be signed out and can't get any of it back.",
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 12),
+                  if (!_confirmingAccountDelete)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 44),
+                          foregroundColor: cs.error,
+                          side: BorderSide(color: cs.error),
+                        ),
+                        onPressed: () =>
+                            setState(() => _confirmingAccountDelete = true),
+                        child: const Text('Delete my account'),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: cs.errorContainer,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            "Type DELETE to confirm. This can't be undone.",
+                            style: TextStyle(
+                              color: cs.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _accountDeleteController,
+                            autocorrect: false,
+                            onChanged: (_) => setState(() {}),
+                            decoration: const InputDecoration(
+                              labelText: 'Type DELETE',
+                            ),
+                          ),
+                          if (_accountDeleteError != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              _accountDeleteError!,
+                              style: TextStyle(color: cs.error, fontSize: 13),
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: _deletingAccount
+                                      ? null
+                                      : () => setState(() {
+                                          _confirmingAccountDelete = false;
+                                          _accountDeleteController.clear();
+                                          _accountDeleteError = null;
+                                        }),
+                                  child: const Text('Cancel'),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: cs.error,
+                                    side: BorderSide(color: cs.error),
+                                  ),
+                                  onPressed: _deletingAccount ||
+                                          _accountDeleteController.text
+                                                  .trim() !=
+                                              'DELETE'
+                                      ? null
+                                      : _confirmDeleteAccount,
+                                  child: Text(
+                                    _deletingAccount
+                                        ? 'Deleting…'
+                                        : 'Delete my account',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            _section(
+              cs,
+              tt,
+              title: 'Privacy',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final point in kPrivacyPoints)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 7, right: 10),
+                            child: Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: cs.primary,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              point,
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
                           ),
                         ],
                       ),

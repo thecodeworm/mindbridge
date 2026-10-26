@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { CrisisChip } from '../components/CrisisChip'
+import { GOOGLE_CONSENT_NOTICE } from '../lib/privacyCopy'
 
 function GoogleIcon() {
   return (
@@ -161,6 +162,7 @@ export function LoginPage() {
           <GoogleIcon />
           Continue with Google
         </button>
+        <p className="px-1 text-xs text-faint">{GOOGLE_CONSENT_NOTICE}</p>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border" />

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/privacy_copy.dart';
 import '../../core/validators.dart';
 import '../../widgets/crisis_fab.dart';
 import '../../widgets/notebook.dart';
@@ -25,6 +27,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
   String? _error;
   bool _submitting = false;
+  bool _consented = false;
   // Errors stay hidden until the first submit, then update live as the user fixes them.
   AutovalidateMode _autovalidate = AutovalidateMode.disabled;
   bool _googleSubmitting = false;
@@ -43,6 +46,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _submit() async {
     setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
     if (!_formKey.currentState!.validate()) return;
+    if (!_consented) {
+      setState(() => _error =
+          'Please confirm you are 13 or older and read the AI note to continue.');
+      return;
+    }
     setState(() {
       _submitting = true;
       _error = null;
@@ -51,6 +59,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       email: _emailController.text.trim(),
       password: _passwordController.text,
       displayName: _displayNameController.text.trim(),
+      consent: consentMetadata(),
     );
     if (!mounted) return;
     setState(() {
@@ -139,6 +148,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                     label: const Text('Continue with Google'),
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    kGoogleConsentNotice,
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: cs.onSurfaceVariant),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -168,6 +183,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               labelText: 'Display name',
                             ),
                             textCapitalization: TextCapitalization.words,
+                            inputFormatters: [LengthLimitingTextInputFormatter(60)],
                             autofillHints: const [AutofillHints.name],
                             validator: (v) => (v == null || v.trim().isEmpty)
                                 ? 'Display name is required'
@@ -241,7 +257,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               _passwordController.text,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
+                          CheckboxListTile(
+                            value: _consented,
+                            onChanged: (v) =>
+                                setState(() => _consented = v ?? false),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              kSignupConsentLabel,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: cs.onSurfaceVariant),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                           FilledButton(
                             onPressed: _submitting ? null : _submit,
                             child: Text(

@@ -132,3 +132,28 @@ Deno.test('callClaude - latencyMs is populated on both success and failure paths
   const result = await callClaude(BASE_PARAMS)
   assertEquals(typeof result.latencyMs, 'number')
 })
+
+Deno.test('callClaude - extracts the JSON object when Claude adds text around it', async () => {
+  using _fetch = stub(
+    globalThis,
+    'fetch',
+    () =>
+      Promise.resolve(
+        jsonResponse({
+          content: [{
+            type: 'text',
+            text:
+              'I hear you.\n{"technique_name":"Grounding"}\nPlease reach out to 988.',
+          }],
+          usage: {},
+        }),
+      ),
+  )
+
+  const result = await callClaude(BASE_PARAMS)
+
+  assertEquals(result.ok, true)
+  if (result.ok) {
+    assertEquals(result.parsed, { technique_name: 'Grounding' })
+  }
+})

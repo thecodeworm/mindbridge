@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { CrisisChip } from '../components/CrisisChip'
+import { consentMetadata, GOOGLE_CONSENT_NOTICE, SIGNUP_CONSENT_LABEL } from '../lib/privacyCopy'
 import {
   MIN_PASSWORD_LENGTH,
   PASSWORD_HINT,
@@ -49,9 +50,14 @@ export function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [consented, setConsented] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    if (!consented) {
+      setError('Please confirm you are 13 or older and read the AI note to continue.')
+      return
+    }
     const passwordError = validatePassword(password) ?? validatePasswordConfirmation(password, confirmPassword)
     if (passwordError) {
       setError(passwordError)
@@ -59,7 +65,7 @@ export function SignUpPage() {
     }
     setError(null)
     setSubmitting(true)
-    const { error } = await signUp(email, password, displayName)
+    const { error } = await signUp(email, password, displayName, consentMetadata())
     setSubmitting(false)
     if (error) { setError(error); return }
     navigate('/')
@@ -93,6 +99,7 @@ export function SignUpPage() {
           <GoogleIcon />
           Continue with Google
         </button>
+        <p className="px-1 text-xs text-faint">{GOOGLE_CONSENT_NOTICE}</p>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border" />
@@ -107,6 +114,7 @@ export function SignUpPage() {
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           required
+          maxLength={60}
           autoComplete="name"
           className="w-full rounded-[10px] border border-border bg-field px-4 py-3 text-ink placeholder:text-faint"
         />
@@ -163,6 +171,16 @@ export function SignUpPage() {
             {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
           </button>
         </div>
+        <label className="flex items-start gap-3 text-sm text-muted">
+          <input
+            type="checkbox"
+            checked={consented}
+            onChange={(e) => setConsented(e.target.checked)}
+            required
+            className="mt-1 h-4 w-4 shrink-0"
+          />
+          <span>{SIGNUP_CONSENT_LABEL}</span>
+        </label>
         <button
           type="submit"
           disabled={submitting}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/elevation.dart';
 import '../../../core/mood_color.dart';
+import '../../../core/privacy_copy.dart';
 import '../../../widgets/notebook.dart';
 import '../notebook_step.dart';
 
@@ -15,11 +16,11 @@ class TrustStep extends StatelessWidget {
     return NotebookStep(
       action: FilledButton(onPressed: onNext, child: const Text('Next')),
       children: [
-        Text('Your entries are', style: tt.displaySmall),
-        Highlight('private.', color: moodColor(3), style: tt.displaySmall),
+        Text(kTrustHeadlineLead, style: tt.displaySmall),
+        Highlight(kTrustHeadlineMark, color: moodColor(3), style: tt.displaySmall),
         const SizedBox(height: 16),
         Text(
-          'Only you can see them.',
+          kTrustSubline,
           style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: 32),
@@ -35,7 +36,7 @@ class TrustStep extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  'Not friends, not family, not even MindBridge staff can read your mood logs or journal entries. What you write here stays yours.',
+                  kTrustCardText,
                   style: tt.bodyLarge?.copyWith(
                     color: cs.onSurfaceVariant,
                     height: 1.45,
