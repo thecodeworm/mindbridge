@@ -109,6 +109,19 @@ export async function callClaude(
   try {
     parsed = JSON.parse(jsonText)
   } catch {
+    // Claude sometimes adds a sentence around the object (most often a
+    // pointer to crisis resources when a journal mentions self-harm), so
+    // fall back to the outermost {...} span before giving up.
+    const start = jsonText.indexOf('{')
+    const end = jsonText.lastIndexOf('}')
+    if (start !== -1 && end > start) {
+      try {
+        parsed = JSON.parse(jsonText.slice(start, end + 1))
+        return { ok: true, parsed, usage: data.usage ?? {}, latencyMs }
+      } catch {
+        // fall through to malformed_json
+      }
+    }
     return {
       ok: false,
       reason: 'malformed_json',
