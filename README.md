@@ -1,255 +1,165 @@
 # MindBridge
 
-**This is not the main MindBridge repo. That's a private repo that I will continue building on. This is the Hackathon Checkpoint.**
+MindBridge is a mood tracker for teenagers. You rate how you feel, pick a word for it, and write a few lines if you want to. The app gives you back one coping technique from cognitive behavioral therapy (CBT), picked for what you just told it. Over time it shows how your mood moves through the week and which activities seem to help.
 
-MindBridge is a mood tracker built for teenagers. You log how you're feeling in under two minutes, and an AI assistant gives you back one simple coping technique based on what you wrote, right away. Over time it also shows you patterns: how your mood moves through the week, what activities seem to help or hurt, and how long you've kept up the habit.
-
-It was built for the 2026 Congressional App Challenge, Texas's 22nd Congressional District (TX-22).
+I built it for the 2026 Congressional App Challenge in Texas's 22nd district (TX-22).
 
 Live web app: https://usemindbridge.vercel.app
 
-## Table of contents
+## Contents
 
-1. [The problem this solves](#the-problem-this-solves)
+1. [Why I built it](#why-i-built-it)
 2. [Who it's for](#who-its-for)
-3. [What the app actually does](#what-the-app-actually-does)
+3. [Features](#features)
 4. [How it's built](#how-its-built)
 5. [Repository layout](#repository-layout)
-6. [Getting it running yourself](#getting-it-running-yourself)
-7. [Configuration reference](#configuration-reference)
-8. [Using the app: a walkthrough](#using-the-app-a-walkthrough)
-9. [Database schema](#database-schema)
-10. [Security and privacy](#security-and-privacy)
-11. [Testing and QA](#testing-and-qa)
-12. [Known limitations](#known-limitations)
-13. [Further documentation](#further-documentation)
-14. [About this project](#about-this-project)
+6. [A first session](#a-first-session)
+7. [Database](#database)
+8. [Security and privacy](#security-and-privacy)
+9. [Testing](#testing)
+10. [Known limitations](#known-limitations)
 
-## The problem this solves
+## Why I built it
 
-About one in five teenagers in the US deals with a serious mental health issue in a given year, and most of them never get help. It's rarely because nothing is available. It's stigma, it's cost, and honestly it's often just that a teenager has no easy way to notice their own patterns until something has already gotten bad.
+Roughly one in five US teenagers deals with a serious mental health issue in a given year, and many never get help. Part of it is stigma and cost. Part of it is not noticing your own patterns until things are already bad.
 
-Most mental health apps are built for adults, feel clinical, or ask for way too much up front (long assessments, a subscription, a parent's involvement). MindBridge tries to remove almost all of that friction. You open the app, you say how you feel, and you get something useful back immediately. No therapist required, no diagnosis, no waiting.
+Most mental health apps are made for adults. They feel clinical or ask for a lot up front, like long questionnaires, a subscription, or a parent's sign-off. I wanted one where you open it, say how you feel, and get something useful back.
 
-The goal isn't to replace therapy or a counselor. It's to give someone a low-stakes way to check in with themselves daily, learn a coping skill from cognitive behavioral therapy (CBT) in the moment they need it, and build enough self-awareness over weeks and months to notice when things are trending in a bad direction, and get themselves help sooner if they need it.
+It doesn't replace a therapist or a school counselor. I see it as a low-pressure way to check in with yourself each day, pick up a coping skill, and notice if things start sliding so you can ask for help sooner.
 
 ## Who it's for
 
-The primary user is a teenager, roughly 13 to 19, who wants a private space to track their mood without anyone else seeing it by default. A few things followed directly from that:
+Teenagers, roughly 13 to 19, who want a private place to track their mood. That shaped a few decisions:
 
-- Nothing in the app auto-shares data with parents or schools. It's the teen's data, kept private.
-- The tone had to be warm and non-clinical. No red error banners, no chart lines that turn green when you're "good" and red when you're "bad." A bad day is not treated as a failure state.
-- The whole first interaction (mood score, an emotion word, and getting a coping suggestion back) needed to take under two minutes, because a habit that takes effort to start doesn't survive as a daily habit.
-- Crisis resources (the 988 Suicide and Crisis Lifeline, Crisis Text Line, and the Trevor Project) are always one tap away, not buried in a menu, and never presented in a way that feels alarming.
+- Nothing is sent to parents or schools.
+- The tone is warm and plain. Errors never use red, and no color labels a day as good or bad.
+- A check-in takes under two minutes, so it's easy to do every day.
+- Crisis resources (988 Suicide and Crisis Lifeline, Crisis Text Line, The Trevor Project) are one tap away through the pink Help chip. They don't show up as a warning banner.
 
-## What the app actually does
+## Features
 
-**Landing and onboarding.** A new visitor sees an actual marketing page first, not a login wall. It explains what the app does in plain language before asking for an email address. From there a short five step walkthrough (welcome, a privacy explanation, a couple of personalization questions, a "here's how this works" explainer, and then a real first mood check-in) gets someone to their first coping suggestion before they've even finished creating an account.
+**Landing and onboarding.** New visitors see a landing page that explains the app before asking for an email. Onboarding is five short steps: welcome, what's private, a couple of optional personalization questions, how check-ins work, and a first check-in. The suggestion shown there is a sample written ahead of time, not one from Claude, so you can see what the app does before making an account.
 
-**Mood logging.** The core loop: drag a slider from 1 to 10 to rate your mood (the slider itself has some spring physics to it and changes color as you drag, so it feels more like a real object than a form input), pick an emotion word from a Mood Meter style picker (24 words split across four quadrants of energy and pleasantness), optionally tag what you were doing (school, exercise, friends, poor sleep, and so on, with 12 built-in tags and support for custom ones), optionally write a journal entry up to 500 characters, and optionally flag a cognitive distortion you noticed in your own thinking (catastrophizing, all-or-nothing thinking, mind reading, and a few others) along with a short reframe of that thought.
+**Check-ins.** Rate your mood from 1 to 10 on a slider and pick an emotion word from a Mood Meter style picker (24 words across four quadrants of energy and pleasantness). Optionally you can tag what you were doing (12 built-in tags like school, exercise, or poor sleep, plus your own), write up to 500 characters in a ruled journal, and flag a thinking trap you noticed, like catastrophizing or mind reading, with a short reframe.
 
-**AI coping suggestion.** The moment you submit a mood log, the app calls a Supabase Edge Function, which in turn calls Claude Haiku with your mood score, emotion word, and journal entry (if you wrote one). It comes back with a named CBT technique, a plain-language description, and three concrete steps you can do right now. This usually takes around two seconds. If your mood score is very low, or if the model detects signs of crisis in what you wrote, crisis resources are surfaced automatically, and that flag can only ever be turned on by a deterministic server-side check, never suppressed by anything a user (or an injected prompt) writes into the journal field.
+**AI coping suggestion.** When you submit, a Supabase Edge Function sends your score, emotion word, and journal entry to Claude Haiku. It returns a named CBT technique, a short description, and three steps you can try right away. While it loads, the app shows quick tips. If your score is 2 or lower, your journal contains one of a list of crisis phrases, or the model flags the entry, crisis resources appear automatically. Nothing written in the journal can stop them from showing.
 
-**Today.** The app is organized into four tabs: Today, Journal, Insights, and Toolkit. Today has one job, which is getting you to check in: a card asking how you are (tap one of five mood-colored dots to jump straight in), or, once you've checked in, today's mood and the technique you got. Under it is the last seven days as a strip of mood-colored dots, plus a rolling 10-day "practice window" that never resets all the way to zero the way a normal streak does, since the goal is encouragement, not guilt.
+**Today.** The app has four tabs: Today, Journal, Insights, and Toolkit. Today asks how you're doing, with five mood-colored dots you can tap to start a check-in. After you check in, it shows your mood and the technique you got. Below that is the past week as a row of colored dots, plus a practice window that counts how many of the last 10 days you checked in. It doesn't reset to zero when you miss a day.
 
-**Insights.** A 7 or 30 day mood trend chart with a line that shifts color along the mood scale and draws itself in on load, the AI weekly review, a "what lifts you" card that surfaces which activities actually correlate with better or worse moods for you specifically (once there's enough data for it to mean anything), and a year-in-pixels grid with one colored square per day you logged.
+**Insights.** A 7-day or 30-day mood chart, a weekly summary, a "what lifts you" card that shows which activities tend to go with better or worse moods for you (once there's enough data), and a year-in-pixels grid with one square per day you logged.
 
-**Journal and Toolkit.** Every past entry is browsable with full detail (the mood, the tag, the journal text, the activities, and the coping suggestion you got). You can mark a suggestion as helpful or not, and save any suggestion to a personal Toolkit so you can find your favorite coping techniques again later without digging through history.
+**Journal and Toolkit.** Every past entry can be opened to see the mood, tags, journal text, and the suggestion you got. You can rate a suggestion as helpful or not and save it to your Toolkit to find later.
 
-**Weekly summary.** On demand, the app can generate a short AI-written weekly reflection: a couple of sentences summarizing the week plus two or three concrete highlights, again from Claude Haiku, cached so it's only generated once per week.
+**Weekly summary.** On request, Claude Haiku writes a short reflection on your week with two or three highlights. It's generated once per week and saved.
 
-**Settings.** Display name, light/dark/system theme, a daily reminder notification (mobile), exporting your own data as a JSON file (mobile), a biometric or PIN app lock (mobile), and a way to wipe your own mood data if you want a fresh start.
+**Settings.** Display name, light, dark, or system theme, JSON export of your data, deleting all your mood data, and deleting your account. The mobile app also has a daily reminder time and a biometric or PIN lock.
 
-**Design details worth knowing about.** Dark mode is treated as a first-class requirement, not an afterthought, since a lot of journaling happens at night. The whole color system deliberately avoids red for anything (errors use a muted rose instead) and avoids a red-to-green mood gradient (low moods render as cool slate, high moods as warm gold, so no color on the app ever tells you your day was "bad").
+**Design.** The look is a clean notebook page with one ballpoint-blue accent. Mood colors work like highlighter pens: lavender, sky, butter, tangerine, and pink from low to high. There's no red-to-green scale. Errors use a muted berry instead of red. Dark mode gets the same attention as light mode, since a lot of journaling happens at night.
 
 ## How it's built
 
-MindBridge is a monorepo with two client apps sharing one backend.
+A monorepo with two client apps and one shared backend.
 
-| Layer | What's used |
+| Layer | Stack |
 |---|---|
-| Mobile | Flutter (Dart SDK ^3.12.2, built and tested against Flutter 3.44.4 in CI) |
-| Web | React 19 with Vite, TypeScript, Tailwind CSS v4, React Router v7 |
+| Mobile | Flutter (Dart SDK ^3.12.2, tested against Flutter 3.44.4 in CI) |
+| Web | React 19, Vite, TypeScript, Tailwind CSS v4, React Router v7 |
 | Charts | fl_chart (mobile), Recharts (web) |
-| Backend | Supabase: Postgres, Auth, Row Level Security, Edge Functions on Deno |
-| AI | Anthropic's Claude Haiku (`claude-haiku-5-5`), called only from server-side Edge Functions |
-| Deployment | Vercel for the web app, TestFlight and the Play Store for mobile |
-| CI | GitHub Actions, five jobs gated behind path filtering so a change to one app doesn't trigger a full rebuild of everything |
+| Backend | Supabase: Postgres, Auth, Row Level Security, Edge Functions (Deno) |
+| AI | Claude Haiku (`claude-haiku-5-5`), called only from Edge Functions |
+| Hosting | Vercel (web), TestFlight and Play Store (mobile) |
+| CI | GitHub Actions, with path filters so a web-only change doesn't rebuild the mobile app |
 
-A few decisions that shaped how this is put together:
+The Anthropic API key only exists in the Edge Function environment. Neither client holds business logic. The Edge Functions own the AI prompts and write all AI-generated data to the database.
 
-The Anthropic API key lives only in Supabase's Edge Function environment. It's never bundled into the Flutter or React code, so there's no way to extract it from either client app. Both client apps are intentionally "thin": neither one owns any real business logic. The Edge Functions are the single source of truth for the AI prompt and for writing AI-generated data to the database. Both platforms are built in parallel, feature by feature, rather than finishing one app entirely before starting the other, so they stay at feature parity with each other (the one deliberate exception being the visual design system rollout, which shipped on Flutter first as the demo platform and was ported to web afterward as a separate step).
+I built the Flutter and React apps side by side, one feature at a time, so they stay at feature parity. The one exception was the visual redesign, which went to Flutter first because it's the demo platform, then to web.
 
 ## Repository layout
 
 ```
 mindbridge/
 ├── apps/
-│   ├── mobile/              Flutter app (iOS, Android, and a web target)
+│   ├── mobile/              Flutter app (iOS, Android, web)
 │   │   ├── lib/
-│   │   │   ├── core/        design tokens, pure logic (streaks, crisis rules, mood color), env config
-│   │   │   ├── widgets/     shared UI pieces used across features (the breathing circle, the mood slider, etc.)
-│   │   │   └── features/    one folder per feature area: onboarding, auth, mood, dashboard, history, settings, toolkit, help
+│   │   │   ├── core/        theme tokens, pure logic (streaks, crisis rules, mood color), env config
+│   │   │   ├── widgets/     shared UI (mood slider, breathing circle, notebook widgets)
+│   │   │   └── features/    one folder per area: onboarding, auth, mood, dashboard, history, settings, toolkit, help
 │   │   └── test/            unit and widget tests
 │   └── web/
 │       └── src/
 │           ├── pages/       one file per route
-│           ├── components/  shared UI pieces, mirroring the mobile widgets
+│           ├── components/  shared UI, mirroring the mobile widgets
 │           ├── features/    onboarding flow
-│           ├── lib/         Supabase calls and pure logic, one file per concern
+│           ├── lib/         Supabase calls and pure logic
 │           └── context/     auth context
 ├── shared/
-│   └── types/                TypeScript types shared between the web app and the Edge Functions
+│   └── types/               TypeScript types shared by the web app and Edge Functions
 ├── supabase/
 │   ├── functions/
-│   │   ├── generate-suggestion/         calls Claude Haiku for a single mood check-in
-│   │   └── generate-weekly-summary/     calls Claude Haiku for a weekly reflection
-│   ├── migrations/           every SQL migration, applied in filename order
-│   ├── qa/                   scripts for seeding test/demo accounts
+│   │   ├── _shared/                     helpers shared across functions
+│   │   ├── generate-suggestion/         coping suggestion for one check-in
+│   │   ├── generate-weekly-summary/     weekly summary
+│   │   └── delete-account/              deletes a user's account and data
+│   ├── migrations/          SQL migrations, applied in filename order
+│   ├── qa/                  scripts that seed test and demo accounts
 │   └── seed.sql
-├── qa/
-│   └── web/                  a headless browser script that walks the whole app end to end
-└── docs/                     a written doc for every source file in the project, plus a running session log
+└── qa/
+    └── web/                 headless browser script that walks through the app
 ```
 
-## Getting it running yourself
+## A first session
 
-### What you need first
+You land on the homepage, tap "Get started," and go through the five onboarding screens. The personalization questions only change some wording, and you can skip them. On the last screen you drag the mood slider, pick an emotion word, and see a sample coping technique. Then you create an account with email or Google, and the app offers to save that first check-in. After sign-up, suggestions come from Claude.
 
-- Node.js 24 and npm, for the web app
-- Flutter 3.44.4 or newer, for the mobile app
-- A free Supabase account, at supabase.com
-- An Anthropic API key, at console.anthropic.com, if you want the AI features to actually work rather than just fail gracefully
+On a regular day you open the app, check in, and read your suggestion. Now and then you can look at Insights for your trend or generate a weekly summary. If a technique helped, you save it to your Toolkit. If a check-in trips the crisis rule, crisis resources come up on their own, and the Help chip is there either way.
 
-### Setting up the backend
+## Database
 
-1. Create a new project on Supabase and open its SQL editor.
-2. Run every file in `supabase/migrations/` in order, starting from `0001_init_schema.sql` through the highest numbered file. Each one is a plain `.sql` file you can paste in and run.
-3. Deploy both functions in `supabase/functions/` (`generate-suggestion` and `generate-weekly-summary`) with the Supabase CLI: `supabase link --project-ref <your-ref>`, then `supabase functions deploy generate-suggestion` and `supabase functions deploy generate-weekly-summary`. Both import shared helpers from `supabase/functions/_shared/`, which the CLI bundles automatically (the dashboard's single-file editor can't), and `supabase/config.toml` pins each function's JWT setting.
-4. Under the project's Edge Function settings, set two secrets:
-   - `ANTHROPIC_API_KEY`, your Claude API key
-   - `ALLOWED_ORIGINS`, a comma separated list of the URLs your web app will be served from
-5. Under Authentication settings, turn off "Confirm email" if you want zero-friction sign-ups for testing (this is what the deployed demo uses; a production launch to real users should turn this back on and set up a real email provider first).
-6. Still under Authentication, add your web app's URL to both the Site URL and the Redirect URLs.
+All data lives in Postgres with Row Level Security enforced by the database itself. Even if one of the apps had a bug, the database would still refuse to let one user read or write another user's rows.
 
-### Running the web app
-
-```bash
-cd apps/web
-npm install
-```
-
-Create a file at `apps/web/.env.local` (see the configuration section below for what goes in it), then:
-
-```bash
-npm run dev       # starts a local dev server, usually at localhost:5173
-npm run build     # type-checks and builds for production
-npm run lint      # runs the linter
-```
-
-### Running the mobile app
-
-```bash
-cd apps/mobile
-flutter pub get
-```
-
-Create a file at `apps/mobile/.env` (again, see the configuration section), then:
-
-```bash
-flutter run --dart-define-from-file=.env
-```
-
-The `--dart-define-from-file` flag has to be passed every time you run or build the app, since that's how it picks up the Supabase URL and key without hardcoding them into the source. For recording a demo, add `--dart-define=DEMO_MODE=true` to replay the landing page and onboarding on every launch; without it, returning users go straight to sign-in or Today. A few other useful commands:
-
-```bash
-flutter analyze                                    # static analysis
-flutter test                                        # unit and widget tests
-flutter build apk --debug                           # a debug Android build
-flutter build ios --release                         # a release iOS build (needs Xcode)
-```
-
-## Configuration reference
-
-### Web: `apps/web/.env.local`
-
-```
-VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-Both values are found on your Supabase project's API settings page. This file is gitignored on purpose and should never be committed.
-
-### Mobile: `apps/mobile/.env`
-
-```
-SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-```
-
-Same values as above, just under the variable names the Flutter side expects. Also gitignored.
-
-### Edge Function secrets (set through the Supabase dashboard, not in any file)
-
-```
-ANTHROPIC_API_KEY=your-anthropic-key
-ALLOWED_ORIGINS=https://your-deployed-web-app.com
-```
-
-The anon key is meant to be public and ships inside both client apps by design; Supabase's Row Level Security is what actually protects user data, not the secrecy of that key. The Anthropic key and the service role key (used internally by the Edge Functions, never by either client app) are the only two values in this whole project that need to stay secret.
-
-## Using the app: a walkthrough
-
-Here's what an actual first session looks like, from a new user's point of view.
-
-You land on the homepage and read a short pitch for what the app does. You tap "Get started" and go through five quick onboarding screens: a welcome screen, a short explanation of what's private and what isn't, one or two questions that just tailor the wording a little (never a gate you have to answer correctly), a quick explainer of how the mood-to-suggestion flow works, and then your actual first check-in: drag the mood slider, pick an emotion word, and you're shown a sample coping technique so you know what to expect. You then create an account (or use Google sign-in), and the app quietly offers to save that first check-in for real, which triggers the same pipeline a normal check-in would.
-
-From there, day to day, you open the app, log your mood in well under a minute, and get your coping suggestion. Every few days you might glance at your dashboard to see your trend line and your streak. Once a week you can generate a short written summary of how the week went. If a technique really worked for you, you save it to your Toolkit so you can find it again without hunting through history. If your mood ever drops into a range the app flags, crisis resources show up automatically, and they're also just always sitting one tap away regardless.
-
-## Database schema
-
-Everything lives in Postgres, behind Supabase's Row Level Security, which is enforced at the database level, not just checked in application code. That means even if there were a bug in the web or mobile app, the database itself refuses to let one user read or write another user's rows.
-
-The core tables:
+Core tables:
 
 ```
 users               one row per account: id, display name, created_at
-mood_logs           the mood score (1 to 10), the chosen emotion tag, and when it was logged
-journal_entries     the optional written entry attached to a mood log, capped at 500 characters
-coping_suggestions  the AI's response to a mood log: technique name, description, three steps
-ai_call_logs        a record of every Claude API call: token counts, latency, when it happened
+mood_logs           mood score (1 to 10), emotion tag, logged_at
+journal_entries     optional entry for a mood log, max 500 characters
+coping_suggestions  the AI response: technique name, description, three steps
+ai_call_logs        every Claude call: token counts, latency, timestamp
 ```
 
-A handful of tables were added later as the feature set grew: `activity_tags` and `mood_log_activities` for the activity tagging feature, `weekly_summaries` for the weekly AI reflection, and a couple of extra columns on `journal_entries` for the cognitive distortion feature. As of this writing there are 14 migration files, all under `supabase/migrations/`, applied in order.
+Later features added `activity_tags` and `mood_log_activities` for activity tagging, `weekly_summaries` for the weekly summary, and extra columns on `journal_entries` for thinking traps. There are 16 migrations in `supabase/migrations/`.
 
 ## Security and privacy
 
-A few things worth calling out specifically, since this is a mental health app dealing with a teenage user base:
+- Every table has Row Level Security tied to `auth.uid()`, so users can only touch their own rows. CI checks this on every schema change.
+- The Anthropic API key only exists in the Edge Function environment and never reaches either client app.
+- Your mood score, emotion word, and journal text are sent to Anthropic's API to generate your suggestion. Nothing goes to parents or schools.
+- Journal text goes into the AI prompt wrapped in a tag, and the system prompt tells the model to treat everything inside it as data, not instructions. That helps against prompt injection, but I wouldn't call it a complete guarantee.
+- Crisis resources show when the score is 2 or lower, when the journal contains any of about 30 crisis phrases (checked on the server), or when the model flags the entry. Journal text can only add to that, never remove it.
+- Both AI functions cap each account at 30 calls per hour and 100 per day, and there's an overall daily cap across all users, so a buggy or malicious client can't run up the API bill.
+- Passwords must be at least 8 characters.
+- A password reset link only lets you set a new password. You don't get into the rest of the app until you've done that.
 
-- Every table has Row Level Security turned on, scoped to `auth.uid()`, so a signed-in user can only ever read or write their own rows. This is checked by an automated test in CI on every change to the schema.
-- The Anthropic API key never touches either client app. It only exists in the Edge Function's server-side environment.
-- Anything a user writes into a journal entry is treated strictly as data, not as instructions, when it's included in the AI prompt. It's wrapped in an explicit tag and the system prompt tells the model to ignore anything inside it that looks like a command. This is a real defense against prompt injection, not just a polite request to the model.
-- Whether crisis resources get shown is decided by a deterministic, server-side rule (a low mood score, or a keyword check on the journal text) that can only raise the crisis flag, never lower it. A cleverly worded journal entry cannot talk the app out of showing crisis resources if the score or keywords already triggered it.
-- Both Edge Functions rate-limit how many AI calls a single user can make per hour, so no client-side bug (or malicious client) can run up an unbounded API bill.
-- Passwords require a minimum of 8 characters.
-- A password reset link opens a restricted session that can only be used to set a new password. It does not grant normal access to the rest of the app until that's done.
+## Testing
 
-## Testing and QA
+The mobile app has unit and widget tests in `apps/mobile/test/`, covering streak math, crisis detection, mood colors, and some of the more involved widgets.
 
-The mobile app has a suite of unit and widget tests under `apps/mobile/test/`, covering the pure logic (streak calculation, crisis detection, mood coloring) as well as some of the more complex widgets. Run them with `flutter test`.
+The web app has a headless end-to-end script, `qa/web/golden_path.py`, that signs in and walks through Today, Insights, Journal, entry detail, dark mode, Help, and Toolkit, checking that each one renders and works.
 
-The web app has a headless end-to-end script (`qa/web/golden_path.py`) that drives a real browser through sign-in, the dashboard, history, entry detail, dark mode, the help screen, and the toolkit, checking that each one actually renders and behaves correctly.
+`supabase/qa/seed_qa_demo_user.py` creates a test account with weeks of realistic mood history. It inserts pre-written coping suggestions instead of calling Claude, so seeding a demo account doesn't use API credits.
 
-There's also a script (`supabase/qa/seed_qa_demo_user.py`) that spins up a disposable test account with realistic mood history, so the app can be clicked through or tested without needing to manually create weeks of data by hand, and without spending real API budget on live AI calls (it inserts pre-written coping suggestions instead of calling Claude).
+CI runs on every push and pull request to `main` and `dev`, and only runs the parts that changed. It does these checks:
 
-CI runs on every push and pull request against `main` and `dev`: linting and a production build for the web app, static analysis, a debug build, and the test suite for the mobile app, and a job that spins up a real throwaway Postgres database, applies every migration in order, and checks that Row Level Security is actually enabled everywhere it should be.
+- Web: lint, tests, build, and an `npm audit` for high severity advisories.
+- Mobile: `flutter analyze`, tests, and a debug APK build.
+- Edge Functions: Deno type check, lint, format check, and tests for the shared helpers.
+- Database: applies every migration to a temporary Postgres database, confirms Row Level Security is on for all 8 tables, and checks that one user can't read another's rows.
+- A check that no `.env` file is tracked in git.
 
 ## Known limitations
 
-Being upfront about where this stands right now:
-
-- AI response time runs around 2.3 seconds at the 95th percentile, a bit over the original 2 second target, though still fast enough not to feel broken.
-- There's no offline mode. Every screen needs a network connection to load data.
-- Branded transactional email (password resets, etc.) is gated on buying a domain and setting up a real email provider. Right now it uses Supabase's default sender, which works but looks generic.
-- Focus indicators for keyboard navigation are fully implemented on text inputs but not yet on every button and chip in the mobile app.
-
+- AI suggestions take about 3.5 to 6 seconds with `claude-haiku-5-5` in production testing, over my 2 second target. The quick tips cover the wait, but it's still slower than I'd like.
+- The crisis phrase check is a keyword list. It can miss indirect wording, so it isn't a substitute for the Help chip or for someone noticing.
+- There's no offline mode. Every screen needs a connection.
+- Emails like password resets come from Supabase's default sender. A branded sender needs a custom domain and email provider, which I haven't set up yet.
+- In the Flutter app, keyboard and switch access focus outlines are on text inputs but not yet on every button and chip.
